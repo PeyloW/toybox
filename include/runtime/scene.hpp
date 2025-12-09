@@ -126,9 +126,11 @@ namespace toybox {
         inline void update_transition(int32_t ticks);
         inline void end_transition();
 
-        vector_c<display_list_c*, 3> _display_lists;
+        display_list_c *_clear_display_list;
+        vector_c<display_list_c*, 4> _display_lists;
         vector_c<unique_ptr_c<display_list_c>, 3> _deletion_display_lists;
         int _active_display_list;
+        const scene_c::configuration_s *_configuration = nullptr;
     };
     
 }

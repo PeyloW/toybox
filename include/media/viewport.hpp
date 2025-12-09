@@ -39,6 +39,8 @@ namespace toybox {
         static constexpr size_s min_size = size_s(320, 208);
         static constexpr size_s max_size = size_s(2032, 208);
 
+        static size_s backing_size(size_s viewport_size);
+        
         __forceinline type_e display_type() const override { return viewport; }
         
         viewport_c(size_s viewport_size = min_size);
@@ -47,7 +49,8 @@ namespace toybox {
         point_s offset() const { return _offset; }
         void set_offset(point_s offset);
 
-        __forceinline dirtymap_c* dirtymap() const { return _dirtymap; }
+        __forceinline dirtymap_c* dirtymap() { return _dirtymap; }
+        __forceinline const dirtymap_c* dirtymap() const { return _dirtymap; }
 
     private:
         const detail::display_config_t display_config() const;

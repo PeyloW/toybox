@@ -140,51 +140,91 @@ void scene_manager_c::replace(scene_c* scene, transition_c* transition) {
 
 display_list_c& scene_manager_c::display_list(display_list_e id) const {
     if (id == display_list_e::clear) {
-        return (display_list_c&)*_display_lists[2];
+        return *_clear_display_list;
     } else {
-        int idx = ((int)id + _active_display_list) & 0x1;
+        int idx = ((int)id + _active_display_list);
+        if (idx >=  _configuration->buffer_count) {
+            idx -= _configuration->buffer_count;
+        }
         return (display_list_c&)*_display_lists[idx];
     }
 }
 
 void scene_manager_c::configure_display_lists(const scene_c::configuration_s& configuration) {
-    for (auto p : _display_lists) {
-        _deletion_display_lists.emplace_back(p);
+    assert(configuration.buffer_count >= 2 && configuration.buffer_count <= 4);
+    // If size changes, we must clear all
+    if (_configuration == nullptr || viewport_c::backing_size(_configuration->viewport_size) != viewport_c::backing_size(configuration.viewport_size)) {
+        for (auto p : _display_lists) {
+            _deletion_display_lists.emplace_back(p);
+        }
+        _display_lists.clear();
+        if (_clear_display_list) {
+            _deletion_display_lists.emplace_back(_clear_display_list);
+            _clear_display_list = nullptr;
+        }
     }
-    _display_lists.clear();
-    for (int i = 0; i < 3; i++) {
+    // Remove excess lists
+    while (_display_lists.size() > configuration.buffer_count) {
+        int idx = _active_display_list - 1;
+        if (idx < 0) {
+            idx += _display_lists.size();
+        } else {
+            --_active_display_list;
+        }
+        _deletion_display_lists.emplace_back(_display_lists[idx]);
+        _display_lists.erase(idx);
+    }
+    if (!configuration.use_clear && _clear_display_list != nullptr) {
+        _deletion_display_lists.emplace_back(_clear_display_list);
+        _clear_display_list = nullptr;
+    }
+    // Update palette for remaining lists
+    if (configuration.palette) {
+        for (int i = 0; i < _display_lists.size(); ++i) {
+            auto pal = _display_lists[i]->get(PRIMARY_PALETTE).palette_ptr().get();
+            copy(configuration.palette->begin(), configuration.palette->end(), pal->begin());
+        }
+    }
+    // Add new required lists
+    auto make_list = [&]() {
         auto listptr = new display_list_c();
-        auto& list = *_display_lists.emplace_back(listptr);
         auto pal = new palette_c();
         if (configuration.palette) {
             copy(configuration.palette->begin(), configuration.palette->end(), pal->begin());
         }
         auto vpt = new viewport_c(configuration.viewport_size);
         vpt->set_offset(point_s(0,0));
-        list.emplace_front(PRIMARY_PALETTE, -1, pal);
-        list.emplace_front(PRIMARY_VIEWPORT, -1, vpt);
+        listptr->emplace_front(PRIMARY_PALETTE, -1, pal);
+        listptr->emplace_front(PRIMARY_VIEWPORT, -1, vpt);
+        return listptr;
+    };
+    while (_display_lists.size() < configuration.buffer_count) {
+        _display_lists.emplace_back(make_list());
     }
+    if (configuration.use_clear && _clear_display_list == nullptr) {
+        _clear_display_list = make_list();
+    }
+    _configuration = &configuration;
 }
 
 void scene_manager_c::swap_display_lists() {
-    _active_display_list = (_active_display_list + 1) & 0x1;
+    ++_active_display_list;
+    if (_active_display_list >= _display_lists.size()) {
+        _active_display_list -= _display_lists.size();
+    }
 }
 
 
 viewport_c& scene_manager_c::update_clear() {
-    viewport_c* viewports[3] = {
-        &_display_lists[0]->get(PRIMARY_VIEWPORT).viewport(),
-        &_display_lists[1]->get(PRIMARY_VIEWPORT).viewport(),
-        &_display_lists[2]->get(PRIMARY_VIEWPORT).viewport(),
-    };
-    viewports[0]->dirtymap()->merge(*viewports[2]->dirtymap());
-    viewports[1]->dirtymap()->merge(*viewports[2]->dirtymap());
-    viewports[2]->dirtymap()->clear();
-    viewports[2]->dirtymap()->clear();
+    auto& clear_viewport = _clear_display_list->get(PRIMARY_VIEWPORT).viewport();
+    for (auto list : _display_lists) {
+        auto& viewport = list->get(PRIMARY_VIEWPORT).viewport();
+        viewport.dirtymap()->merge(*clear_viewport.dirtymap());
+    }
+    clear_viewport.dirtymap()->clear();
     debug_cpu_color(DEBUG_CPU_PHYS_RESTORE);
-    auto& back_viewport = *viewports[(_active_display_list + 1) & 0x1];
-    auto& clear = *viewports[2];
-    back_viewport.dirtymap()->restore(back_viewport, clear.image());
+    auto& back_viewport = display_list(back).get(PRIMARY_VIEWPORT).viewport();
+    back_viewport.dirtymap()->restore(back_viewport, clear_viewport.image());
     return back_viewport;
 }
 

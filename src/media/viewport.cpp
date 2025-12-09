@@ -23,18 +23,19 @@ static size_s fixed_viewport_size(size_s viewport_size) {
     );
 }
 
-static size_s fixed_backing_size(size_s fixed_viewport_size) {
+size_s viewport_c::backing_size(size_s viewport_size) {
+    viewport_size = fixed_viewport_size(viewport_size);
     return size_s(
         // Width is min 320, and max 336 which is enough for HW scroll
-        min(fixed_viewport_size.width, (int16_t)336),
+        min(viewport_size.width, (int16_t)336),
         // Height is nearest multiple of 16, + 8 for HW scroll
-        fixed_viewport_size.height + 6 // ~(2032-320)/320 extra lines
+        viewport_size.height + 6 // ~(2032-320)/320 extra lines
     );
 }
 
 detail::viewport_image_holder::viewport_image_holder(size_s viewport_size) :
     _viewport_size(fixed_viewport_size(viewport_size)),
-    _backing_image(fixed_backing_size(_viewport_size), false, nullptr)
+    _backing_image(viewport_c::backing_size(viewport_size), false, nullptr)
 {}
 
 // View port size is the total potential area, the image only what is needed to support hardware scrolling that area.
