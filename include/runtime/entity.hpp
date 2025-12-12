@@ -16,8 +16,6 @@
 namespace toybox {
 
     struct entity_s {
-        static constexpr const int edata_size = 4;
-        static constexpr const int adata_size = 6;
         uint8_t index = 0;
         uint8_t active:1 = 1;  // Only active entities are drawn, run and actions.
         uint8_t event:1 = 0;    // If set action is not called per frame, only on target event trigger
@@ -27,17 +25,13 @@ namespace toybox {
         uint8_t action = 0;
         uint8_t frame_index = 0;
         frect_s position;
-        uint8_t edata[edata_size];
-        template<class T> requires (sizeof(T) <= edata_size)
-        T& edata_as() { return (T&)(edata[0]); }
-        template<class T> requires (sizeof(T) <= edata_size)
-        const T& edata_as() const { return (const T&)(edata[0]); }
-        uint8_t adata[adata_size];
-        template<class T> requires (sizeof(T) <= adata_size)
-        T& adata_as() { return (T&)(adata[0]); }
-        template<class T> requires (sizeof(T) <= adata_size)
-        const T& adata_as() const { return (const T&)(adata[0]); }
+        uint16_t reserved_data[5];
+        template<class T> requires (sizeof(T) <= 10)
+        T& data_as() { return (T&)(reserved_data[0]); }
+        template<class T> requires (sizeof(T) <= 10)
+        const T& data_as() const { return (const T&)(reserved_data[0]); }
     };
+    static_assert((offsetof(entity_s, reserved_data) & 1) == 0);
     static_assert(sizeof(entity_s) == 24);
 
     // struct_layout for byte-order swapping

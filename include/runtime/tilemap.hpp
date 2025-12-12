@@ -27,12 +27,13 @@ namespace toybox {
         int16_t index = 0;  // tileset index to draw with
         type_e type = none;    // Tile type
         uint8_t flags = 0;
-        uint8_t data[4];
+        uint16_t reserved_data[2];
         template<class T> requires (sizeof(T) <= 4)
-        T& data_as() { return (T&)(data[0]); }
+        T& data_as() { return (T&)(reserved_data[0]); }
         template<class T> requires (sizeof(T) <= 4)
-        const T& data_as() const { return (const T&)(data[0]); }
+        const T& data_as() const { return (const T&)(reserved_data[0]); }
     };
+    static_assert((offsetof(tile_s, reserved_data) & 1) == 0);
     static_assert(sizeof(tile_s) == 8);
     
     

@@ -114,8 +114,14 @@ namespace toybox {
             size_s size;                // Size of level in tiles
             uint8_t tileset_index;      // Index of tileset to use
             uint8_t entity_count;       // Number of entities in level
+            int8_t reserved_data[10];
+            template<class T> requires (sizeof(T) <= 10)
+            T& data_as() { return (T&)(reserved_data[0]); }
+            template<class T> requires (sizeof(T) <= 10)
+            const T& data_as() const { return (const T&)(reserved_data[0]); }
         };
-        static_assert(sizeof(level_header_s) == 6);
+        static_assert((offsetof(level_header_s, reserved_data) & 1) == 0);
+        static_assert(sizeof(level_header_s) == 16);
     }
     // struct_layout for byte-order swapping
     template<>
