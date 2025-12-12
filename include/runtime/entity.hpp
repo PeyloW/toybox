@@ -17,9 +17,15 @@ namespace toybox {
 
     struct entity_s {
         uint8_t index = 0;
-        uint8_t active:1 = 1;  // Only active entities are drawn, run and actions.
-        uint8_t event:1 = 0;    // If set action is not called per frame, only on target event trigger
-        uint8_t flags:6 = 0;
+#if __M68000__
+        uint8_t active :1 = 1;  // Only active entities are drawn, run and actions.
+        uint8_t event :1 = 0;    // If set action is not called per frame, only on target event trigger
+        uint8_t flags :6 = 0;
+#else
+        uint8_t flags :6 = 0;
+        uint8_t event :1 = 0;    // If set action is not called per frame, only on target event trigger
+        uint8_t active :1 = 1;  // Only active entities are drawn, run and actions.
+#endif
         uint8_t type = 0;
         uint8_t group = 0;
         uint8_t action = 0;

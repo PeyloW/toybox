@@ -42,9 +42,9 @@ Support simple horizontally scrolling games controlled with joystick. ETA Summer
 - [ ] Rewrite `transition_c` system for display lists
     - [ ] Cross-fade through color
     - [ ] Update existing transitions
-- [-] `tilemap_c` for defining a tiled display from 16x16 blocks
+- [x] `tilemap_c` for defining a tiled display from 16x16 blocks
     - [x] Source from `tileset_c` and solid color
-        - x Optimized batch drawing primitives for repeated 16x16 blocks
+        - [x] Optimized batch drawing primitives for repeated 16x16 blocks
     - [x] General tile types; empty, solid, climbable, hurts, etc.
     - [x] Subtilemap splicing with dirty tracking
     - [x] Tilemap file format loading (Blocked on Editor)
