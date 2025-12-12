@@ -37,6 +37,10 @@ tilemap_c(rect_s()), _is_initialized(false)
             for (auto& tile : _tiles) {
                 tile.type = tile_s::type_e::invalid;
             }
+        } else if (chunk.id == cc4::NAME) {
+            if (!file.skip(chunk)) {
+                return;
+            }
         } else if (chunk.id == detail::cc4::ENTS) {
             assert(header.entity_count * sizeof(entity_s) == chunk.size);
             _all_entities.reserve(header.entity_count + 16);
@@ -79,10 +83,13 @@ tilemap_c(rect_s()), _is_initialized(false)
                     }
                 }
             }
+        } else {
+            assert(false && "Unkown chunk");
+            errno = EINVAL;
+            return;
         }
     }
     assert(_subtilemaps.size() > 0 && "Must have at least one tilemap.");
-    splice_subtilemap(0);
 }
 
 void tilemap_level_c::init() {
@@ -99,6 +106,7 @@ void tilemap_level_c::init() {
         }
         ++idx;
     }
+    splice_subtilemap(0);
     _is_initialized = true;
 }
 

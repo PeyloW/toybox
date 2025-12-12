@@ -13,7 +13,20 @@
 
 namespace toybox {
 
-    struct tile_s {
+    struct tile_s  {
+        tile_s() {}
+        tile_s(const tile_s& o) {
+            *this = o;
+        }
+        tile_s(tile_s&& o) {
+            *this = o;
+        }
+        tile_s& operator=(const tile_s& o) {
+            memcpy(this, &o, sizeof(tile_s)); return *this;
+        };
+        tile_s& operator=(tile_s&& o) {
+            memcpy(this, &o, sizeof(tile_s)); return *this;
+        };
         enum class type_e : uint8_t {
             none      = 0,
             water     = 1,
