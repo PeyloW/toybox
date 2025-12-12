@@ -38,9 +38,9 @@ tilemap_c(rect_s()), _is_initialized(false)
                 tile.type = tile_s::type_e::invalid;
             }
         } else if (chunk.id == cc4::NAME) {
-            if (!file.skip(chunk)) {
-                return;
-            }
+            char* name = (char*)_malloc(chunk.size);
+            file.read((uint8_t*)name, chunk.size);
+            _name.reset(name);
         } else if (chunk.id == detail::cc4::ENTS) {
             assert(header.entity_count * sizeof(entity_s) == chunk.size);
             _all_entities.reserve(header.entity_count + 16);
@@ -93,6 +93,7 @@ tilemap_c(rect_s()), _is_initialized(false)
 }
 
 void tilemap_level_c::init() {
+    fast_rand_seed = _name[0] + ((uint16_t)_name[1] << 8);
     setup_actions();
     setup_entity_defs();
     _tileset = init_tileset(_tileset_index);

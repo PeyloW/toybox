@@ -135,7 +135,7 @@ void tilemap_level_c::update_actions() {
     // NOTE: Will need some optimisation to not run them all eventually.
     for (auto& entity : _all_entities) {
         if (entity.action != 0 && entity.active && !entity.event) {
-            _actions[entity.action](*this, entity);
+            _actions[entity.action](*this, entity, false);
         }
     }
 }
