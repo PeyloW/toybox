@@ -72,7 +72,9 @@ void tilemap_level_c::erase_destroyed_entities() {
 static bool verify_entity_indexes(const tilemap_level_c& level) {
     const auto& entities = level.all_entities();
     for (int i = 0; i < entities.size(); ++i) {
-        if (entities[i].index != i) return false;
+        if (entities[i].index != i) {
+            return false;
+        }
     }
     return true;
 }
@@ -316,7 +318,7 @@ void tilemap_level_c::splice_subtilemap(int index) {
     rect_s rect(bounds.origin.x << 4, bounds.origin.y << 4, bounds.size.width << 4, bounds.size.height << 4);
     _tiles_dirtymap->mark(rect);
     for (const auto idx : tilemap.activate_entity_idxs()) {
-        all_entities()[idx].active = 1;
+        splice_entity(_all_entities[idx]);
     }
 }
 
@@ -325,3 +327,8 @@ void tilemap_level_c::splice_tile(tile_s& tile, point_s tilespace_at) {
         (*this)[tilespace_at] = tile;
     }
 }
+
+void tilemap_level_c::splice_entity(entity_s& entity) {
+    entity.active = 1;
+}
+

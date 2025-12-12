@@ -84,6 +84,7 @@ namespace toybox {
         virtual void reset(tile_s& tile);
 
         virtual void splice_tile(tile_s& tile, point_s tilespace_at);
+        virtual void splice_entity(entity_s& entity);
         
     private:
         viewport_c* _viewport;
