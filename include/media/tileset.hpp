@@ -49,8 +49,13 @@ namespace toybox {
             return _rects[x + _max_tile.x * y];
         }
         
-        __forceinline array_s<uint16_t, 6> data() { return _data; }
-        __forceinline const array_s<uint16_t, 6> data() const { return _data; }
+        __forceinline array_s<uint16_t, 6>& data() { return _data; }
+        __forceinline const array_s<uint16_t, 6>& data() const { return _data; }
+
+        template<typename T> requires (sizeof(T) <= 12)
+        T& data_as() { return (T&)(_data[0]); }
+        template<typename T> requires (sizeof(T) <= 12)
+        const T& data_as() const { return (const T&)(_data[0]); }
     private:
         const shared_ptr_c<image_c> _image;
         const point_s _max_tile;
