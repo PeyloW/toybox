@@ -84,6 +84,14 @@ extern "C" {
 #   define _calloc calloc
 #   define _free free
 #endif
+    
+#ifdef TOYBOX_HOST
+    void _add_searchpath(const char* path);
+    FILE* _fopen(const char* path, const char* mode);
+#else
+#   define _fopen fopen
+#endif
+    
 }
 
 #ifndef TOYBOX_HOST

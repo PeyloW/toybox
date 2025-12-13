@@ -9,6 +9,7 @@
 
 #include "machine/host_bridge.hpp"
 #include "media/image.hpp"
+#include <errno.h>
 
 using namespace toybox;
 
@@ -17,6 +18,29 @@ extern "C" {
     extern void g_clock_interupt();
     extern void g_update_mouse(point_s position, bool left, bool right);
     extern void g_update_joystick(directions_e directions, bool fire);
+    
+#ifdef TOYBOX_HOST
+    static const char* s_added_searchpath = nullptr;
+    void _add_searchpath(const char* path) {
+        s_added_searchpath = path;
+    }
+    
+    FILE* _fopen(const char* path, const char* mode) {
+        FILE* file = nullptr;
+        if (s_added_searchpath) {
+            char buffer[1024] = {0};
+            strcpy(buffer, s_added_searchpath);
+            strcat(buffer, "/");
+            strcat(buffer, path + 4);
+            file = fopen(buffer, mode);
+        }
+        if (file == nullptr) {
+            errno = 0;
+            file = fopen(path, mode);
+        }
+        return file;
+    }
+#endif
 }
 
 static host_bridge_c* s_bridge = nullptr;

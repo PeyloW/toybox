@@ -32,6 +32,7 @@ public:
         _window = SDL_CreateWindow("ToyBox", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screen_size.width * 2, screen_size.height * 2, SDL_WINDOW_SHOWN);
         _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
         _texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, screen_size.width, screen_size.height);
+        SDL_RaiseWindow(_window);
 
         SDL_AudioSpec desired;
         SDL_zero(desired);
@@ -400,6 +401,10 @@ int machine_c::with_machine(int argc, const char* argv[], machine_f f) {
     assert(_shared_machine == nullptr && "Shared machine already initialized");
     char* dir = dirname((char*)argv[0]);
     hard_assert(chdir(dir) == 0 && "Failed to change directory");
+    
+    if (argc > 1) {
+        _add_searchpath(argv[1]);
+    }
     
     machine_c machine;
     _shared_machine = &machine;

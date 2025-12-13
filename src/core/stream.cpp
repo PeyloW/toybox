@@ -137,7 +137,7 @@ static constexpr const char* mode_for_mode(fstream_c::openmode_e mode) {
 bool fstream_c::open() {
     bool r = false;
     if (_file == nullptr) {
-        _file = fopen(_path, mode_for_mode(_mode));
+        _file = _fopen(_path, mode_for_mode(_mode));
         r = _file != nullptr;
     }
     return r;
