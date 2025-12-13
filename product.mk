@@ -48,13 +48,15 @@ ifeq ($(HOST),sdl2)
 	cp build/$(PRODUCT) install/$(PRODUCT)
 else
 	mkdir -p install/auto
-	cp build/$(PRODUCT).tos install/$(PRODUCT).tos
-	cp build/$(PRODUCT).tos install/auto/$(PRODUCT).prg
+	cp build/$(PRODUCT).tos install/$(PRODUCT).TOS
+	$(MAKE) -C $(TOYBOX)/tools/auto_trampoline PRODUCT=$(PRODUCT)
+	cp $(TOYBOX)/tools/auto_trampoline/build/$(PRODUCT).prg install/auto/$(PRODUCT).PRG
 	if [ -d other ]; then cp -r other/* install/; fi
 endif
 
 clean:
 	$(MAKE) -C $(TOYBOX) clean
+	$(MAKE) -C $(TOYBOX)/tools/auto_trampoline clean
 	rm -rf build
 	rm -rf install
 
