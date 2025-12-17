@@ -106,7 +106,7 @@ void tilemap_level_c::update(viewport_c& viewport, int display_id, int ticks) {
 #endif
         if (_tiles_dirtymap->is_dirty()) {
             auto& manager = scene_manager_c::shared();
-            for (int idx = 0; idx < 4; ++idx) {
+            for (int idx = 0; idx < manager.display_list_count(); ++idx) {
                 auto& viewport = manager.display_list((scene_manager_c::display_list_e)idx).get(display_id).viewport();
                 viewport.dirtymap()->merge(*_tiles_dirtymap);
             }

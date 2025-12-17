@@ -59,18 +59,24 @@ namespace toybox {
      */
     class transition_c : public nocopy_c {
     public:
+        enum class update_state_e : uint8_t {
+            repeat, swap, done
+        };
+        using enum update_state_e;
+
         transition_c();
         virtual ~transition_c() {}
         
         // TODO: Must configure using from and to display lists.
-        virtual void will_begin(const scene_c* from, const scene_c* to) = 0;
-        virtual bool tick(int ticks) = 0;
+        virtual void will_begin(const scene_c* from, scene_c* to) = 0;
+        virtual update_state_e update(display_list_c& display_list, int ticks) = 0;
 
         static transition_c* create(canvas_c::stencil_e dither);
         static transition_c* create(canvas_c::stencil_e dither, uint8_t through);
         static transition_c* create(color_c through);
     
     protected:
+        void configure_display_lists(const scene_c* to);
         scene_manager_c& manager;
     };
         
@@ -83,6 +89,7 @@ namespace toybox {
      the visual transition.
      */
     class scene_manager_c final : public nocopy_c {
+        friend class transition_c;
     public:
         enum class display_list_e : int8_t {
             clear = -1, front, back
@@ -103,6 +110,7 @@ namespace toybox {
         timer_c& clock;
 
         display_list_c& display_list(display_list_e id) const;
+        int display_list_count() const { return _display_lists.size(); }
         
     private:
         scene_manager_c();
@@ -116,14 +124,14 @@ namespace toybox {
         
         void swap_display_lists();
 
-        inline viewport_c& update_clear();
+        inline void update_clear();
         inline void update_scene(scene_c& scene, int32_t ticks);
 
         __forceinline void enqueue_delete(scene_c* scene) {
             _deletion_scenes.emplace_back(scene);
         }
         inline void begin_transition(transition_c* transition, const scene_c* from, scene_c* to, bool obscured);
-        inline void update_transition(int32_t ticks);
+        inline transition_c::update_state_e update_transition(display_list_c& display_list, int32_t ticks);
         inline void end_transition();
 
         display_list_c *_clear_display_list;

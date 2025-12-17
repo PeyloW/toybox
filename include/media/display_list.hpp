@@ -37,20 +37,38 @@ namespace toybox {
             assert(item_ptr != nullptr);
             return *item_ptr;
         }
+        __forceinline shared_ptr_c<viewport_c>& viewport_ptr() {
+            assert(item_ptr->display_type() == display_item_c::viewport && "Display item is not a viewport");
+            return reinterpret_pointer_cast<viewport_c>(item_ptr);
+        }
         __forceinline const shared_ptr_c<viewport_c>& viewport_ptr() const {
             assert(item_ptr->display_type() == display_item_c::viewport && "Display item is not a viewport");
             return reinterpret_pointer_cast<viewport_c>(item_ptr);
         }
-        __forceinline viewport_c& viewport() const {
+        __forceinline viewport_c& viewport() {
             assert(item_ptr != nullptr);
             assert(item_ptr->display_type() == display_item_c::viewport && "Display item is not a viewport");
             return (viewport_c&)*item_ptr;
+        }
+        __forceinline const viewport_c& viewport() const {
+            assert(item_ptr != nullptr);
+            assert(item_ptr->display_type() == display_item_c::viewport && "Display item is not a viewport");
+            return (viewport_c&)*item_ptr;
+        }
+        __forceinline shared_ptr_c<palette_c>& palette_ptr() {
+            assert(item_ptr->display_type() == display_item_c::palette && "Display item is not a palette");
+            return reinterpret_pointer_cast<palette_c>(item_ptr);
         }
         __forceinline const shared_ptr_c<palette_c>& palette_ptr() const {
             assert(item_ptr->display_type() == display_item_c::palette && "Display item is not a palette");
             return reinterpret_pointer_cast<palette_c>(item_ptr);
         }
-        __forceinline palette_c& palette() const {
+        __forceinline palette_c& palette() {
+            assert(item_ptr != nullptr);
+            assert(item_ptr->display_type() == display_item_c::palette && "Display item is not a palette");
+            return (palette_c&)*item_ptr;
+        }
+        __forceinline const palette_c& palette() const {
             assert(item_ptr != nullptr);
             assert(item_ptr->display_type() == display_item_c::palette && "Display item is not a palette");
             return (palette_c&)*item_ptr;

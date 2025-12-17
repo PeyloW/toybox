@@ -23,7 +23,6 @@ fullscreen_scene_c::fullscreen_scene_c() :
 
 scene_c::configuration_s &fullscreen_scene_c::configuration() const {
     static scene_c::configuration_s config{default_configuration.viewport_size, asset_manager_c::shared().image(BACKGROUND).palette(), 2, true};
-    palette_c* pal = config.palette.get();
     return config;
 }
 
@@ -49,7 +48,7 @@ void fullscreen_scene_c::update(display_list_c& display_list, int ticks) {
     }
     if (mouse_c::shared().state(mouse_c::left) == button_state_e::clicked) {
         auto next_scene = new tilemap_scene_c();
-        manager.replace(next_scene);
+        manager.replace(next_scene, transition_c::create(color_c(0x00f)));
     } else if (mouse_c::shared().state(mouse_c::right) == button_state_e::clicked) {
         manager.pop();
     }

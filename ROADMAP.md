@@ -39,8 +39,8 @@ Support simple horizontally scrolling games controlled with joystick. ETA Summer
     - [x] Use active `display_list_c` not `image_c`
     - [x] Hardware scroll viewport on Atari target
     - [x] Hardware scrolled display on host
-- [ ] Rewrite `transition_c` system for display lists
-    - [ ] Cross-fade through color
+- [-] Rewrite `transition_c` system for display lists
+    - [x] Cross-fade through color
     - [ ] Update existing transitions
 - [x] `tilemap_c` for defining a tiled display from 16x16 blocks
     - [x] Source from `tileset_c` and solid color

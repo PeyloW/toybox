@@ -22,7 +22,7 @@ namespace toybox {
             _transition_state.shade = 0;
         }
 
-        virtual void will_begin(const scene_c* from, const scene_c* to) override {
+        virtual void will_begin(const scene_c* from, scene_c* to) override {
             /*
             if (to) {
                 _palette = &to->configuration().palette;
@@ -33,7 +33,7 @@ namespace toybox {
             */
         }
 
-        virtual bool tick(int ticks) override {
+        virtual update_state_e update(display_list_c& display_list, int ticks) override {
             if (_transition_state.shade == 0 && _palette) {
                 //machine_c::shared().set_active_palette(_palette);
                 _palette = nullptr;
@@ -48,7 +48,11 @@ namespace toybox {
                 _transition_state.full_restores_left--;
             }
             _transition_state.shade += 1 + MAX(1, ticks);
-            return _transition_state.full_restores_left <= 0;
+            if (_transition_state.full_restores_left <= 0) {
+                return done;
+            } else {
+                return swap;
+            }
         }
     protected:
         const palette_c* _palette;
@@ -67,7 +71,7 @@ public:
             _transition_state.full_restores_left = 4;
         }
     
-    virtual bool tick(int ticks) override {
+    virtual update_state_e update(display_list_c& display_list, int ticks) override {
         if (_transition_state.full_restores_left > 2) {
             auto&phys_viewport = manager.display_list(scene_manager_c::display_list_e::front).get(PRIMARY_VIEWPORT).viewport();
             auto&log_viewport = manager.display_list(scene_manager_c::display_list_e::back).get(PRIMARY_VIEWPORT).viewport();
@@ -87,9 +91,9 @@ public:
             } else {
                 _transition_state.shade = 0;
             }
-            return false;
+            return swap;
         } else {
-            return dither_transition_c::tick(ticks);
+            return dither_transition_c::update(display_list, ticks);
         }
     }
 protected:
@@ -100,59 +104,65 @@ protected:
 class fade_through_transition_c final : public transition_c {
 public:
     fade_through_transition_c(color_c through) :
-        transition_c(), _to_palette(nullptr), _through(through), _count(0)
+        transition_c(), _through(through), _count(0), _did_update_lists(false)
     {}
-    virtual ~fade_through_transition_c() {
-        if (_to_palette) {
-            //machine_c::shared().set_active_palette(_to_palette);
-        }
-    }
-    virtual void will_begin(const scene_c* from, const scene_c* to) override {
+    virtual void will_begin(const scene_c* from, scene_c* to) override {
         assert(to && "Target scene must not be null");
         uint8_t r, g, b;
+        _to = to;
         _through.get(&r, &g, &b);
-        const palette_c from_palette;
-        const palette_c to_palette;
-        _to_palette = &to_palette;
+        const palette_c& from_palette = *from->configuration().palette;
+        const palette_c& to_palette = *to->configuration().palette;
         for (int i = 0; i <= 16; i++) {
-            _palettes.emplace_back();
-            auto&palette = _palettes.back();
+            _palettes.emplace_back(new palette_c());
+            auto& palette = *_palettes.back();
             int shade = i * color_c::MIX_FULLY_OTHER / 16;
             for (int j = 0; j < 16; j++) {
                 palette[j] = from_palette[j].mix(_through, shade);
             }
         }
         for (int i = 15; i >= 0; i--) {
-            _palettes.emplace_back();
-            auto&palette = _palettes.back();
+            _palettes.emplace_back(new palette_c());
+            auto&palette = *_palettes.back();
             int shade = i * color_c::MIX_FULLY_OTHER / 16;
             for (int j = 0; j < 16; j++) {
                 palette[j] = to_palette[j].mix(_through, shade);
             }
         }
     }
-    virtual bool tick(int ticks) override {
+    void apply_palette_to_all(shared_ptr_c<palette_c>& pal) {
+        for (int i = 0; i < manager.display_list_count(); ++i) {
+            auto& list_pal = manager.display_list((scene_manager_c::display_list_e)i).get(PRIMARY_PALETTE).palette_ptr();
+            list_pal = pal;
+        }
+    }
+    virtual update_state_e update(display_list_c& display_list, int ticks) override {
         const int count = _count / 2;
         auto&m = machine_c::shared();
+        auto& pal = display_list.get(PRIMARY_PALETTE).palette_ptr();
         if (count < 17) {
-            //m.set_active_palette(&_palettes[count]);
-        } else if (count < 18) {
-            auto&phys_viewport = manager.display_list(scene_manager_c::display_list_e::front).get(PRIMARY_VIEWPORT).viewport();
-            auto&log_viewport = manager.display_list(scene_manager_c::display_list_e::back).get(PRIMARY_VIEWPORT).viewport();
-            phys_viewport.draw_aligned(log_viewport.image(), point_s());
+            pal = _palettes[count];
+        } else if (count < 18 && !_did_update_lists) {
+            configure_display_lists(_to);
+            auto& back = manager.display_list(scene_manager_c::back);
+            _to->update(back, -1);
+            apply_palette_to_all(_palettes[count - 1]);
+            _did_update_lists = true;
         } else if (count < 34) {
-            //m.set_active_palette(&_palettes[count - 1]);
+            pal = _palettes[count - 1];
         } else {
-            return true;
+            apply_palette_to_all(_palettes[32]);
+            return done;
         }
         _count++;
-        return false;
+        return repeat;
     }
 private:
-    const palette_c* _to_palette;
+    scene_c* _to;
     const color_c _through;
     int _count;
-    vector_c<palette_c, 33> _palettes;
+    bool _did_update_lists;
+    vector_c<shared_ptr_c<palette_c>, 33> _palettes;
 };
 
 transition_c* transition_c::create(canvas_c::stencil_e dither) {
