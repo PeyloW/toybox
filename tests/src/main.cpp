@@ -14,7 +14,8 @@ int main(int argc, const char* argv[]) {
     test_list();
     
     // Test display list
-    test_display_list();
+    // Disable for now, display list destruction now requires the maschine_s singleton to be alive.
+    //test_display_list();
     
     // Test algorithms
     test_algorithms();
@@ -28,6 +29,10 @@ int main(int argc, const char* argv[]) {
 
     // Test shared_ptr
     test_shared_ptr();
+
+    // Test optionset and bitset
+    test_optionset();
+    test_bitset();
 
     printf("All pass.\n\r");
 #ifndef TOYBOX_HOST

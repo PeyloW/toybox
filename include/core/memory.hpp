@@ -98,16 +98,21 @@ namespace toybox {
             o._count = nullptr;
         }
         shared_ptr_c& operator=(const shared_ptr_c& o) {
-            if (this->_ptr != o._ptr) cleanup();
-            this->_ptr = o._ptr;
-            take_count(o._count);
+            if (this->_ptr != o._ptr) {
+                cleanup();
+                this->_ptr = o._ptr;
+                take_count(o._count);
+            }
             return *this;
         }
         shared_ptr_c& operator=(shared_ptr_c&& o) {
-            if (this->_ptr != o._ptr) cleanup();
+            if (this->_ptr != o._ptr) {
+                cleanup();
+            }
             this->_ptr = o._ptr;
-            take_count(o._count);
-            o.cleanup();
+            this->_count = o._count;
+            o._ptr = nullptr;
+            o._count = nullptr;
             return *this;
         }
 

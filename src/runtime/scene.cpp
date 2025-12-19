@@ -246,6 +246,7 @@ void scene_manager_c::begin_transition(transition_c* transition, const scene_c* 
     if (to) {
         const auto& config = to->configuration();
         if (config.use_clear) {
+            configure_display_lists(config);
             auto& clear = display_list(display_list_e::clear);
             auto& viewport = clear.get(PRIMARY_VIEWPORT).viewport();
             viewport.with_dirtymap(viewport.dirtymap(), [&]{

@@ -64,3 +64,5 @@ void test_math();
 void test_math_functions();
 void test_lifetime();
 void test_shared_ptr();
+void test_optionset();
+void test_bitset();

@@ -152,7 +152,7 @@ __neverinline void test_shared_ptr() {
             hard_assert(ptr1.get() == ptr2.get() && "Same raw pointer after static cast.");
         }
         hard_assert(non_trivial_s::s_destructors == 2 && "Destructor called twice");
-        hard_assert(non_trivial_subclass_s::s_subclass_destructors == 1 && "Subclass destructor was not called!");
+        hard_assert(non_trivial_subclass_s::s_subclass_destructors == 2 && "Subclass destructor was not called!");
     }
 
     printf("== End: test_shared_ptr\n\r");
