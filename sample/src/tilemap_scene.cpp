@@ -170,6 +170,7 @@ void tilemap_scene_c::update(display_list_c& display, int ticks) {
     _level.update(viewport, PRIMARY_VIEWPORT, ticks);
     if (controller_c::shared().state() == button_state_e::clicked) {
         auto next_scene = new fullscreen_scene_c();
-        manager.replace(next_scene);
+        auto& pal = *configuration().palette;
+        manager.replace(next_scene, transition_c::create(pal[1]));
     }
 }

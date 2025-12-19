@@ -143,7 +143,7 @@ public:
         if (count < 17) {
             pal = _palettes[count];
         } else if (count < 18 && !_did_update_lists) {
-            configure_display_lists(_to);
+            to_will_appear(_to);
             auto& back = manager.display_list(scene_manager_c::back);
             _to->update(back, -1);
             apply_palette_to_all(_palettes[count - 1]);

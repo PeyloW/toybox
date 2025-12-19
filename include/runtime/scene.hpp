@@ -58,6 +58,7 @@ namespace toybox {
      A `transition_c` manages the visual transition from one scene to another.
      */
     class transition_c : public nocopy_c {
+        friend class scene_manager_c;
     public:
         enum class update_state_e : uint8_t {
             repeat, swap, done
@@ -67,7 +68,6 @@ namespace toybox {
         transition_c();
         virtual ~transition_c() {}
         
-        // TODO: Must configure using from and to display lists.
         virtual void will_begin(const scene_c* from, scene_c* to) = 0;
         virtual update_state_e update(display_list_c& display_list, int ticks) = 0;
 
@@ -76,8 +76,9 @@ namespace toybox {
         static transition_c* create(color_c through);
     
     protected:
-        void configure_display_lists(const scene_c* to);
+        void to_will_appear(scene_c* to);
         scene_manager_c& manager;
+        bool _obscured;
     };
         
     /**
@@ -109,7 +110,7 @@ namespace toybox {
         timer_c& vbl;
         timer_c& clock;
 
-        display_list_c& display_list(display_list_e id) const;
+        display_list_c& display_list(display_list_e id);
         int display_list_count() const { return _display_lists.size(); }
         
     private:
@@ -131,7 +132,7 @@ namespace toybox {
             _deletion_scenes.emplace_back(scene);
         }
         inline void begin_transition(transition_c* transition, const scene_c* from, scene_c* to, bool obscured);
-        inline transition_c::update_state_e update_transition(display_list_c& display_list, int32_t ticks);
+        inline transition_c::update_state_e update_transition(int32_t ticks);
         inline void end_transition();
 
         display_list_c *_clear_display_list;

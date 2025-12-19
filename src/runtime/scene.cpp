@@ -21,8 +21,17 @@ scene_c::configuration_s& scene_c::configuration() const {
 // NOTE: Cross fade through a color may be the only option worth it for now.
 transition_c::transition_c() : manager(scene_manager_c::shared()) {}
 
-void transition_c::configure_display_lists(const scene_c *to) {
+void transition_c::to_will_appear(scene_c *to) {
     manager.configure_display_lists(to->configuration());
+    if (to) {
+        const auto& config = to->configuration();
+        if (config.use_clear) {
+            to->will_appear(_obscured);
+            manager.update_clear();
+        } else {
+            to->will_appear(_obscured);
+        }
+    }
 }
 
 class no_transition_c final : public transition_c {
@@ -35,7 +44,7 @@ public:
         _full_restores_left = to->configuration().buffer_count;
     };
     virtual update_state_e update(display_list_c& display_list, int ticks) override {
-        configure_display_lists(_to);
+        to_will_appear(_to);
         auto& pal = display_list.get(PRIMARY_PALETTE).palette_ptr();
         pal = _to->configuration().palette;
         if (--_full_restores_left <= 0) {
@@ -45,7 +54,7 @@ public:
         }
     }
 private:
-    const scene_c* _to;
+    scene_c* _to;
     int _full_restores_left;
 };
 
@@ -56,7 +65,6 @@ scene_manager_c::scene_manager_c() :
     machine_c::shared();
     _active_display_list = 0;
     _transition = nullptr;
-    configure_display_lists(scene_c::default_configuration);
     srand48(time(nullptr));
 }
 
@@ -70,7 +78,8 @@ scene_manager_c& scene_manager_c::shared()
 
 void scene_manager_c::run(scene_c* rootscene, transition_c* transition) {
     push(rootscene, transition);
-
+    _configuration = &rootscene->configuration();
+    
     vbl.reset_tick();
     int32_t previous_tick = vbl.tick();
     while (_scene_stack.size() > 0) {
@@ -82,8 +91,7 @@ void scene_manager_c::run(scene_c* rootscene, transition_c* transition) {
         
         if (_transition) {
             const auto& config = top_scene().configuration();
-            auto& list = display_list(config.use_clear ? clear : back);
-            const auto state = update_transition(list, ticks);
+            const auto state = update_transition(ticks);
             if (state == transition_c::repeat) {
                 do_swap = false;
             }
@@ -147,13 +155,33 @@ void scene_manager_c::replace(scene_c* scene, transition_c* transition) {
     begin_transition(transition, from, scene, false);
 }
 
-display_list_c& scene_manager_c::display_list(display_list_e id) const {
+// Add new required lists
+static display_list_c* make_display_list(const scene_c::configuration_s& configuration) {
+    auto listptr = new display_list_c();
+    auto pal = new palette_c();
+    if (configuration.palette) {
+        copy(configuration.palette->begin(), configuration.palette->end(), pal->begin());
+    }
+    auto vpt = new viewport_c(configuration.viewport_size);
+    vpt->set_offset(point_s(0,0));
+    listptr->emplace_front(PRIMARY_PALETTE, -1, pal);
+    listptr->emplace_front(PRIMARY_VIEWPORT, -1, vpt);
+    return listptr;
+};
+
+display_list_c& scene_manager_c::display_list(display_list_e id) {
     if (id == display_list_e::clear) {
+        if (_clear_display_list == nullptr) {
+            _clear_display_list = make_display_list(scene_manager_c::top_scene().configuration());
+        }
         return *_clear_display_list;
     } else {
         int idx = ((int)id + _active_display_list);
         if (idx >=  _configuration->buffer_count) {
             idx -= _configuration->buffer_count;
+        }
+        while (_display_lists.size() <= idx) {
+            _display_lists.emplace_back(make_display_list(scene_manager_c::top_scene().configuration()));
         }
         return (display_list_c&)*_display_lists[idx];
     }
@@ -194,24 +222,11 @@ void scene_manager_c::configure_display_lists(const scene_c::configuration_s& co
             copy(configuration.palette->begin(), configuration.palette->end(), pal->begin());
         }
     }
-    // Add new required lists
-    auto make_list = [&]() {
-        auto listptr = new display_list_c();
-        auto pal = new palette_c();
-        if (configuration.palette) {
-            copy(configuration.palette->begin(), configuration.palette->end(), pal->begin());
-        }
-        auto vpt = new viewport_c(configuration.viewport_size);
-        vpt->set_offset(point_s(0,0));
-        listptr->emplace_front(PRIMARY_PALETTE, -1, pal);
-        listptr->emplace_front(PRIMARY_VIEWPORT, -1, vpt);
-        return listptr;
-    };
     while (_display_lists.size() < configuration.buffer_count) {
-        _display_lists.emplace_back(make_list());
+        _display_lists.emplace_back(make_display_list(configuration));
     }
     if (configuration.use_clear && _clear_display_list == nullptr) {
-        _clear_display_list = make_list();
+        _clear_display_list = make_display_list(configuration);
     }
     _configuration = &configuration;
 }
@@ -243,32 +258,21 @@ void scene_manager_c::update_scene(scene_c& scene, int32_t ticks) {
 }
 
 void scene_manager_c::begin_transition(transition_c* transition, const scene_c* from, scene_c* to, bool obscured) {
-    if (to) {
-        const auto& config = to->configuration();
-        if (config.use_clear) {
-            configure_display_lists(config);
-            auto& clear = display_list(display_list_e::clear);
-            auto& viewport = clear.get(PRIMARY_VIEWPORT).viewport();
-            viewport.with_dirtymap(viewport.dirtymap(), [&]{
-                to->will_appear(obscured);
-            });
-        } else {
-            to->will_appear(obscured);
-        }
-    }
     if (_transition) delete _transition;
     if (transition) {
         _transition = transition;
     } else {
         _transition = new no_transition_c();
     }
+    _transition->_obscured = obscured;
     _transition->will_begin(from, to);
 }
 
-transition_c::update_state_e scene_manager_c::update_transition(display_list_c& display_list, int32_t ticks) {
+transition_c::update_state_e scene_manager_c::update_transition(int32_t ticks) {
     assert(_transition && "Transition must not be null");
     debug_cpu_color(DEBUG_CPU_RUN_TRANSITION);
-    const auto state = _transition->update(display_list, ticks);
+    auto& list = display_list(back);
+    const auto state = _transition->update(list, ticks);
     if (state == transition_c::done) {
         end_transition();
     }
