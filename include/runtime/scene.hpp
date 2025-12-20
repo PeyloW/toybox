@@ -98,14 +98,14 @@ namespace toybox {
         using enum display_list_e;
         static scene_manager_c& shared();
 
-        void run(scene_c* rootscene, transition_c* transition = nullptr);
+        void run(unique_ptr_c<scene_c> rootscene, unique_ptr_c<transition_c> transition = nullptr);
 
         __forceinline scene_c& top_scene() const {
             return *_scene_stack.back();
         };
-        void push(scene_c* scene, transition_c* transition = nullptr);
-        void pop(transition_c* transition = nullptr, int count = 1);
-        void replace(scene_c* scene, transition_c* transition = nullptr);
+        void push(unique_ptr_c<scene_c> scene, unique_ptr_c<transition_c> transition = nullptr);
+        void pop(unique_ptr_c<transition_c> transition = nullptr, int count = 1);
+        void replace(unique_ptr_c<scene_c> scene, unique_ptr_c<transition_c> transition = nullptr);
 
         timer_c& vbl;
         timer_c& clock;
@@ -117,8 +117,8 @@ namespace toybox {
         scene_manager_c();
         ~scene_manager_c() = default;
 
-        transition_c* _transition;
-        vector_c<scene_c*, 8> _scene_stack;
+        unique_ptr_c<transition_c> _transition;
+        vector_c<unique_ptr_c<scene_c>, 8> _scene_stack;
         vector_c<unique_ptr_c<scene_c>, 8> _deletion_scenes;
 
         void configure_display_lists(const scene_c::configuration_s& configuration);
@@ -128,16 +128,16 @@ namespace toybox {
         inline void update_clear();
         inline void update_scene(scene_c& scene, int32_t ticks);
 
-        __forceinline void enqueue_delete(scene_c* scene) {
-            _deletion_scenes.emplace_back(scene);
+        __forceinline void enqueue_top_scene_for_delete() {
+            _deletion_scenes.emplace_back(move(_scene_stack.back()));
+            _scene_stack.pop_back();
         }
-        inline void begin_transition(transition_c* transition, const scene_c* from, scene_c* to, bool obscured);
+        inline void begin_transition(unique_ptr_c<transition_c> transition, const scene_c* from, scene_c* to, bool obscured);
         inline transition_c::update_state_e update_transition(int32_t ticks);
         inline void end_transition();
 
-        display_list_c *_clear_display_list;
-        vector_c<display_list_c*, 4> _display_lists;
-        vector_c<unique_ptr_c<display_list_c>, 3> _deletion_display_lists;
+        shared_ptr_c<display_list_c> _clear_display_list;
+        vector_c<shared_ptr_c<display_list_c>, 4> _display_lists;
         int _active_display_list;
         const scene_c::configuration_s *_configuration = nullptr;
     };

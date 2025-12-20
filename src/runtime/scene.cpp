@@ -76,9 +76,9 @@ scene_manager_c& scene_manager_c::shared()
 
 #define DEBUG_NO_SET_SCREEN 0
 
-void scene_manager_c::run(scene_c* rootscene, transition_c* transition) {
-    push(rootscene, transition);
+void scene_manager_c::run(unique_ptr_c<scene_c> rootscene, unique_ptr_c<transition_c> transition) {
     _configuration = &rootscene->configuration();
+    push(move(rootscene), move(transition));
     
     vbl.reset_tick();
     int32_t previous_tick = vbl.tick();
@@ -107,12 +107,14 @@ void scene_manager_c::run(scene_c* rootscene, transition_c* transition) {
                 update_scene(scene, ticks);
             }
             _deletion_scenes.clear();
-            _deletion_display_lists.clear();
         }
         debug_cpu_color(DEBUG_CPU_DONE);
         timer_c::with_paused_timers([&] {
-            display_list_c& back = display_list(display_list_e::back);
-            machine_c::shared().set_active_display_list(&back);
+            int idx = (int)display_list_e::back + _active_display_list;
+            if (idx >= _configuration->buffer_count) {
+                idx -= _configuration->buffer_count;
+            }
+            machine_c::shared().set_active_display_list(_display_lists[idx]);
             if (do_swap) {
                 swap_display_lists();
             }
@@ -120,44 +122,45 @@ void scene_manager_c::run(scene_c* rootscene, transition_c* transition) {
     }
 }
 
-void scene_manager_c::push(scene_c* scene, transition_c* transition) {
+void scene_manager_c::push(unique_ptr_c<scene_c> scene, unique_ptr_c<transition_c> transition) {
     scene_c* from = nullptr;
     if (_scene_stack.size() > 0) {
         from = &top_scene();
         from->will_disappear(true);
     }
-    _scene_stack.push_back(scene);
-    begin_transition(transition, from, scene, false);
+    scene_c* to = scene.get();
+    _scene_stack.emplace_back(move(scene));
+    begin_transition(move(transition), from, to, false);
 }
 
-void scene_manager_c::pop(transition_c* transition, int count) {
+void scene_manager_c::pop(unique_ptr_c<transition_c> transition, int count) {
     scene_c* from = nullptr;
     while (count-- > 0) {
         from = &top_scene();
         from->will_disappear(false);
-        enqueue_delete(from);
-        _scene_stack.pop_back();
+        enqueue_top_scene_for_delete();
     }
     scene_c* to = nullptr;
     if (_scene_stack.size() > 0) {
         to = &top_scene();
     }
     if (to) {
-        begin_transition(transition, from, to, true);
+        begin_transition(move(transition), from, to, true);
     }
 }
 
-void scene_manager_c::replace(scene_c* scene, transition_c* transition) {
+void scene_manager_c::replace(unique_ptr_c<scene_c> scene, unique_ptr_c<transition_c> transition) {
     scene_c* from = &top_scene();
     from->will_disappear(false);
-    enqueue_delete(from);
-    _scene_stack.back() = scene;
-    begin_transition(transition, from, scene, false);
+    scene_c* to = scene.get();
+    enqueue_top_scene_for_delete();
+    _scene_stack.emplace_back(move(scene));
+    begin_transition(move(transition), from, to, false);
 }
 
 // Add new required lists
-static display_list_c* make_display_list(const scene_c::configuration_s& configuration) {
-    auto listptr = new display_list_c();
+static shared_ptr_c<display_list_c> make_display_list(const scene_c::configuration_s& configuration) {
+    shared_ptr_c<display_list_c> listptr(new display_list_c());
     auto pal = new palette_c();
     if (configuration.palette) {
         copy(configuration.palette->begin(), configuration.palette->end(), pal->begin());
@@ -167,11 +170,11 @@ static display_list_c* make_display_list(const scene_c::configuration_s& configu
     listptr->emplace_front(PRIMARY_PALETTE, -1, pal);
     listptr->emplace_front(PRIMARY_VIEWPORT, -1, vpt);
     return listptr;
-};
+}
 
 display_list_c& scene_manager_c::display_list(display_list_e id) {
     if (id == display_list_e::clear) {
-        if (_clear_display_list == nullptr) {
+        if (!_clear_display_list) {
             _clear_display_list = make_display_list(scene_manager_c::top_scene().configuration());
         }
         return *_clear_display_list;
@@ -183,7 +186,7 @@ display_list_c& scene_manager_c::display_list(display_list_e id) {
         while (_display_lists.size() <= idx) {
             _display_lists.emplace_back(make_display_list(scene_manager_c::top_scene().configuration()));
         }
-        return (display_list_c&)*_display_lists[idx];
+        return *_display_lists[idx];
     }
 }
 
@@ -191,14 +194,8 @@ void scene_manager_c::configure_display_lists(const scene_c::configuration_s& co
     assert(configuration.buffer_count >= 2 && configuration.buffer_count <= 4);
     // If size changes, we must clear all
     if (_configuration == nullptr || viewport_c::backing_size(_configuration->viewport_size) != viewport_c::backing_size(configuration.viewport_size)) {
-        for (auto p : _display_lists) {
-            _deletion_display_lists.emplace_back(p);
-        }
         _display_lists.clear();
-        if (_clear_display_list) {
-            _deletion_display_lists.emplace_back(_clear_display_list);
-            _clear_display_list = nullptr;
-        }
+        _clear_display_list = nullptr;
     }
     // Remove excess lists
     while (_display_lists.size() > configuration.buffer_count) {
@@ -208,11 +205,9 @@ void scene_manager_c::configure_display_lists(const scene_c::configuration_s& co
         } else {
             --_active_display_list;
         }
-        _deletion_display_lists.emplace_back(_display_lists[idx]);
         _display_lists.erase(idx);
     }
-    if (!configuration.use_clear && _clear_display_list != nullptr) {
-        _deletion_display_lists.emplace_back(_clear_display_list);
+    if (!configuration.use_clear && _clear_display_list) {
         _clear_display_list = nullptr;
     }
     // Update palette for remaining lists
@@ -225,7 +220,7 @@ void scene_manager_c::configure_display_lists(const scene_c::configuration_s& co
     while (_display_lists.size() < configuration.buffer_count) {
         _display_lists.emplace_back(make_display_list(configuration));
     }
-    if (configuration.use_clear && _clear_display_list == nullptr) {
+    if (configuration.use_clear && !_clear_display_list) {
         _clear_display_list = make_display_list(configuration);
     }
     _configuration = &configuration;
@@ -241,7 +236,7 @@ void scene_manager_c::swap_display_lists() {
 
 void scene_manager_c::update_clear() {
     auto& clear_viewport = _clear_display_list->get(PRIMARY_VIEWPORT).viewport();
-    for (auto list : _display_lists) {
+    for (auto& list : _display_lists) {
         auto& viewport = list->get(PRIMARY_VIEWPORT).viewport();
         viewport.dirtymap()->merge(*clear_viewport.dirtymap());
     }
@@ -257,12 +252,12 @@ void scene_manager_c::update_scene(scene_c& scene, int32_t ticks) {
     scene.update(back, ticks);
 }
 
-void scene_manager_c::begin_transition(transition_c* transition, const scene_c* from, scene_c* to, bool obscured) {
-    if (_transition) delete _transition;
+void scene_manager_c::begin_transition(unique_ptr_c<transition_c> transition, const scene_c* from, scene_c* to, bool obscured) {
+    _transition.reset();
     if (transition) {
-        _transition = transition;
+        _transition = move(transition);
     } else {
-        _transition = new no_transition_c();
+        _transition.reset(new no_transition_c());
     }
     _transition->_obscured = obscured;
     _transition->will_begin(from, to);
@@ -281,6 +276,5 @@ transition_c::update_state_e scene_manager_c::update_transition(int32_t ticks) {
 
 void scene_manager_c::end_transition() {
     assert(_transition && "Transition must not be null");
-    delete _transition;
-    _transition = nullptr;
+    _transition.reset();
 }

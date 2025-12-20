@@ -41,9 +41,9 @@ namespace toybox {
             assert(item_ptr->display_type() == display_item_c::viewport && "Display item is not a viewport");
             return reinterpret_pointer_cast<viewport_c>(item_ptr);
         }
-        __forceinline const shared_ptr_c<viewport_c>& viewport_ptr() const {
+        __forceinline const shared_ptr_c<const viewport_c>& viewport_ptr() const {
             assert(item_ptr->display_type() == display_item_c::viewport && "Display item is not a viewport");
-            return reinterpret_pointer_cast<viewport_c>(item_ptr);
+            return reinterpret_pointer_cast<const viewport_c>(item_ptr);
         }
         __forceinline viewport_c& viewport() {
             assert(item_ptr != nullptr);
@@ -59,9 +59,9 @@ namespace toybox {
             assert(item_ptr->display_type() == display_item_c::palette && "Display item is not a palette");
             return reinterpret_pointer_cast<palette_c>(item_ptr);
         }
-        __forceinline const shared_ptr_c<palette_c>& palette_ptr() const {
+        __forceinline const shared_ptr_c<const palette_c>& palette_ptr() const {
             assert(item_ptr->display_type() == display_item_c::palette && "Display item is not a palette");
-            return reinterpret_pointer_cast<palette_c>(item_ptr);
+            return reinterpret_pointer_cast<const palette_c>(item_ptr);
         }
         __forceinline palette_c& palette() {
             assert(item_ptr != nullptr);
@@ -80,7 +80,7 @@ namespace toybox {
     
     class display_list_c : public list_c<display_list_entry_s> {
     public:
-        ~display_list_c();
+        ~display_list_c() = default;
         const_iterator insert_sorted(const_reference value) {
             auto pos = iterator_before(value.row);
             return insert_after(pos, value);

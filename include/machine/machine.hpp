@@ -9,6 +9,7 @@
 
 #include "core/cincludes.hpp"
 #include "core/geometry.hpp"
+#include "core/memory.hpp"
 
 namespace toybox {
     
@@ -48,15 +49,16 @@ namespace toybox {
 
         uint32_t get_cookie(uint32_t cookie, uint32_t def_value = 0) const __pure;
 
-        const display_list_c* active_display_list() const;
-        void set_active_display_list(const display_list_c* display_list);
+        const shared_ptr_c<display_list_c>& active_display_list() const;
+        void set_active_display_list(const shared_ptr_c<display_list_c>& display_list);
 
     private:
         static machine_c* _shared_machine;
+        shared_ptr_c<display_list_c> _active_display_list;
         machine_c();
         ~machine_c();
-        void set_active_viewport(const viewport_c* viewport);
-        void set_active_palette(const palette_c* palette);
+        void set_active_viewport(const shared_ptr_c<const viewport_c>& viewport);
+        void set_active_palette(const shared_ptr_c<const palette_c>& palette);
 #if TOYBOX_TARGET_ATARI
         uint32_t _old_super;
         uint16_t _old_modes[3];

@@ -15,9 +15,10 @@
 
 using namespace toybox;
 
+static shared_ptr_c<const palette_c> s_active_palette;
+static shared_ptr_c<const viewport_c> s_active_viewport;
+
 extern "C" {
-    const palette_c* g_active_palette = nullptr;
-    const viewport_c* g_active_viewport = nullptr;
     detail::display_config_t g_active_display_config = {0,0,0};
 }
 
@@ -37,9 +38,9 @@ machine_c::machine_c() {
     Setscreen((void*)-1, (void*)-1, 0);
     _old_modes[2] = *((uint8_t*)0x484);
     *((uint8_t*)0x484) = 0;
-    g_active_palette = new palette_c((uint16_t*)0xffff8240);
+    s_active_palette = shared_ptr_c<const palette_c>(new palette_c((uint16_t*)0xffff8240));
 #else
-    g_active_palette = new palette_c();
+    s_active_palette = shared_ptr_c<const palette_c>(new palette_c());
 #endif
     assert(type() != unknown && type() >= ste && "Machine type must be STE or higher");
 }
@@ -131,39 +132,34 @@ uint32_t machine_c::get_cookie(uint32_t cookie, uint32_t def_value) const {
 #endif
 }
 
-static const display_list_c* s_active_display_list = nullptr;
-
-const display_list_c* machine_c::active_display_list() const {
-    return s_active_display_list;
+const shared_ptr_c<display_list_c>& machine_c::active_display_list() const {
+    return _active_display_list;
 }
 
-void machine_c::set_active_display_list(const display_list_c* display_list) {
+void machine_c::set_active_display_list(const shared_ptr_c<display_list_c>& display_list) {
     timer_c::with_paused_timers([&] {
-        s_active_display_list = display_list;
+        _active_display_list = display_list;
         if (display_list) {
-            //assert(is_sorted(display_list->begin(), display_list->end()) && "Display list must be sorted");
             for (const auto& entry : *display_list) {
                 switch (entry.item().display_type()) {
-                    case display_item_c::viewport: {
-                        auto config = entry.viewport().display_config();
-                        set_active_viewport(&entry.viewport());
+                    case display_item_c::viewport:
+                        set_active_viewport(entry.viewport_ptr());
                         break;
-                    }
                     case display_item_c::palette:
-                        set_active_palette(&entry.palette());
+                        set_active_palette(entry.palette_ptr());
                         break;
                 }
             }
         } else {
-            set_active_viewport(nullptr);
-            set_active_palette(nullptr);
+            set_active_viewport({});
+            set_active_palette({});
         }
     });
 }
 
 
-void machine_c::set_active_viewport(const viewport_c* viewport) {
-    g_active_viewport = viewport;
+void machine_c::set_active_viewport(const shared_ptr_c<const viewport_c>& viewport) {
+    s_active_viewport = viewport;
     if (viewport) {
         g_active_display_config = viewport->display_config();
     } else {
@@ -171,11 +167,13 @@ void machine_c::set_active_viewport(const viewport_c* viewport) {
     }
 }
 
-void machine_c::set_active_palette(const palette_c* palette) {
-    g_active_palette = palette;
+void machine_c::set_active_palette(const shared_ptr_c<const palette_c>& palette) {
+    s_active_palette = palette;
 #ifdef __M68000__
 #   if TOYBOX_TARGET_ATARI
-copy(palette->begin(), palette->end(), reinterpret_cast<color_c*>(0xffff8240));
+    if (palette) {
+        copy(palette->begin(), palette->end(), reinterpret_cast<color_c*>(0xffff8240));
+    }
 #   else
 #       error "Unsupported target"
 #   endif

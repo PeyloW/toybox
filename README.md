@@ -34,6 +34,8 @@ Make no assumption of integer/pointer size. Host may use 32 bit integers, target
 
 Try to avoid multiple inheritance, and when done only the first inherited class can be polymorphic. Add static asserts before the class definition to ensure this.
 
+For memory management pass referenses wheneever possible. Use `unique_ptr_c` and `shared_ptr_c` to manage life time, and signal that a function takes ownership of a pointer. Functions returninga newly allocated object returns a plain pointer. Pointer arguments are only guaranteed to outlive the call to the function, no further.
+
 Rely on `static_assert` to ensure expected sizes for structs are correct. Asserts are enabled on host, but not on Atari target. Asserts are used liberally to ensure correctness, with `assert` that is not compiled on Atari target, and `hard_assert` for critical errors that must be caught on all targets.
 
 For known failable methods, such as IO we rely on `errno`, and `expected_c` helper class.

@@ -50,9 +50,14 @@ namespace toybox {
         ~unique_ptr_c() { cleanup(); }
 
         unique_ptr_c(unique_ptr_c&& o) {
-            if (this->_ptr != o._ptr) cleanup();
             this->_ptr = o._ptr;
             o._ptr = nullptr;
+        }
+        unique_ptr_c& operator=(unique_ptr_c&& o) {
+            cleanup();
+            this->_ptr = o._ptr;
+            o._ptr = nullptr;
+            return *this;
         }
 
         void reset(T* p = nullptr) {

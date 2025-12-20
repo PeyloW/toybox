@@ -174,7 +174,7 @@ public:
     }
 #endif
     
-    void draw_display_list(const display_list_c* display) {
+    void draw_display_list(const shared_ptr_c<display_list_c>& display) {
         const viewport_c* active_viewport = nullptr;
         const palette_c* active_palette = nullptr;
         for (const auto& entry : *display) {
@@ -275,7 +275,7 @@ public:
         
         while (!s_should_quit.load()) {
             SDL_Event event;
-            const display_list_c* previous_display_list = nullptr;
+            shared_ptr_c<display_list_c> previous_display_list;
             while (SDL_PollEvent(&event)) {
                 bool update_joy = false;
                 switch (event.type) {

@@ -12,6 +12,7 @@
 #pragma once
 
 #include "core/geometry.hpp"
+#include "core/memory.hpp"
 #include "machine/input.hpp"
 
 namespace toybox {
@@ -28,6 +29,7 @@ namespace toybox {
      */
     class host_bridge_c : nocopy_c {
     public:
+        virtual ~host_bridge_c() = default;
         static host_bridge_c& shared();
         static void set_shared(host_bridge_c* bridge);
 
