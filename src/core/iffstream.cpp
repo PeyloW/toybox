@@ -26,18 +26,19 @@ const char* cc4_t::cstring() const {
     return buf;
 }
 
-iffstream_c::iffstream_c(stream_c* stream) :
-    stream_c(), _stream(stream)
+iffstream_c::iffstream_c(shared_ptr_c<stream_c> stream) :
+    stream_c(), _stream(move(stream))
 {
-    assert(stream && "Stream must not be null");
+    assert(_stream && "Stream must not be null");
 }
 
 iffstream_c::iffstream_c(const char* path, fstream_c::openmode_e mode) {
     auto fstream = new expected_c<fstream_c>(failable, path, mode);
-    if (fstream) {
-        new (static_cast<void*>(this)) iffstream_c(expected_cast(fstream));
+    if (*fstream) {
+        construct_at(this, shared_ptr_c<stream_c>(expected_cast(fstream)));
     } else {
         errno = fstream->error();
+        delete fstream;
     }
 }
 

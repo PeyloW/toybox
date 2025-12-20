@@ -17,8 +17,8 @@ namespace toybox {
     static_assert(!is_polymorphic<tilemap_c>::value);
     class tilemap_level_c : public asset_c, public tilemap_c {
     public:
-        // Creates a tilemap level of given bounds, using a tileset.
-        // All tiles are initialized to empty tiles.
+        /// Creates a tilemap level of given bounds.
+        /// Tileset is optional (can be null), non-owning, client manages lifetime.
         tilemap_level_c(rect_s tilespace_bounds, tileset_c* tileset);
         
         // Creates a tilemap by loading the level file, and splicing subtilemap 0 into it.
@@ -77,6 +77,7 @@ namespace toybox {
         
         virtual void setup_actions();
         virtual void setup_entity_defs();
+        /// Returns tileset for index, or null if not available. Non-owning.
         virtual tileset_c* init_tileset(int index);
         virtual void init(entity_s& entity);
         virtual void init(tile_s& tile, int subtilemap_index);
@@ -87,10 +88,10 @@ namespace toybox {
         virtual void splice_entity(entity_s& entity);
         
     private:
-        viewport_c* _viewport;
-        dirtymap_c* _tiles_dirtymap;
+        viewport_c* _viewport;  // Non-owning, valid only during update() call
+        unique_ptr_c<dirtymap_c> _tiles_dirtymap;
         rect_s _visible_bounds;
-        tileset_c* _tileset;
+        tileset_c* _tileset;  // Non-owning, optional (can be null)
         unique_ptr_c<const char> _name;
         vector_c<entity_s, 0> _all_entities;
         vector_c<tilemap_c, 32> _subtilemaps;

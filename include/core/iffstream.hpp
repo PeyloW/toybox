@@ -89,7 +89,7 @@ namespace toybox {
         using unknown_writer = function_c<bool(iffstream_c& stream)>;
         inline static const constexpr unknown_writer null_writer{};
 
-        iffstream_c(stream_c* stream);
+        iffstream_c(shared_ptr_c<stream_c> stream);
         iffstream_c(const char* path, fstream_c::openmode_e mode = fstream_c::openmode_e::input);
         ~iffstream_c() = default;
                 
@@ -139,7 +139,7 @@ namespace toybox {
         bool read(iff_group_s& group_out);
         bool read(iff_chunk_s& chunk_out);
 
-        unique_ptr_c<stream_c> _stream;
+        shared_ptr_c<stream_c> _stream;
     };
         
 }

@@ -47,7 +47,7 @@ tileset_c::tileset_c(const char* path, size_s tile_size)
 {
     auto image = load_image(path, tile_size);
     if (image) {
-        new (static_cast<void*>(this)) tileset_c(*image, s_header.tile_size);
+        construct_at(this, *image, s_header.tile_size);
         copy(&s_header.reserved[0], &s_header.reserved[6], _data.begin());
     } else {
         errno = image.error();

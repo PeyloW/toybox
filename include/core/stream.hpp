@@ -109,7 +109,7 @@ namespace toybox {
         virtual size_t write(const uint8_t* buf, size_t count = 1) override;
 
     private:
-        const char* _path;
+        const char* _path;  // Non-owning, caller must ensure lifetime
         openmode_e _mode;
         FILE* _file;
     };

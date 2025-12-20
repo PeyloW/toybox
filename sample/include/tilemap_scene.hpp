@@ -12,7 +12,7 @@
 
 using namespace toybox;
 
-tilemap_level_c* make_tilemaplevel();
+tilemap_level_c* create_tilemaplevel();
 
 class tilemap_scene_c final : public scene_c {
 public:

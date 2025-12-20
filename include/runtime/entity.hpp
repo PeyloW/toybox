@@ -51,8 +51,8 @@ namespace toybox {
             int index;      // -1 do not draw
             rect_s rect;    // Rect of relative to graphics tile
         };
-        tileset_c* tileset;
-        vector_c<frame_def_s, 0> frame_defs; //
+        tileset_c* tileset;  // Non-owning
+        vector_c<frame_def_s, 0> frame_defs;
     };
     
 }

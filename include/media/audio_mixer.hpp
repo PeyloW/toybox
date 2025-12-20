@@ -29,7 +29,7 @@ namespace toybox {
         void stop_all();
 
     private:
-        const music_c* _active_music;
+        const music_c* _active_music;  // Non-owning, references music owned elsewhere
         int _active_track;
 #ifdef __M68000__
         uint16_t _music_init_code[8];

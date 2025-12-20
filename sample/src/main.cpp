@@ -43,7 +43,7 @@ static asset_manager_c& setup_assets() {
 
         // Level is not loaded at all, dynamically created on demand
         { LEVEL, asset_manager_c::asset_def_s(asset_c::tilemap_level, 2, nullptr, [](const asset_manager_c& manager, const char* path) -> asset_c* {
-            return make_tilemaplevel();
+            return create_tilemaplevel();
         })},
     };
 

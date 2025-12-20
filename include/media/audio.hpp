@@ -68,8 +68,8 @@ namespace toybox {
     private:
         unique_ptr_c<uint8_t> _data;
         size_t _length;
-        char* _title;
-        char* _composer;
+        char* _title;  // Non-owning, points into _data
+        char* _composer;  // Non-owning, points into _data
         int _track_count;
         format_e _format;
         uint8_t _freq;

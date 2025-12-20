@@ -30,7 +30,7 @@ tilemap_c(rect_s()), _is_initialized(false)
             assert(header.size.height >= 12);
             _tilespace_bounds = {{0,0}, header.size};
             rect_s bounds(0,0, header.size.width << 4, header.size.height << 4);
-            _tiles_dirtymap = dirtymap_c::create(bounds.size);
+            _tiles_dirtymap = unique_ptr_c<dirtymap_c>(dirtymap_c::create(bounds.size));
             set_visible_bounds(bounds);
             _tileset_index = header.tileset_index;
             _tiles.resize(header.size.width * header.size.height);

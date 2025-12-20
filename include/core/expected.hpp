@@ -47,7 +47,7 @@ namespace toybox {
         template<typename... Args>
         explicit expected_c(failable_t, Args&&... args) : _error(0) {
             errno = 0;
-            new (static_cast<void*>(&_value)) T(static_cast<Args&&>(args)...);
+            construct_at(&_value, static_cast<Args&&>(args)...);
             if (errno != 0) {
                 _error = errno;
                 if (!is_trivially_destructible<T>::value) {
@@ -60,14 +60,14 @@ namespace toybox {
         // Copy constructor
         expected_c(const expected_c& other) : _error(other._error) {
             if (_error == 0) {
-                ::new (static_cast<void*>(&_value)) T(other._value);
+                construct_at(&_value, other._value);
             }
         }
         
         // Move constructor
         expected_c(expected_c&& other) : _error(other._error) {
             if (_error == 0) {
-                ::new (static_cast<void*>(&_value)) T(move(other._value));
+                construct_at(&_value, move(other._value));
             }
         }
         

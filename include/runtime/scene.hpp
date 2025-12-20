@@ -139,7 +139,7 @@ namespace toybox {
         shared_ptr_c<display_list_c> _clear_display_list;
         vector_c<shared_ptr_c<display_list_c>, 4> _display_lists;
         int _active_display_list;
-        const scene_c::configuration_s *_configuration = nullptr;
+        const scene_c::configuration_s *_configuration;  // Always valid, never null
     };
     
 }

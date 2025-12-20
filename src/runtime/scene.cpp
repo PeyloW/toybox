@@ -60,7 +60,8 @@ private:
 
 scene_manager_c::scene_manager_c() :
     vbl(timer_c::shared(timer_c::timer_e::vbl)),
-    clock(timer_c::shared(timer_c::timer_e::clock))
+    clock(timer_c::shared(timer_c::timer_e::clock)),
+    _configuration(&scene_c::default_configuration)
 {
     machine_c::shared();
     _active_display_list = 0;
@@ -193,7 +194,7 @@ display_list_c& scene_manager_c::display_list(display_list_e id) {
 void scene_manager_c::configure_display_lists(const scene_c::configuration_s& configuration) {
     assert(configuration.buffer_count >= 2 && configuration.buffer_count <= 4);
     // If size changes, we must clear all
-    if (_configuration == nullptr || viewport_c::backing_size(_configuration->viewport_size) != viewport_c::backing_size(configuration.viewport_size)) {
+    if (viewport_c::backing_size(_configuration->viewport_size) != viewport_c::backing_size(configuration.viewport_size)) {
         _display_lists.clear();
         _clear_display_list = nullptr;
     }

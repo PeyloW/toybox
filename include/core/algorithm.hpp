@@ -59,6 +59,15 @@ namespace toybox {
         return d_first;
     }
 
+    template<const_forward_iterator I, forward_iterator J>
+    J uninitialized_copy(I first, I last, J d_first) {
+        while (first != last) {
+            construct_at(&*d_first, *first);
+            ++d_first; ++first;
+        }
+        return d_first;
+    }
+
     template<const_random_access_iterator FI, typename T>
     FI lower_bound(FI first, FI last, const T& value) {
         int16_t count = last - first;

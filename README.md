@@ -34,7 +34,7 @@ Make no assumption of integer/pointer size. Host may use 32 bit integers, target
 
 Try to avoid multiple inheritance, and when done only the first inherited class can be polymorphic. Add static asserts before the class definition to ensure this.
 
-For memory management pass referenses wheneever possible. Use `unique_ptr_c` and `shared_ptr_c` to manage life time, and signal that a function takes ownership of a pointer. Functions returninga newly allocated object returns a plain pointer. Pointer arguments are only guaranteed to outlive the call to the function, no further.
+For memory management pass references whenever possible for non-owning access. Use pointers for optional arguments that may be null. Use `unique_ptr_c` and `shared_ptr_c` to manage lifetime; prefer `unique_ptr_c` when ownership is not shared. Passing a `unique_ptr_c` as an argument transfers ownership to the callee. Functions use "make" in the name when constructing data in place (e.g., `make_stencil()`), and "create" when allocating a new object and returning a plain pointer; the caller is responsible for managing the lifetime of created objects. Pointer arguments without smart pointer wrappers are only guaranteed to outlive the call. ToyBox internals may deviate from these rules for performance reasons, with a comment explaining why.
 
 Rely on `static_assert` to ensure expected sizes for structs are correct. Asserts are enabled on host, but not on Atari target. Asserts are used liberally to ensure correctness, with `assert` that is not compiled on Atari target, and `hard_assert` for critical errors that must be caught on all targets.
 

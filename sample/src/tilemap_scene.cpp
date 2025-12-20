@@ -70,7 +70,7 @@ static void player_control(tilemap_level_c& level, entity_s& entity, bool event)
     level.active_viewport().set_offset(offset);
 }
 
-tilemap_level_c* make_tilemaplevel() {
+tilemap_level_c* create_tilemaplevel() {
     static constexpr const char* recipe[] = {
         "       #####              ",
         "       #---#              ",

@@ -24,7 +24,7 @@ tilemap_level_c::tilemap_level_c(rect_s tilespace_bounds, tileset_c* tileset) : 
         tilespace_bounds.size.width * 16,
         tilespace_bounds.size.height * 16
     );
-    _tiles_dirtymap = dirtymap_c::create(bounds.size);
+    _tiles_dirtymap = unique_ptr_c<dirtymap_c>(dirtymap_c::create(bounds.size));
     set_visible_bounds(bounds);
 }
 
