@@ -77,7 +77,9 @@ namespace toybox {
         template<typename... Bits>
         requires(same_as<Bits, int> && ...)
         constexpr bitset_c(Bits... bits) : _raw(((Int(1) << bits) | ...)) {
-            (assert(bits >= begin_bit && bits < end_bit), ...);
+#ifdef TOYBOX_HOST
+            (check_bit(bits), ...);
+#endif
         }
         constexpr bitset_c(const bitset_c& o) = default;
         constexpr bitset_c(bitset_c&& o) = default;
@@ -107,6 +109,11 @@ namespace toybox {
     private:
         struct tag_s{};
         constexpr bitset_c(Int raw, tag_s tag) : _raw(raw) {}
+#ifdef TOYBOX_HOST
+        static constexpr void check_bit(int bit) {
+            assert(bit >= begin_bit && bit < end_bit);
+        }
+#endif
         Int _raw = 0;
     };
     
