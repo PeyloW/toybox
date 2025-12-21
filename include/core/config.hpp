@@ -22,8 +22,6 @@
 #   define TOYBOX_TARGET_AMIGA 0
 #endif
 
-#define TOYBOX_ASSET_COUNT 32
-
 #ifndef TOYBOX_LOG_MALLOC
 #   define TOYBOX_LOG_MALLOC 0
 #endif

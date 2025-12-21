@@ -11,7 +11,7 @@
 #include "core/vector.hpp"
 #include "core/memory.hpp"
 #include "core/concepts.hpp"
-
+#include "core/bitset.hpp"
 
 namespace toybox {
 
@@ -41,15 +41,17 @@ namespace toybox {
      */
     class asset_manager_c final : nocopy_c {
     public:
+        using asset_set_t = bitset_c<uint16_t>;
         static asset_manager_c& shared();
         
         ~asset_manager_c() {}
 
         using progress_f = void(*)(int loaded, int total);
-        void preload(uint32_t sets, progress_f progress = nullptr);
-        void unload(uint32_t sets);
-        
+        void preload(asset_set_t sets, progress_f progress = nullptr);
+        void unload(asset_set_t sets);
+
         asset_c& asset(int id) const;
+        void unload(int id);
 
         template<derived_from<asset_c> T>
         __forceinline T& asset(int id) const { return (T&)(asset(id)); };
@@ -84,10 +86,10 @@ namespace toybox {
 
         struct asset_def_s {
             using asset_create_f = asset_c*(*)(const asset_manager_c& manager, const char* path);
-            constexpr asset_def_s(asset_c::type_e type, uint32_t sets, const char* file = nullptr, asset_create_f create = nullptr) :
+            constexpr asset_def_s(asset_c::type_e type, asset_set_t sets, const char* file = nullptr, asset_create_f create = nullptr) :
                 type(type), sets(sets), file(file), create(create) {}
             asset_c::type_e type;
-            uint32_t sets;
+            asset_set_t sets;
             const char* file;
             asset_create_f create;
         };
@@ -99,8 +101,8 @@ namespace toybox {
         asset_manager_c();
         asset_c* create_asset(int id, const asset_def_s& def) const;
 
-        vector_c<asset_def_s, TOYBOX_ASSET_COUNT> _asset_defs;
-        mutable vector_c<unique_ptr_c<asset_c>, TOYBOX_ASSET_COUNT> _assets;
+        vector_c<asset_def_s, 0> _asset_defs;
+        mutable vector_c<unique_ptr_c<asset_c>, 0> _assets;
     };
     
 }

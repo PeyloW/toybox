@@ -15,11 +15,11 @@ enum demo_assets_e {
 // Shared
     
 // Used by fullscreen_scene
-    BACKGROUND, // image
-    SPRITES,    // tileset
-    MUSIC,      // music
+    ASSET_BACKGROUND, // image
+    ASSET_SPRITES,    // tileset
+    ASSET_MUSIC,      // music
 // Used by tilemap_scene
-    TILESET_WALL,
-    TILESET_SPR,// Tileset for sprites
-    LEVEL       // tilemap level
+    ASSET_TILESET_WALL,
+    ASSET_TILESET_SPR,// Tileset for sprites
+    ASSET_LEVEL       // tilemap level
 };

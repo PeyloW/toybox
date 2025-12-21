@@ -85,7 +85,7 @@ tilemap_level_c* create_tilemaplevel() {
         "       #######            ",
     };
     const size_s size((int16_t)strlen(recipe[0]), 11);
-    auto level_ptr = new tilemap_level_c(rect_s(point_s(), size_s(size.width,size.height)), &asset_manager_c::shared().tileset(TILESET_WALL));
+    auto level_ptr = new tilemap_level_c(rect_s(point_s(), size_s(size.width,size.height)), &asset_manager_c::shared().tileset(ASSET_TILESET_WALL));
     auto& level = *level_ptr;
         
     // Setup available actions
@@ -94,13 +94,13 @@ tilemap_level_c* create_tilemaplevel() {
     
     // Setup entity type defs:
     auto& player = level.entity_type_defs().emplace_back();
-    player.tileset = &asset_manager_c::shared().tileset(TILESET_SPR);
+    player.tileset = &asset_manager_c::shared().tileset(ASSET_TILESET_SPR);
     player.frame_defs.push_back({ 2, {{2,2},{12,12}} }); // Up
     player.frame_defs.push_back({ 1, {{2,2},{12,12}} }); // Down
     player.frame_defs.push_back({ 4, {{2,2},{12,12}} }); // Left
     player.frame_defs.push_back({ 3, {{2,2},{12,12}} }); // Right
     auto& box = level.entity_type_defs().emplace_back();
-    box.tileset = &asset_manager_c::shared().tileset(TILESET_SPR);
+    box.tileset = &asset_manager_c::shared().tileset(ASSET_TILESET_SPR);
     box.frame_defs.push_back({ 5, {{0,0},{16,16}} });
 
     for (int y = 0; y < size.height; ++y) {
@@ -153,12 +153,12 @@ tilemap_level_c* create_tilemaplevel() {
 
 
 tilemap_scene_c::tilemap_scene_c() :
-    _level(asset_manager_c::shared().tilemap_level(LEVEL))
+    _level(asset_manager_c::shared().tilemap_level(ASSET_LEVEL))
 {
 }
 
 scene_c::configuration_s& tilemap_scene_c::configuration() const {
-    static scene_c::configuration_s config{_level.visible_bounds().size, asset_manager_c::shared().tileset(TILESET_SPR).image()->palette(), 2, false};
+    static scene_c::configuration_s config{_level.visible_bounds().size, asset_manager_c::shared().tileset(ASSET_TILESET_SPR).image()->palette(), 2, false};
     return config;
 }
 

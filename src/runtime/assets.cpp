@@ -23,7 +23,7 @@ asset_manager_c& asset_manager_c::shared() {
 
 asset_manager_c::asset_manager_c() {}
 
-void asset_manager_c::preload(uint32_t sets, progress_f progress) {
+void asset_manager_c::preload(asset_set_t sets, progress_f progress) {
     int ids[_asset_defs.size()];
     int count = 0;
     int id = 0;
@@ -41,14 +41,18 @@ void asset_manager_c::preload(uint32_t sets, progress_f progress) {
     }
 }
 
-void asset_manager_c::unload(uint32_t sets) {
+void asset_manager_c::unload(asset_set_t sets) {
     int id = 0;
     for (auto& def : _asset_defs) {
-        if ((def.sets & ~sets) == 0) {
+        if ((def.sets & sets)) {
             _assets[id].reset();
         }
         id++;
     }
+}
+
+void asset_manager_c::unload(int id) {
+    _assets[id].reset();
 }
 
 asset_c& asset_manager_c::asset(int id) const {

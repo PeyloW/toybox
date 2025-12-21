@@ -12,7 +12,7 @@
 fullscreen_scene_c::fullscreen_scene_c() :
     scene_c(),
     _mouse(mouse_c::shared()),
-    _sprites(asset_manager_c::shared().tileset(SPRITES))
+    _sprites(asset_manager_c::shared().tileset(ASSET_SPRITES))
 {
     _mouse.set_limits(rect_s(8, 8, 280, 160));
     const auto pos = _mouse.position();
@@ -22,14 +22,14 @@ fullscreen_scene_c::fullscreen_scene_c() :
 };
 
 scene_c::configuration_s &fullscreen_scene_c::configuration() const {
-    static scene_c::configuration_s config{default_configuration.viewport_size, asset_manager_c::shared().image(BACKGROUND).palette(), 2, true};
+    static scene_c::configuration_s config{default_configuration.viewport_size, asset_manager_c::shared().image(ASSET_BACKGROUND).palette(), 2, true};
     return config;
 }
 
 void fullscreen_scene_c::will_appear(bool obscured) {
     auto &clear_display = manager.display_list(scene_manager_c::display_list_e::clear);
     auto &clear_viewport = clear_display.get(PRIMARY_VIEWPORT).viewport();
-    auto &image = asset_manager_c::shared().image(BACKGROUND);
+    auto &image = asset_manager_c::shared().image(ASSET_BACKGROUND);
     clear_viewport.draw_aligned(image, point_s(0,0));
     for (int i = 0; i < 16; i++) {
         clear_viewport.fill(i, rect_s(i * 20, 198, 20, 2));

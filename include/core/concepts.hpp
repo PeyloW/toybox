@@ -97,9 +97,8 @@ namespace toybox {
     };
     template<typename I>
     concept dereferencable = const_dereferencable<I> &&
-    requires(I i) {
-        typename indirectly_readable_traits<I>::value_type;
-        { *i = typename indirectly_readable_traits<I>::value_type{} };
+    requires(I i, typename indirectly_readable_traits<I>::value_type&& v) {
+        { *i = static_cast<typename indirectly_readable_traits<I>::value_type&&>(v) };
     };
     
     template<typename I>
@@ -112,9 +111,9 @@ namespace toybox {
         {  i[n]  } -> same_as<decltype(*I{})>;
     };
     template<typename I>
-    concept random_accessible = const_random_accessible<I> && dereferencable<I> && requires(I i, int n) {
-        typename indirectly_readable_traits<I>::value_type;
-        { i[n] = typename indirectly_readable_traits<I>::value_type{} };
+    concept random_accessible = const_random_accessible<I> && dereferencable<I> &&
+    requires(I i, int n, typename indirectly_readable_traits<I>::value_type&& v) {
+        { i[n] = static_cast<typename indirectly_readable_traits<I>::value_type&&>(v) };
     };
     
 #pragma mark - Iterator concepts
