@@ -106,6 +106,9 @@ public:
     fade_through_transition_c(color_c through) :
         transition_c(), _through(through), _count(0), _did_update_lists(false)
     {}
+    ~fade_through_transition_c() {
+        (void)1;
+    }
     virtual void will_begin(const scene_c* from, scene_c* to) override {
         assert(to && "Target scene must not be null");
         uint8_t r, g, b;

@@ -64,7 +64,6 @@ asset_c& asset_manager_c::asset(int id) const {
 }
 
 void asset_manager_c::add_asset_def(int id, const asset_def_s& def) {
-    assert(def.sets != 0 && "Asset definition must have at least one set defined");
     while (_asset_defs.size() <= id) {
         _asset_defs.emplace_back(asset_c::custom, 0);
     }
@@ -113,7 +112,7 @@ asset_c* asset_manager_c::create_asset(int id, const asset_def_s& def) const {
             case asset_c::tileset:
                 return expected_cast(new expected_c<tileset_c>(failable, path.get(), size_s(16, 16)));
             case asset_c::font:
-                return expected_cast(new expected_c<font_c>(failable, path.get(), size_s(16, 16)));
+                return expected_cast(new expected_c<font_c>(failable, path.get(), size_s(8, 8)));
             case asset_c::sound:
                 return expected_cast(new expected_c<sound_c>(failable, path.get()));
             case asset_c::music:

@@ -76,7 +76,7 @@ namespace toybox {
     static_assert(sizeof(unique_ptr_c<void*>) == sizeof(void*), "unique_ptr_c size mismatch.");
 
     namespace detail {
-        struct  shared_count_t {
+        struct shared_count_t {
             shared_count_t() : count(1) {}
             uint16_t count;
             void* operator new(size_t count) {
@@ -86,12 +86,12 @@ namespace toybox {
             void operator delete(void* ptr) {
                 allocator::deallocate(ptr);
             }
-            using allocator = pool_allocator_c<shared_count_t, 64>;
+            using allocator = pool_allocator_c<shared_count_t, 256>;
         };
     }
     
     template<typename T>
-    class  shared_ptr_c : public detail::basic_ptr_c<T> {
+    class shared_ptr_c : public detail::basic_ptr_c<T> {
     public:
         shared_ptr_c(T* ptr = nullptr) : detail::basic_ptr_c<T>(ptr), _count(ptr ? new detail::shared_count_t() : nullptr) {}
         ~shared_ptr_c() { cleanup(); }
