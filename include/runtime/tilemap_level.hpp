@@ -31,6 +31,7 @@ namespace toybox {
         const char* name() const { return _name.get(); }
         
         virtual void update(viewport_c& viewport, int display_id, int ticks);
+        bool is_initialized() const { return _is_initialized; }
         virtual void init();
         virtual void reset();
         
