@@ -100,7 +100,7 @@ void tilemap_level_c::update(viewport_c& viewport, int display_id, int ticks) {
     }
     {
         // AI may update tiles, so we need to dirty viewports to redraw them
-        debug_cpu_color(0x030);
+        debug_cpu_color(0x120);
 #if TOYBOX_DEBUG_DIRTYMAP
         _tiles_dirtymap->print_debug("tilemap_level_c::update() _tiles_dirtymap");
 #endif
@@ -115,13 +115,13 @@ void tilemap_level_c::update(viewport_c& viewport, int display_id, int ticks) {
     }
     {
         // Draw all the tiles, both updates, and previously dirtied by drawing sprites
-        debug_cpu_color(0x040);
+        debug_cpu_color(0x122);
         draw_tiles();
         assert(verify_entity_indexes(*this) && "Invalid entity index detected");
     }
     {
         // And lastly draw all the sprites needed
-        debug_cpu_color(0x050);
+        debug_cpu_color(0x221);
         draw_entities();
         assert(verify_entity_indexes(*this) && "Invalid entity index detected");
     }
@@ -173,9 +173,8 @@ void tilemap_level_c::draw_tiles() {
                     } else {
                         for (int x = tile_rect.origin.x; x <= tile_rect.max_x(); ++x) {
                             const auto& tile = (*this)[x, y];
-                            debug_cpu_color(0x043);
+                            debug_cpu_color(0x223);
                             draw_tile(tile, at);
-                            debug_cpu_color(0x040);
                             at.x += 16;
                         }
                     }
@@ -208,9 +207,8 @@ void tilemap_level_c::draw_entities() {
                 if (frame_def.index >= 0) {
                     const point_s origin = static_cast<point_s>(entity.position.origin);
                     const point_s at = origin - frame_def.rect.origin;
-                    debug_cpu_color(0x053);
+                    debug_cpu_color(0x322);
                     viewport.draw(*ent_def.tileset, frame_def.index, at);
-                    debug_cpu_color(0x050);
                 }
             }
         }
