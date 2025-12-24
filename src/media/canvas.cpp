@@ -111,6 +111,9 @@ void canvas_c::draw(const image_c& src, const rect_s& rect, point_s at, const in
             return;
         }
     }
+    if (rect.size.is_empty()) {
+        return;
+    }
     if (_dirtymap) {
         const rect_s dirty_rect(at, rect.size);
         _dirtymap->mark(dirty_rect);

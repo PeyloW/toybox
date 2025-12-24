@@ -94,12 +94,12 @@ namespace toybox {
         constexpr bool operator==(const int bit) const { return (*this)[bit]; }
 
         constexpr bitset_c operator+(const bitset_c& o) const { return bitset_c(_raw | o._raw, tag_s{}); }
-        constexpr bitset_c& operator+=(const bitset_c& o) const { _raw |= o._raw; return *this; }
+        constexpr bitset_c& operator+=(const bitset_c& o) { _raw |= o._raw; return *this; }
         constexpr bitset_c operator-(const bitset_c& o) const { return bitset_c(_raw & ~o._raw, tag_s{}); }
-        constexpr bitset_c& operator-=(const bitset_c& o) const { _raw &= ~o._raw; return *this; }
+        constexpr bitset_c& operator-=(const bitset_c& o) { _raw &= ~o._raw; return *this; }
 
         constexpr bitset_c operator&(const bitset_c& o) const { return bitset_c(_raw & o._raw, tag_s{}); }
-        constexpr bitset_c& operator&=(const bitset_c& o) const { _raw &= o._raw; return *this; }
+        constexpr bitset_c& operator&=(const bitset_c& o) { _raw &= o._raw; return *this; }
 
         constexpr iterator_c begin() { return iterator_c(*this, begin_bit); }
         constexpr const iterator_c begin() const { return iterator_c(*this, begin_bit); }
