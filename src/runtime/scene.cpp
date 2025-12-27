@@ -13,7 +13,7 @@ using namespace toybox;
 
 scene_c::scene_c() : manager(scene_manager_c::shared()) {}
 scene_c::configuration_s scene_c::default_configuration = { viewport_c::min_size, nullptr, 2, true };
-scene_c::configuration_s& scene_c::configuration() const {
+const scene_c::configuration_s& scene_c::configuration() const {
     return default_configuration;
 }
 
@@ -61,7 +61,7 @@ private:
 scene_manager_c::scene_manager_c() :
     vbl(timer_c::shared(timer_c::timer_e::vbl)),
     clock(timer_c::shared(timer_c::timer_e::clock)),
-    _configuration(&scene_c::default_configuration)
+    _configuration(scene_c::default_configuration)
 {
     machine_c::shared();
     _active_display_list = 0;
@@ -78,7 +78,7 @@ scene_manager_c& scene_manager_c::shared()
 #define DEBUG_NO_SET_SCREEN 0
 
 void scene_manager_c::run(unique_ptr_c<scene_c> rootscene, unique_ptr_c<transition_c> transition) {
-    _configuration = &rootscene->configuration();
+    _configuration = rootscene->configuration();
     push(move(rootscene), move(transition));
     
     vbl.reset_tick();
@@ -112,8 +112,8 @@ void scene_manager_c::run(unique_ptr_c<scene_c> rootscene, unique_ptr_c<transiti
         debug_cpu_color(DEBUG_CPU_DONE);
         timer_c::with_paused_timers([&] {
             int idx = (int)display_list_e::back + _active_display_list;
-            if (idx >= _configuration->buffer_count) {
-                idx -= _configuration->buffer_count;
+            if (idx >= _configuration.buffer_count) {
+                idx -= _configuration.buffer_count;
             }
             machine_c::shared().set_active_display_list(_display_lists[idx]);
             if (do_swap) {
@@ -181,8 +181,8 @@ display_list_c& scene_manager_c::display_list(display_list_e id) {
         return *_clear_display_list;
     } else {
         int idx = ((int)id + _active_display_list);
-        if (idx >=  _configuration->buffer_count) {
-            idx -= _configuration->buffer_count;
+        if (idx >=  _configuration.buffer_count) {
+            idx -= _configuration.buffer_count;
         }
         while (_display_lists.size() <= idx) {
             _display_lists.emplace_back(make_display_list(scene_manager_c::top_scene().configuration()));
@@ -194,8 +194,9 @@ display_list_c& scene_manager_c::display_list(display_list_e id) {
 void scene_manager_c::configure_display_lists(const scene_c::configuration_s& configuration) {
     assert(configuration.buffer_count >= 2 && configuration.buffer_count <= 4);
     // If size changes, we must clear all
-    if (viewport_c::backing_size(_configuration->viewport_size) != viewport_c::backing_size(configuration.viewport_size)) {
+    if (_configuration.viewport_size != configuration.viewport_size) {
         _display_lists.clear();
+        _active_display_list = 0;
         _clear_display_list = nullptr;
     }
     // Remove excess lists
@@ -224,7 +225,7 @@ void scene_manager_c::configure_display_lists(const scene_c::configuration_s& co
     if (configuration.use_clear && !_clear_display_list) {
         _clear_display_list = make_display_list(configuration);
     }
-    _configuration = &configuration;
+    _configuration = configuration;
 }
 
 void scene_manager_c::swap_display_lists() {

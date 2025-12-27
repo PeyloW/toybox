@@ -157,7 +157,7 @@ tilemap_scene_c::tilemap_scene_c() :
 {
 }
 
-scene_c::configuration_s& tilemap_scene_c::configuration() const {
+const scene_c::configuration_s& tilemap_scene_c::configuration() const {
     static scene_c::configuration_s config{_level.visible_bounds().size, asset_manager_c::shared().tileset(ASSET_TILESET_SPR).image()->palette(), 2, false};
     return config;
 }
