@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "core/span.hpp"
 #include "runtime/actions.hpp"
 #include "runtime/tilemap.hpp"
 
@@ -50,16 +51,18 @@ namespace toybox {
         bool collides_with_entity(int index, uint8_t in_group, int* index_out) const;
         bool collides_with_entity(const frect_s& rect, uint8_t in_group, int* index_out) const;
 
-        vector_c<action_f, 0>& actions() { return _actions; };
-        const vector_c<action_f, 0>& actions() const { return _actions; };
+        pair_c<int, action_f> add_action(action_f action);
+        span_c<action_f> actions() { return {_actions.begin(), _actions.size()}; };
+        span_c<const action_f> actions() const { return {_actions.begin(), _actions.size()}; };
         
-        vector_c<entity_type_def_s, 0>& entity_type_defs() { return _entity_type_defs; };
-        const vector_c<entity_type_def_s, 0>& entity_type_defs() const { return _entity_type_defs; };
+        pair_c<int, entity_type_def_s&> add_entity_type_def(tileset_c* tileset = nullptr);
+        span_c<entity_type_def_s> entity_type_defs() { return {_entity_type_defs.begin(), _entity_type_defs.size()}; };
+        span_c<const entity_type_def_s> entity_type_defs() const { return {_entity_type_defs.begin(), _entity_type_defs.size()}; };
 
+        pair_c<int, entity_s&> spawn_entity(uint8_t type, uint8_t group, frect_s position);
         void update_entity_indexes(int from = 0);
         vector_c<entity_s, 0>& all_entities() { return _all_entities; }
         const vector_c<entity_s, 0>& all_entities() const { return _all_entities; }
-        entity_s& spawn_entity(uint8_t type, uint8_t group, frect_s position);
         void destroy_entity(int index);
         void erase_destroyed_entities();
 

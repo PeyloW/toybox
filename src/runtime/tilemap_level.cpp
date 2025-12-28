@@ -33,6 +33,17 @@ tilemap_level_c::~tilemap_level_c() {
     assert(0 && "Why?");
 }
 
+pair_c<int, action_f> tilemap_level_c::add_action(action_f action) {
+    int i = _actions.size();
+    _actions.push_back(action);
+    return {i, action};
+}
+
+pair_c<int, entity_type_def_s&> tilemap_level_c::add_entity_type_def(tileset_c* tileset) {
+    int i = _entity_type_defs.size();
+    return {i, _entity_type_defs.emplace_back(tileset)};
+}
+
 void tilemap_level_c::update_entity_indexes(int from) {
     assert(_all_entities.size() <= 255 && "Too many entities");
     for (int i = from; i < _all_entities.size(); ++i) {
@@ -40,14 +51,14 @@ void tilemap_level_c::update_entity_indexes(int from) {
     }
 }
 
-entity_s& tilemap_level_c::spawn_entity(uint8_t type, uint8_t group, frect_s position) {
+pair_c<int, entity_s&> tilemap_level_c::spawn_entity(uint8_t type, uint8_t group, frect_s position) {
     const int idx = _all_entities.size();
     auto& entity = _all_entities.emplace_back();
     entity.index = idx;
     entity.type = type;
     entity.group = group;
     entity.position = position;
-    return entity;
+    return {idx, entity};
 };
 
 void tilemap_level_c::destroy_entity(int index) {

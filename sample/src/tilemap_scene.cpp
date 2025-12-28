@@ -89,17 +89,17 @@ tilemap_level_c* create_tilemaplevel() {
     auto& level = *level_ptr;
         
     // Setup available actions
-    level.actions().emplace_back(&actions::idle);
-    level.actions().emplace_back(&player_control);
+    level.add_action(&actions::idle);
+    level.add_action(&player_control);
     
     // Setup entity type defs:
-    auto& player = level.entity_type_defs().emplace_back();
+    auto& player = level.add_entity_type_def().second;
     player.tileset = &asset_manager_c::shared().tileset(ASSET_TILESET_SPR);
     player.frame_defs.push_back({ 2, {{2,2},{12,12}} }); // Up
     player.frame_defs.push_back({ 1, {{2,2},{12,12}} }); // Down
     player.frame_defs.push_back({ 4, {{2,2},{12,12}} }); // Left
     player.frame_defs.push_back({ 3, {{2,2},{12,12}} }); // Right
-    auto& box = level.entity_type_defs().emplace_back();
+    auto& box = level.add_entity_type_def().second;
     box.tileset = &asset_manager_c::shared().tileset(ASSET_TILESET_SPR);
     box.frame_defs.push_back({ 5, {{0,0},{16,16}} });
 
