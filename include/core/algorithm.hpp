@@ -68,13 +68,13 @@ namespace toybox {
         return d_first;
     }
 
-    template<const_random_access_iterator FI, typename T>
-    FI lower_bound(FI first, FI last, const T& value) {
+    template<const_random_access_iterator FI, typename T, typename Comp>
+    FI lower_bound(FI first, FI last, const T& value, Comp comp) {
         int16_t count = last - first;
         while (count > 0) {
             const int16_t step = count / 2;
             const FI it = first + step;
-            if (*it < value) {
+            if (comp(*it, value)) {
                 first = it + 1;
                 count -= step + 1;
             } else {
@@ -82,6 +82,10 @@ namespace toybox {
             }
         }
         return first;
+    }
+    template<const_random_access_iterator FI, typename T>
+    FI lower_bound(FI first, FI last, const T& value) {
+        return lower_bound(first, last, value, [](const T& a, const T& b) { return a < b; });
     }
 
     template<const_random_access_iterator FI, typename T>
@@ -103,12 +107,12 @@ namespace toybox {
     }
            
     // Selection sort for forward only iterators
-    template<forward_iterator I>
-    void sort(I first, I last) {
+    template<forward_iterator I, typename Comp>
+    void sort(I first, I last, Comp comp) {
         for (auto i = first; i != last; ++i) {
             auto min = i;
             for (auto j = i; ++j != last; ) {
-                if (*j < *min) {
+                if (comp(*j, *min)) {
                     min = j;
                 }
             }
@@ -118,20 +122,25 @@ namespace toybox {
         }
     }
     // Insertion sort for O(n) for almost sorted small lists
-    template<bidirectional_iterator I>
-    void sort(I first, I last) {
+    template<bidirectional_iterator I, typename Comp>
+    void sort(I first, I last, Comp comp) {
         for (auto i = first; i != last; ++i) {
             const auto key = *i;
             auto j = i;
             while (j != first) {
                 auto prev = j;
                 --prev;
-                if (!(*prev > key)) break;
+                if (!comp(key, *prev)) break;
                 *j = move(*prev);
                 j = prev;
             }
             *j = move(key);
         }
+    }
+
+    template<typename I>
+    void sort(I first, I last) {
+        sort(first, last, [](const auto& a, const auto& b){ return a < b; });
     }
     
     template<const_forward_iterator I>

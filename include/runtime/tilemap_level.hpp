@@ -61,8 +61,8 @@ namespace toybox {
 
         pair_c<int, entity_s&> spawn_entity(uint8_t type, uint8_t group, frect_s position);
         void update_entity_indexes(int from = 0);
-        vector_c<entity_s, 0>& all_entities() { return _all_entities; }
-        const vector_c<entity_s, 0>& all_entities() const { return _all_entities; }
+        span_c<entity_s> all_entities() { return {_all_entities.begin(), _all_entities.size()}; }
+        span_c<const entity_s> all_entities() const { return {_all_entities.begin(), _all_entities.size()}; }
         void destroy_entity(int index);
         void erase_destroyed_entities();
 

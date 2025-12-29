@@ -12,6 +12,7 @@ int main(int argc, const char* argv[]) {
     test_array_and_vector();
     test_dynamic_vector();
     test_list();
+    test_map();
     
     // Test display list
     // Disable for now, display list destruction now requires the maschine_s singleton to be alive.

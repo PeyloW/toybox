@@ -69,6 +69,15 @@ def __lldb_init_module(debugger, internal_dict):
         'type synthetic add -x "^(toybox::)?vector_c<.+>$" -l toybox_printers.VectorSyntheticProvider'
     )
     debugger.HandleCommand(
+        'type summary add -x "^(toybox::)?map_c<.+>$" -F toybox_printers.map_c_summary'
+    )
+    debugger.HandleCommand(
+        'type synthetic add -x "^(toybox::)?map_c<.+>$" -l toybox_printers.MapSyntheticProvider'
+    )
+    debugger.HandleCommand(
+        'type summary add -x "^(toybox::)?pair_c<.+>$" -F toybox_printers.pair_c_summary'
+    )
+    debugger.HandleCommand(
         'type summary add -x "^(toybox::)?list_c<.+>$" -F toybox_printers.list_c_summary'
     )
     debugger.HandleCommand(
@@ -489,6 +498,106 @@ def vector_c_summary(valobj, internal_dict):
 
 class VectorSyntheticProvider(IndexedSyntheticProvider):
     """Synthetic children provider for vector_c."""
+
+    def update(self):
+        self.children = []
+        valobj_non_synth = self.valobj.GetNonSyntheticValue()
+
+        size_val = valobj_non_synth.GetChildMemberWithName('_size')
+        if not size_val or not size_val.IsValid():
+            return
+        size = size_val.GetValueAsUnsigned()
+
+        buffer = get_member_recursive(valobj_non_synth, '_buffer')
+        if not buffer or not buffer.IsValid():
+            return
+
+        buffer_type = buffer.GetType()
+        if buffer_type.IsPointerType():
+            membuf_type = buffer_type.GetPointeeType()
+            buffer_addr = buffer.GetValueAsUnsigned()
+        elif buffer_type.IsArrayType():
+            membuf_type = buffer_type.GetArrayElementType()
+            buffer_addr = buffer.GetLoadAddress()
+        else:
+            return
+
+        if buffer_addr == 0 or buffer_addr == 0xffffffffffffffff:
+            return
+
+        membuf_size = membuf_type.GetByteSize()
+        num_template_args = membuf_type.GetNumberOfTemplateArguments()
+        if num_template_args == 0:
+            return
+        element_type = membuf_type.GetTemplateArgumentType(0)
+        if not element_type or not element_type.IsValid():
+            return
+
+        for i in range(size):
+            addr = buffer_addr + i * membuf_size
+            child = self.valobj.CreateValueFromAddress(f"[{i}]", addr, element_type)
+            if child.IsValid():
+                self.children.append(child)
+
+
+# =============================================================================
+# Pair support
+# =============================================================================
+
+def get_value_display(valobj):
+    """Get a display string for a value, or None if it should be expanded."""
+    if not valobj or not valobj.IsValid():
+        return None
+    # Try summary first (for types with custom formatters)
+    summary = valobj.GetSummary()
+    if summary:
+        return summary
+    # For simple types, use GetValue()
+    value = valobj.GetValue()
+    if value:
+        return value
+    # Complex types without summary - don't try to display inline
+    return None
+
+
+def pair_c_summary(valobj, internal_dict):
+    """Format pair_c as {first, second} for simple types, or {first, ...} for complex."""
+    try:
+        first = valobj.GetChildMemberWithName('first')
+        second = valobj.GetChildMemberWithName('second')
+        if not first.IsValid() or not second.IsValid():
+            return "<invalid>"
+        first_str = get_value_display(first)
+        second_str = get_value_display(second)
+        # Show key if available, indicate expansion needed for complex values
+        if first_str and second_str:
+            return f"{{{first_str}: {second_str}}}"
+        elif first_str:
+            return f"{{{first_str}: ...}}"
+        else:
+            return "{...}"
+    except Exception as e:
+        return f"<error: {e}>"
+
+
+# =============================================================================
+# Map support
+# =============================================================================
+
+def map_c_summary(valobj, internal_dict):
+    """Format map_c as size=N."""
+    try:
+        valobj_non_synth = valobj.GetNonSyntheticValue()
+        size = valobj_non_synth.GetChildMemberWithName('_size')
+        if size and size.IsValid():
+            return f"size={size.GetValueAsUnsigned()}"
+        return "<invalid>"
+    except Exception as e:
+        return f"<error: {e}>"
+
+
+class MapSyntheticProvider(IndexedSyntheticProvider):
+    """Synthetic children provider for map_c."""
 
     def update(self):
         self.children = []

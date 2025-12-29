@@ -134,6 +134,8 @@ namespace toybox {
     
     template<typename T> struct is_trivially_copyable : public bool_constant<__is_trivially_copyable(T)> {};
   
+    template<typename T> struct is_trivial : public bool_constant<__is_trivial(T)> {};
+
     template<typename T> struct is_polymorphic : public bool_constant<__is_polymorphic(T)> {};
     
     template<typename T> struct has_virtual_destructor : public bool_constant<__has_virtual_destructor(T)> {};

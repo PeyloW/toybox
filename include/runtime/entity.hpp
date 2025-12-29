@@ -40,6 +40,8 @@ namespace toybox {
     static_assert((offsetof(entity_s, reserved_data) & 1) == 0);
     static_assert(sizeof(entity_s) == 24);
 
+    using entity_pair_c = pair_c<int, entity_s>;
+    
     // struct_layout for byte-order swapping
     template<>
     struct struct_layout<entity_s> {

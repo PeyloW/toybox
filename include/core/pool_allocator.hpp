@@ -91,9 +91,9 @@ private:
         uint8_t data[alloc_size];
     };
     static void _grow_pool() {
-        int chunk_size = s_next_chunk_size;
+        const size_t chunk_size = MIN(s_next_chunk_size, size_t(256));
         block_t* chunk = new block_t[chunk_size];
-        for (int i = 0; i < chunk_size - 1; ++i) {
+        for (size_t i = 0; i < chunk_size - 1; ++i) {
             chunk[i].next = &chunk[i + 1];
         }
         chunk[chunk_size - 1].next = first_block;
@@ -103,7 +103,7 @@ private:
         }
     }
     static inline block_t* first_block = nullptr;
-    static inline int s_next_chunk_size = 8;
+    static inline size_t s_next_chunk_size = 8;
 };
 
 }
