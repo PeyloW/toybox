@@ -16,7 +16,7 @@
 namespace toybox {
 
     struct entity_s {
-        uint8_t index = 0;
+        uint8_t id = 0;
 #if __M68000__
         uint8_t active :1 = 1;  // Only active entities are drawn, run and actions.
         uint8_t event :1 = 0;    // If set action is not called per frame, only on target event trigger
@@ -45,7 +45,7 @@ namespace toybox {
     // struct_layout for byte-order swapping
     template<>
     struct struct_layout<entity_s> {
-        static constexpr const char* value = "6b4w10b";  // index, type, group, action, frame_index, flags, position(4w), data[10]
+        static constexpr const char* value = "6b4w10b";  // id, type, group, action, frame_index, flags, position(4w), data[10]
     };
 
     struct entity_type_def_s {

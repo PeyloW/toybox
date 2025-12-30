@@ -44,50 +44,51 @@ pair_c<int, entity_type_def_s&> tilemap_level_c::add_entity_type_def(tileset_c* 
     return {i, _entity_type_defs.emplace_back(tileset)};
 }
 
-void tilemap_level_c::update_entity_indexes(int from) {
-    assert(_all_entities.size() <= 255 && "Too many entities");
-    for (int i = from; i < _all_entities.size(); ++i) {
-        _all_entities[i].index = (uint8_t)i;
-    }
-}
-
-pair_c<int, entity_s&> tilemap_level_c::spawn_entity(uint8_t type, uint8_t group, frect_s position) {
-    const int idx = _all_entities.size();
+entity_s& tilemap_level_c::spawn_entity(uint8_t type, uint8_t group, frect_s position) {
+    const uint8_t new_id = _all_entities.size() ? _all_entities.back().id + 1 : 0;
     auto& entity = _all_entities.emplace_back();
-    entity.index = idx;
+    entity.id = new_id;
     entity.type = type;
     entity.group = group;
     entity.position = position;
-    return {idx, entity};
+    return entity;
 };
 
-void tilemap_level_c::destroy_entity(int index) {
-    auto& entity = _all_entities[index];
-    entity.action = 0;  // If destroyed by world, no need to also run actions.
-    entity.group = 0;   // Move to no group to disable collision detection.
-    _destroy_entities.push_back(index);
+entity_s& tilemap_level_c::entity_at(uint8_t id) {
+    auto it = lower_bound(_all_entities.begin(), _all_entities.end(), id, [](const auto& ent, const uint8_t id){ return ent.id < id; });
+    assert(it != _all_entities.end());
+    assert(it->id == id);
+    return *it;
+}
+
+const entity_s& tilemap_level_c::entity_at(uint8_t id) const {
+    auto it = lower_bound(_all_entities.begin(), _all_entities.end(), id, [](const auto& ent, const uint8_t id){ return ent.id < id; });
+    assert(it != _all_entities.end());
+    assert(it->id == id);
+    return *it;
+}
+
+void tilemap_level_c::destroy_entity(uint8_t id) {
+    auto it = lower_bound(_all_entities.begin(), _all_entities.end(), id, [](const auto& ent, const uint8_t id){ return ent.id < id; });
+    it->active = false;
+    _destroy_entities.push_back(id);
 }
 
 void tilemap_level_c::erase_destroyed_entities() {
     if (_destroy_entities.size() > 0) {
-        sort(_destroy_entities.begin(), _destroy_entities.end());
-        for (int i = _destroy_entities.size() - 1; i >= 0; --i) {
-            const int j = _destroy_entities[i];
-            _all_entities.erase(j);
+        for (const uint8_t j : _destroy_entities) {
+            auto it = lower_bound(_all_entities.begin(), _all_entities.end(), j, [](const auto& ent, const uint8_t id){ return ent.id < id; });
+            assert(it != _all_entities.end());
+            assert(it->id == j);
+            _all_entities.erase(it);
         }
-        update_entity_indexes(_destroy_entities[0]);
         _destroy_entities.clear();
     }
 }
 
-static bool verify_entity_indexes(const tilemap_level_c& level) {
+static bool verify_entity_ids(const tilemap_level_c& level) {
     const auto& entities = level.all_entities();
-    for (int i = 0; i < entities.size(); ++i) {
-        if (entities[i].index != i) {
-            return false;
-        }
-    }
-    return true;
+    return is_sorted(entities.begin(), entities.end(), [](const auto& a, const auto& b){ return a.id < b.id; });
 }
 
 void tilemap_level_c::update(viewport_c& viewport, int display_id, int ticks) {
@@ -99,7 +100,7 @@ void tilemap_level_c::update(viewport_c& viewport, int display_id, int ticks) {
         debug_cpu_color(0x010);
         update_level();
         erase_destroyed_entities();
-        assert(verify_entity_indexes(*this) && "Invalid entity index detected");
+        assert(verify_entity_ids(*this) && "Invalid entity id detected");
     }
     {
         // Update the AI for entities.
@@ -107,7 +108,7 @@ void tilemap_level_c::update(viewport_c& viewport, int display_id, int ticks) {
         debug_cpu_color(0x020);
         update_actions();
         erase_destroyed_entities();
-        assert(verify_entity_indexes(*this) && "Invalid entity index detected");
+        assert(verify_entity_ids(*this) && "Invalid entity id detected");
     }
     {
         // AI may update tiles, so we need to dirty viewports to redraw them
@@ -128,13 +129,13 @@ void tilemap_level_c::update(viewport_c& viewport, int display_id, int ticks) {
         // Draw all the tiles, both updates, and previously dirtied by drawing sprites
         debug_cpu_color(0x122);
         draw_tiles();
-        assert(verify_entity_indexes(*this) && "Invalid entity index detected");
+        assert(verify_entity_ids(*this) && "Invalid entity id detected");
     }
     {
         // And lastly draw all the sprites needed
         debug_cpu_color(0x221);
         draw_entities();
-        assert(verify_entity_indexes(*this) && "Invalid entity index detected");
+        assert(verify_entity_ids(*this) && "Invalid entity id detected");
     }
     _viewport = nullptr;
 }
@@ -234,9 +235,9 @@ void tilemap_level_c::mark_tiles_dirtymap(rect_s rect) {
     _tiles_dirtymap->mark(rect);
 }
 
-tile_s::type_e tilemap_level_c::collides_with_level(int index) const {
-    assert(index >= 0 && index < _all_entities.size() && "Entity index out of bounds");
-    const auto& entity = _all_entities[index];
+tile_s::type_e tilemap_level_c::collides_with_level(uint8_t id) const {
+    assert(id < _all_entities.size() && "Entity id out of bounds");
+    const auto& entity = _all_entities[id];
     return collides_with_level(entity.position);
 }
 
@@ -265,33 +266,33 @@ tile_s::type_e tilemap_level_c::collides_with_level(const frect_s& rect) const {
     return max_type;
 }
 
-bool tilemap_level_c::collides_with_entity(int index, uint8_t in_group, int* index_out) const {
-    assert(index >= 0 && index < _all_entities.size() && "Entity index out of bounds");
-    assert(index_out != nullptr && "index_out must not be null");
-    const auto& source_position = _all_entities[index].position;
+bool tilemap_level_c::collides_with_entity(uint8_t id, uint8_t in_group, uint8_t* id_out) const {
+    assert(id < _all_entities.size() && "Entity id out of bounds");
+    assert(id_out != nullptr && "id_out must not be null");
+    const auto& source_position = _all_entities[id].position;
     // Iterate through all entities and check for collisions with matching group
     for (int idx = 0; idx < _all_entities.size(); ++idx) {
-        if (idx == index) continue; // Skip self
+        if (idx == id) continue; // Skip self
         const auto& entity = _all_entities[idx];
         if (entity.group != in_group) continue;
         if (!entity.active) continue;
         if (source_position.intersects(entity.position)) {
-            *index_out = idx;
+            *id_out = (uint8_t)idx;
             return true;
         }
     }
     return false;
 }
 
-bool tilemap_level_c::collides_with_entity(const frect_s& rect, uint8_t in_group, int* index_out) const {
-    assert(index_out != nullptr && "index_out must not be null");
+bool tilemap_level_c::collides_with_entity(const frect_s& rect, uint8_t in_group, uint8_t* id_out) const {
+    assert(id_out != nullptr && "id_out must not be null");
     // Iterate through all entities and check for collisions with matching group
     for (int idx = 0; idx < _all_entities.size(); ++idx) {
         const auto& entity = _all_entities[idx];
         if (entity.group != in_group) continue;
         if (!entity.active) continue;
         if (rect.intersects(entity.position)) {
-            *index_out = idx;
+            *id_out = (uint8_t)idx;
             return true;
         }
     }

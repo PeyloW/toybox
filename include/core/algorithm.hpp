@@ -143,20 +143,25 @@ namespace toybox {
         sort(first, last, [](const auto& a, const auto& b){ return a < b; });
     }
     
-    template<const_forward_iterator I>
-    I is_sorted_until(I first, I last) {
+    template<const_forward_iterator I, typename Comp>
+    I is_sorted_until(I first, I last, Comp comp) {
         if (first == last) return last;
         for (I next = first; ++next != last; first = next) {
-            if (*next < *first) {
+            if (comp(*next, *first)) {
                 return next;
             }
         }
         return last;
     }
     
+    template<const_forward_iterator I, typename Comp>
+    bool is_sorted(I first, I last, Comp comp) {
+        return is_sorted_until(first, last, comp) == last;
+    }
+
     template<const_forward_iterator I>
     bool is_sorted(I first, I last) {
-        return is_sorted_until(first, last) == last;
+        return is_sorted(first, last, [](const auto& a, const auto& b){ return a < b; });
     }
 
 }

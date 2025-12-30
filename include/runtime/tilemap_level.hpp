@@ -45,11 +45,11 @@ namespace toybox {
             return *_viewport;
         };
 
-        tile_s::type_e collides_with_level(int index) const;
+        tile_s::type_e collides_with_level(uint8_t id) const;
         tile_s::type_e collides_with_level(fpoint_s at) const;
         tile_s::type_e collides_with_level(const frect_s& rect) const;
-        bool collides_with_entity(int index, uint8_t in_group, int* index_out) const;
-        bool collides_with_entity(const frect_s& rect, uint8_t in_group, int* index_out) const;
+        bool collides_with_entity(uint8_t id, uint8_t in_group, uint8_t* id_out) const;
+        bool collides_with_entity(const frect_s& rect, uint8_t in_group, uint8_t* id_out) const;
 
         pair_c<int, action_f> add_action(action_f action);
         span_c<action_f> actions() { return {_actions.begin(), _actions.size()}; };
@@ -59,11 +59,12 @@ namespace toybox {
         span_c<entity_type_def_s> entity_type_defs() { return {_entity_type_defs.begin(), _entity_type_defs.size()}; };
         span_c<const entity_type_def_s> entity_type_defs() const { return {_entity_type_defs.begin(), _entity_type_defs.size()}; };
 
-        pair_c<int, entity_s&> spawn_entity(uint8_t type, uint8_t group, frect_s position);
-        void update_entity_indexes(int from = 0);
+        entity_s& spawn_entity(uint8_t type, uint8_t group, frect_s position);
+        entity_s& entity_at(uint8_t id);
+        const entity_s& entity_at(uint8_t id) const;
         span_c<entity_s> all_entities() { return {_all_entities.begin(), _all_entities.size()}; }
         span_c<const entity_s> all_entities() const { return {_all_entities.begin(), _all_entities.size()}; }
-        void destroy_entity(int index);
+        void destroy_entity(uint8_t id);
         void erase_destroyed_entities();
 
         const rect_s&visible_bounds() const { return _visible_bounds; };
@@ -101,7 +102,7 @@ namespace toybox {
         vector_c<tilemap_c, 32> _subtilemaps;
         vector_c<action_f, 0> _actions;
         vector_c<entity_type_def_s, 0> _entity_type_defs;
-        vector_c<int, 16> _destroy_entities;
+        vector_c<uint8_t, 16> _destroy_entities;
         uint8_t _tileset_index;
         bool _is_initialized;
     };

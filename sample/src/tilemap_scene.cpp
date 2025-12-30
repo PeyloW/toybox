@@ -31,13 +31,13 @@ static bool move_entity_if_possible(tilemap_level_c& level, entity_s& entity, fp
     // Move entity, if not posissible we adjust back on exit
     entity.position.origin = entity.position.origin + delta;
     // Collision with level is always fail
-    if (level.collides_with_level(entity.index) < tile_s::solid) {
-        int box_index;
-        if (!level.collides_with_entity(entity.index, BOX, &box_index)) {
+    if (level.collides_with_level(entity.id) < tile_s::solid) {
+        uint8_t box_id;
+        if (!level.collides_with_entity(entity.id, BOX, &box_id)) {
             return true;
         } else if (entity.type == PLAYER) {
             // Colliding with a box is fine, if we are the player and box can be moved
-            if (move_entity_if_possible(level, level.all_entities()[box_index], delta)) {
+            if (move_entity_if_possible(level, level.entity_at(box_id), delta)) {
                 return true;
             }
         }
@@ -125,28 +125,23 @@ tilemap_level_c* create_tilemaplevel() {
                     tile.index = TARGET;
                     tile.flags = is_target;
                     break;
-                case '@':
+                case '@': {
                     tile.index = FLOOR;
-                    level.all_entities().emplace(level.all_entities().begin(), (entity_s){
-                        .type=PLAYER, .group=PLAYER,
-                        .action = 1,
-                        .frame_index = DOWN,
-                        .position=frect_s{ origin() + fpoint_s(2,2), {12,12} }
-                    });
+                    auto& player = level.spawn_entity(PLAYER, PLAYER, frect_s{ origin() + fpoint_s(2,2), {12,12} });
+                    player.action = 1;
+                    player.frame_index = DOWN;
                     break;
-                case '$':
+                }
+                case '$': {
                     tile.index = FLOOR;
-                    level.all_entities().emplace_back((entity_s){
-                        .type=BOX, .group=BOX,
-                        .position=frect_s{ origin(), {16,16} }
-                    });
+                    auto& box = level.spawn_entity(BOX, BOX, frect_s{ origin(), {16,16} });
                     break;
+                }
                 default:
                     break;
             }
         }
     }
-    level.update_entity_indexes();
     
     return level_ptr;
 }
