@@ -25,7 +25,7 @@ tilemap_level_c::tilemap_level_c(rect_s tilespace_bounds, tileset_c* tileset) : 
         tilespace_bounds.size.height * 16
     );
     _tiles_dirtymap = unique_ptr_c<dirtymap_c>(dirtymap_c::create(bounds.size));
-    set_visible_bounds(bounds);
+    set_total_bounds(bounds);
 }
 
 tilemap_level_c::~tilemap_level_c() {
@@ -54,14 +54,14 @@ entity_s& tilemap_level_c::spawn_entity(uint8_t type, uint8_t group, frect_s pos
     return entity;
 };
 
-entity_s& tilemap_level_c::entity_at(uint8_t id) {
+entity_s& tilemap_level_c::get_entity(uint8_t id) {
     auto it = lower_bound(_all_entities.begin(), _all_entities.end(), id, [](const auto& ent, const uint8_t id){ return ent.id < id; });
     assert(it != _all_entities.end());
     assert(it->id == id);
     return *it;
 }
 
-const entity_s& tilemap_level_c::entity_at(uint8_t id) const {
+const entity_s& tilemap_level_c::get_entity(uint8_t id) const {
     auto it = lower_bound(_all_entities.begin(), _all_entities.end(), id, [](const auto& ent, const uint8_t id){ return ent.id < id; });
     assert(it != _all_entities.end());
     assert(it->id == id);
@@ -235,9 +235,30 @@ void tilemap_level_c::mark_tiles_dirtymap(rect_s rect) {
     _tiles_dirtymap->mark(rect);
 }
 
+template<typename Level, invocable<tile_s&> Func>
+    requires same_as<typename remove_cvref<Level>::type, tilemap_level_c>
+__forceinline static void enmerate_level_tiles(Level& level, const frect_s& _rect, Func func) {
+    const auto rect = static_cast<rect_s>(_rect);
+    assert(rect.contained_by(level.total_bounds()) && "Rect must be in bounds");
+    const auto tile_x_min = rect.origin.x >> 4;
+    const auto tile_y_min = rect.origin.y >> 4;
+    const auto tile_x_max = rect.max_x() >> 4;
+    const auto tile_y_max = rect.max_y() >> 4;
+    for (int16_t y = tile_y_min; y <= tile_y_max; ++y) {
+        for (int16_t x = tile_x_min; x <= tile_x_max; ++x) {
+            auto& tile = level[x, y];
+            func(tile);
+        }
+    }
+}
+
+void tilemap_level_c::enumerate_tiles(const frect_s& rect, function_c<void(tile_s&)> func) {
+    enmerate_level_tiles(*this, rect, func);
+}
+
 tile_s::type_e tilemap_level_c::collides_with_level(uint8_t id) const {
     assert(id < _all_entities.size() && "Entity id out of bounds");
-    const auto& entity = _all_entities[id];
+    const auto& entity = get_entity(id);
     return collides_with_level(entity.position);
 }
 
@@ -248,28 +269,18 @@ tile_s::type_e tilemap_level_c::collides_with_level(fpoint_s at) const {
 }
 
 tile_s::type_e tilemap_level_c::collides_with_level(const frect_s& rect) const {
-    const auto pixel_rect = static_cast<rect_s>(rect);
-    assert(pixel_rect.contained_by(_visible_bounds) && "Rect must be in visible bounds");
-    // Tile coordinate bounds
-    const auto tile_x_min = pixel_rect.origin.x >> 4;
-    const auto tile_y_min = pixel_rect.origin.y >> 4;
-    const auto tile_x_max = pixel_rect.max_x() >> 4;
-    const auto tile_y_max = pixel_rect.max_y() >> 4;
     // Check each tile in the rect's coverage area
     tile_s::type_e max_type = tile_s::none;
-    for (int16_t y = tile_y_min; y <= tile_y_max; ++y) {
-        for (int16_t x = tile_x_min; x <= tile_x_max; ++x) {
-            const auto& tile = (*this)[x, y];
-            max_type = max(max_type, tile.type);
-        }
-    }
+    enmerate_level_tiles(*this, rect, [&](const tile_s& tile) {
+        max_type = max(max_type, tile.type);
+    });
     return max_type;
 }
 
 bool tilemap_level_c::collides_with_entity(uint8_t id, uint8_t in_group, uint8_t* id_out) const {
     assert(id < _all_entities.size() && "Entity id out of bounds");
     assert(id_out != nullptr && "id_out must not be null");
-    const auto& source_position = _all_entities[id].position;
+    const auto& source_position = get_entity(id).position;
     // Iterate through all entities and check for collisions with matching group
     for (int idx = 0; idx < _all_entities.size(); ++idx) {
         if (idx == id) continue; // Skip self
@@ -299,18 +310,25 @@ bool tilemap_level_c::collides_with_entity(const frect_s& rect, uint8_t in_group
     return false;
 }
 
-void tilemap_level_c::set_visible_bounds(const rect_s& bounds) {
-    // TODO: When changing bounds columns (and eventually rows) of tiles needs to be marked dirty.
-    // NOTE: Outside of visible bounds should always be clean.
+void tilemap_level_c::set_total_bounds(const rect_s& bounds) {
     _tiles_dirtymap->mark(bounds);
 #if TOYBOX_DEBUG_DIRTYMAP
-    _tiles_dirtymap->print_debug("tilemap_level_c::set_visible_bounds()");
+    _tiles_dirtymap->print_debug("tilemap_level_c::set_total_bounds()");
 #endif
+    _total_bounds = bounds;
+}
+
+void tilemap_level_c::set_visible_bounds(const rect_s& bounds) {
+    assert(bounds.contained_by(_total_bounds) && "Visible bounds must be in total bounds");
     _visible_bounds = bounds;
 }
 
+void tilemap_level_c::add_visible_bounds(const rect_s& bounds) {
+    assert(bounds.contained_by(_total_bounds) && "Visible bounds must be in total bounds");
+    _visible_bounds = _visible_bounds.unification(bounds);
+}
+
 void tilemap_level_c::splice_subtilemap(int index) {
-    // TODO: Merge the subtilemap into self, and mark all changes tiles as dirty.
     // NOTE: Stretch goal would be to animate these, but probably not worth the effort.
     auto& tilemap = _subtilemaps[index];
     const auto& bounds = tilemap.tilespace_bounds();
@@ -326,6 +344,7 @@ void tilemap_level_c::splice_subtilemap(int index) {
         ++at.y;
     }
     rect_s rect(bounds.origin.x << 4, bounds.origin.y << 4, bounds.size.width << 4, bounds.size.height << 4);
+    add_visible_bounds(rect);
     _tiles_dirtymap->mark(rect);
     for (const auto idx : tilemap.activate_entity_idxs()) {
         splice_entity(_all_entities[idx]);

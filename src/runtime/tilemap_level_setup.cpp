@@ -31,7 +31,7 @@ tilemap_c(rect_s()), _is_initialized(false)
             _tilespace_bounds = {{0,0}, header.size};
             rect_s bounds(0,0, header.size.width << 4, header.size.height << 4);
             _tiles_dirtymap = unique_ptr_c<dirtymap_c>(dirtymap_c::create(bounds.size));
-            set_visible_bounds(bounds);
+            set_total_bounds(bounds);
             _tileset_index = header.tileset_index;
             _tiles.resize(header.size.width * header.size.height);
             for (auto& tile : _tiles) {
@@ -126,10 +126,11 @@ void tilemap_level_c::reset() {
     for (auto& tile : _tiles) {
         reset(tile);
     }
-    // TODO: Should figure out how to destroy all temp entities here.
     for (auto& entity : _all_entities) {
         reset(entity);
     }
+    erase_destroyed_entities();
+    _tiles_dirtymap->mark(_visible_bounds);
 }
 
 void tilemap_level_c::init(entity_s& entity) {}

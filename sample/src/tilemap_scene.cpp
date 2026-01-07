@@ -37,7 +37,7 @@ static bool move_entity_if_possible(tilemap_level_c& level, entity_s& entity, fp
             return true;
         } else if (entity.type == PLAYER) {
             // Colliding with a box is fine, if we are the player and box can be moved
-            if (move_entity_if_possible(level, level.entity_at(box_id), delta)) {
+            if (move_entity_if_possible(level, level.get_entity(box_id), delta)) {
                 return true;
             }
         }
@@ -153,7 +153,7 @@ tilemap_scene_c::tilemap_scene_c() :
 }
 
 const scene_c::configuration_s& tilemap_scene_c::configuration() const {
-    static scene_c::configuration_s config{_level.visible_bounds().size, asset_manager_c::shared().tileset(ASSET_TILESET_SPR).image()->palette(), 2, false};
+    static scene_c::configuration_s config{_level.total_bounds().size, asset_manager_c::shared().tileset(ASSET_TILESET_SPR).image()->palette(), 2, false};
     return config;
 }
 

@@ -123,6 +123,20 @@ namespace toybox {
             intersection_out = base_rect_s(x1, y1, x2 - x1, y2 - y1);
             return true;
         }
+        constexpr base_rect_s unification(const base_rect_s& rect) const {
+            if (size.is_empty()) return rect;
+            if (rect.size.is_empty()) return *this;
+            const auto x1 = min(origin.x, rect.origin.x);
+            const auto y1 = min(origin.y, rect.origin.y);
+            const auto x2 = max(origin.x + size.width, rect.origin.x + rect.size.width);
+            const auto y2 = max(origin.y + size.height, rect.origin.y + rect.size.height);
+            return base_rect_s(x1, y1, x2 - x1, y2 - y1);
+        }
+        
+        constexpr base_rect_s inset(const Type dx, const Type dy) const {
+            return base_rect_s(origin.x + dx, origin.y + dy, size.width - dx * 2, size.height - dy * 2);
+        }
+
         /// Clip this rect to the bounds of clip_bounds, adjusting at accordingly.
         /// Returns true if the rect was completely clipped (size became <= 0).
         bool clip_to(const base_rect_s& clip_bounds, point_s& at) {

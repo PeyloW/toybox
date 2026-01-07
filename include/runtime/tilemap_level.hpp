@@ -45,6 +45,7 @@ namespace toybox {
             return *_viewport;
         };
 
+        void enumerate_tiles(const frect_s& rect, function_c<void(tile_s&)> func);
         tile_s::type_e collides_with_level(uint8_t id) const;
         tile_s::type_e collides_with_level(fpoint_s at) const;
         tile_s::type_e collides_with_level(const frect_s& rect) const;
@@ -60,15 +61,18 @@ namespace toybox {
         span_c<const entity_type_def_s> entity_type_defs() const { return {_entity_type_defs.begin(), _entity_type_defs.size()}; };
 
         entity_s& spawn_entity(uint8_t type, uint8_t group, frect_s position);
-        entity_s& entity_at(uint8_t id);
-        const entity_s& entity_at(uint8_t id) const;
+        entity_s& get_entity(uint8_t id);
+        const entity_s& get_entity(uint8_t id) const;
         span_c<entity_s> all_entities() { return {_all_entities.begin(), _all_entities.size()}; }
         span_c<const entity_s> all_entities() const { return {_all_entities.begin(), _all_entities.size()}; }
         void destroy_entity(uint8_t id);
         void erase_destroyed_entities();
 
-        const rect_s&visible_bounds() const { return _visible_bounds; };
+        const rect_s& total_bounds() const { return _total_bounds; };
+        const rect_s& visible_bounds() const { return _visible_bounds; }
         void set_visible_bounds(const rect_s& bounds);
+        void add_visible_bounds(const rect_s& bounds);
+
         const tileset_c& tileset() const { return *_tileset; }
         
         void splice_subtilemap(int index);
@@ -93,8 +97,11 @@ namespace toybox {
         virtual void splice_entity(entity_s& entity);
         
     private:
+        void set_total_bounds(const rect_s& bounds);
+        
         viewport_c* _viewport;  // Non-owning, valid only during update() call
         unique_ptr_c<dirtymap_c> _tiles_dirtymap;
+        rect_s _total_bounds;
         rect_s _visible_bounds;
         tileset_c* _tileset;  // Non-owning, optional (can be null)
         unique_ptr_c<const char> _name;
