@@ -40,7 +40,10 @@ namespace toybox {
     static_assert((offsetof(entity_s, reserved_data) & 1) == 0);
     static_assert(sizeof(entity_s) == 24);
 
-    using entity_pair_c = pair_c<int, entity_s>;
+    /// Key extractor for entity_s by id field.
+    struct entity_id_get_t {
+        __forceinline uint8_t operator()(const entity_s& e) const { return e.id; }
+    };
     
     // struct_layout for byte-order swapping
     template<>

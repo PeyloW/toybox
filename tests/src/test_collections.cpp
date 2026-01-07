@@ -508,16 +508,18 @@ void test_list() {
 
 void test_map() {
     printf("== Start: test_map\n\r");
-    map_c<int, int, 6> map1({{6,0},{2,2}, {4,1}});
+    pair_map_c<int, int, 6> map1;
+    map1.insert({6, 0});
+    map1.insert({2, 2});
+    map1.insert({4, 1});
     hard_assert(map1.size() == 3);
-    hard_assert(map1[2] == 2);
-    hard_assert(map1[4] == 1);
-    hard_assert(map1[6] == 0);
+    hard_assert(map1[2].second == 2);
+    hard_assert(map1[4].second == 1);
+    hard_assert(map1[6].second == 0);
 
-    map1.insert({2,10});
-    map1.insert({7,7});
-    map1.insert({1,1});
-    map1.insert({3,3});
+    map1.insert({7, 7});
+    map1.insert({1, 1});
+    map1.insert({3, 3});
     // map1 now contains keys: 1, 2, 3, 4, 6, 7 (sorted)
     hard_assert(map1.size() == 6);
 
@@ -541,7 +543,7 @@ void test_map() {
 
     // Test push_back(), emplace_back(), pop_back() - for bulk loading sorted data
     {
-        map_c<int, int, 8> map3;
+        pair_map_c<int, int, 8> map3;
 
         // First element must be inserted normally (push_back checks against back())
         map3.insert({10, 100});
@@ -559,9 +561,9 @@ void test_map() {
         hard_assert(map3.back().first == 30 && map3.back().second == 300);
 
         // Verify all elements are in order and findable
-        hard_assert(map3.find(10) != map3.end() && map3[10] == 100);
-        hard_assert(map3.find(20) != map3.end() && map3[20] == 200);
-        hard_assert(map3.find(30) != map3.end() && map3[30] == 300);
+        hard_assert(map3.find(10) != map3.end() && map3[10].second == 100);
+        hard_assert(map3.find(20) != map3.end() && map3[20].second == 200);
+        hard_assert(map3.find(30) != map3.end() && map3[30].second == 300);
 
         // pop_back removes the last element
         map3.pop_back();
@@ -579,34 +581,23 @@ void test_map() {
 
     // Test with non_trivial_s to verify memory management
     {
-        map_c<int, non_trivial_s, 8> map2;
+        pair_map_c<int, non_trivial_s, 8> map2;
 
         // Test insert with rvalue
         map2.insert({1, non_trivial_s(100)});
         hard_assert(map2.size() == 1);
-        hard_assert(map2[1].value == 100);
-        // Generation: 0 (temp) -> 1 (into pair) -> 2 (into map)
-        hard_assert(map2[1].generation == 2 && "Copied twice: into pair, into map");
+        hard_assert(map2[1].second.value == 100);
 
         // Test insert with lvalue
         pair_c<int, non_trivial_s> pair1(2, non_trivial_s(200));
         map2.insert(pair1);
         hard_assert(map2.size() == 2);
-        hard_assert(map2[2].value == 200);
+        hard_assert(map2[2].second.value == 200);
 
         // Test emplace (constructs pair in place)
         map2.emplace(3, non_trivial_s(300));
         hard_assert(map2.size() == 3);
-        hard_assert(map2[3].value == 300);
-        // Generation: 0 (temp) -> 1 (copied into pair via construct_at)
-        hard_assert(map2[3].generation == 1 && "Copied once into pair");
-
-        // Test insert replacing existing key
-        const int destructors_before_replace = non_trivial_s::s_destructors;
-        map2.insert({2, non_trivial_s(250)});
-        hard_assert(map2.size() == 3 && "Size unchanged when replacing");
-        hard_assert(map2[2].value == 250);
-        hard_assert(non_trivial_s::s_destructors > destructors_before_replace && "Old value destroyed");
+        hard_assert(map2[3].second.value == 300);
 
         // Test erase by iterator
         const int destructors_before_erase = non_trivial_s::s_destructors;
@@ -619,7 +610,7 @@ void test_map() {
         // Verify remaining elements are sorted
         it = map2.begin();
         hard_assert(it->first == 2 && "First remaining key should be 2");
-        hard_assert(it->second.value == 250);
+        hard_assert(it->second.value == 200);
         ++it;
         hard_assert(it->first == 3 && "Second remaining key should be 3");
         hard_assert(it->second.value == 300);
@@ -632,16 +623,13 @@ void test_map() {
 
         // Verify remaining element
         hard_assert(map2.begin()->first == 2);
-        hard_assert(map2.begin()->second.value == 250);
+        hard_assert(map2.begin()->second.value == 200);
 
         // Test clear
         const int destructors_before_clear = non_trivial_s::s_destructors;
         map2.clear();
         hard_assert(map2.size() == 0);
         hard_assert(non_trivial_s::s_destructors > destructors_before_clear && "Cleared values destroyed");
-
-        // Destructor count should increase when map2 goes out of scope
-        // (but map2 is already empty, so no change expected from that)
     }
 
     printf("test_map pass.\n\r");

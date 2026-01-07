@@ -138,4 +138,22 @@ namespace toybox {
     template<typename I>
     concept random_access_iterator = bidirectional_iterator<I> && random_accessible<I>;
 
+#pragma mark - Container concepts
+
+    template<class C>
+    concept container = requires(C& c, const C& cc) {
+        typename C::value_type;
+        { cc.begin() } -> const_random_access_iterator;
+        { cc.end() } -> const_random_access_iterator;
+        { cc.size() } -> convertible_to<int>;
+    };
+
+    template<class C>
+    concept mutable_container = container<C> && requires(C& c, typename C::value_type v) {
+        { c.push_back(v) };
+        { c.pop_back() };
+        { c.erase(c.begin()) };
+        { c.clear() };
+    };
+
 }

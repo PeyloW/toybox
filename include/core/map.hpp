@@ -1,6 +1,6 @@
 //
 //  map.hpp
-//  toybox_index
+//  toybox
 //
 //  Created by Fredrik on 2025-12-28.
 //
@@ -8,231 +8,213 @@
 #pragma once
 
 #include "core/algorithm.hpp"
-#include "core/initializer_list.hpp"
-#include "core/base_buffer.hpp"
-#include "core/utility.hpp"
+#include "core/concepts.hpp"
+#include "core/vector.hpp"
 
 namespace toybox {
+    
+    namespace detail {
+        /// Default comparator using < operator.
+        struct default_less_t {
+            template<class T>
+            __forceinline constexpr bool operator()(const T& a, const T& b) const {
+                return a < b;
+            }
+        };
+        
+        /// Key extractor for pair-like types with .first member.
+        struct first_key_get_t {
+            template<class T>
+            __forceinline constexpr auto operator()(const T& v) const -> decltype(v.first) {
+                return v.first;
+            }
+        };
 
+        /// Key extractor for types with .id member.
+        struct id_key_get_t {
+            template<class T>
+            __forceinline constexpr auto operator()(const T& v) const -> decltype(v.id) {
+                return v.id;
+            }
+        };
+    }
+    
     /**
-     `map_c` is a minimal implementation of `std::map`.
-     When Count > 0: Uses statically allocated backing store for performance.
-     When Count == 0: Uses dynamically allocated backing store with automatic growth.
-     Elements are sorted, and guaranteed to be continious in memory.
+     `map_c` is minimal implementation of `std::flat_map` providing associative access to elements
+     of a sorted underlying container. Instead of using key + value containers a single container
+     with a get key provider is used.
+     
+     Container can be a value type (owning) or reference type (non-owning).
+     Mutating operations are only available when Container supports them.
      */
-    template<class Key, class Type, int Count>
-    class map_c : public nocopy_c,
-                  private conditional<Count == 0,
-                                      detail::base_buffer_dynamic_c<pair_c<Key,Type>>,
-                                      detail::base_buffer_static_c<pair_c<Key,Type>, Count>>::type
-    {
-        static_assert(is_trivial<Key>::value);
+    template<class Container, class KeyGet, class KeyCompare = detail::default_less_t>
+    requires container<typename remove_reference<Container>::type>
+    class map_c {
+    private:
+        using container_type = typename remove_reference<Container>::type;
+        static constexpr bool is_owning = !is_reference<Container>::value;
+        static constexpr bool is_const_ref = is_reference<Container>::value && is_const<container_type>::value;
+        static constexpr bool is_mutable = mutable_container<container_type> && !is_const_ref;
+        static constexpr bool is_copyable = !is_owning || is_copy_constructible<container_type>::value;
+
     public:
-        using key_type = Key;
-        using mapped_type = Type;
-        using value_type = pair_c<key_type,mapped_type>;
+        using value_type = typename container_type::value_type;
+        using key_type = decltype(declval<KeyGet>()(declval<const value_type&>()));
         using pointer = value_type*;
         using const_pointer = const value_type*;
         using reference = value_type&;
         using const_reference = const value_type&;
-        using iterator = value_type*;
-        using const_iterator = const value_type*;
+        using iterator = typename container_type::iterator;
+        using const_iterator = typename container_type::const_iterator;
 
-        map_c() : _size(0) {}
-        constexpr map_c(initializer_list<value_type> init) : _size(0) {
-            this->__ensure_capacity((int)init.size(), _size);
-            copy(init.begin(), init.end(), begin());
-            _size = (int)init.size();
-            sort_keys();
-        }
-        constexpr map_c(const map_c& o) requires (Count == 0) : _size(0) {
-            this->__ensure_capacity(o._size, _size);
-            uninitialized_copy(o.begin(), o.end(), begin());
-            _size = o._size;
-        }
-        constexpr map_c(map_c&& o) requires (Count == 0) : _size(o._size) {
-            this->__take_ownership(o);
-            o._size = 0;
-        }
-                                            
-        ~map_c() {
-            clear();
-        }
-            
-        map_c& operator=(const map_c& o) requires (Count == 0) {
-            if (this == &o) return *this;
-            clear();
-            this->__ensure_capacity(o._size, _size);
-            uninitialized_copy(o.begin(), o.end(), begin());
-            _size = o._size;
-            return *this;
-        }
+        static constexpr KeyGet key_get{};
+        static constexpr KeyCompare key_compare{};
+
+        // Constructors - owning
+        map_c() requires is_owning = default;
+        explicit map_c(container_type&& c) requires is_owning : _container(move(c)) {}
+
+        // Constructor - reference
+        explicit map_c(container_type& c) requires (!is_owning) : _container(c) {}
+
+        // Copy operations (enabled for references or copyable containers)
+        map_c(const map_c& o) requires is_copyable = default;
+        map_c& operator=(const map_c& o) requires is_copyable = default;
+
+        // Move operations
+        map_c(map_c&& o) = default;
+        map_c& operator=(map_c&& o) = default;
         
-        map_c& operator=(map_c&& o) requires (Count == 0) {
-            if (this == &o) return *this;
-            clear();
-            this->__release_ownership();
-            this->__take_ownership(o);
-            _size = o._size;
-            o._size = 0;
-            return *this;
-        }
-    
-        __forceinline iterator begin() __pure {
-            return this->__buffer()[0].template ptr<0>();
-        }
-        __forceinline const_iterator begin() const __pure {
-            return this->__buffer()[0].template ptr<0>();
-        }
-        __forceinline iterator end() __pure {
-            return this->__buffer()[_size].template ptr<0>();
-        }
-        __forceinline const_iterator end() const __pure {
-            return this->__buffer()[_size].template ptr<0>();
-        }
-        __forceinline pointer data() {
-            return this->__buffer()[0].template ptr<0>();
-        }
-        __forceinline const_pointer data() const {
-            return this->__buffer()[0].template ptr<0>();
-        }
-        __forceinline int size() const __pure { return _size; }
-        
-        iterator find(const Key& key) {
-            auto it = lower_bound(begin(), end(), key, key_comp);
-            if (it != end() && it->first == key) {
-                return it;
-            }
+        // Iteration - non-const (only for non-const containers)
+        __forceinline iterator begin() requires (!is_const_ref) { return _container.begin(); }
+        __forceinline iterator end() requires (!is_const_ref) { return _container.end(); }
+        __forceinline pointer data() requires (!is_const_ref) { return _container.data(); }
+
+        // Iteration - const
+        __forceinline const_iterator begin() const { return _container.begin(); }
+        __forceinline const_iterator end() const { return _container.end(); }
+        __forceinline const_pointer data() const { return _container.data(); }
+        __forceinline int size() const { return _container.size(); }
+
+        // Element access - non-const (only for non-const containers)
+        __forceinline reference front() requires (!is_const_ref) { return _container.front(); }
+        __forceinline reference back() requires (!is_const_ref) { return _container.back(); }
+
+        // Element access - const
+        __forceinline const_reference front() const { return _container.front(); }
+        __forceinline const_reference back() const { return _container.back(); }
+
+        // Lookup - non-const (only for non-const containers)
+        iterator find(const key_type& key) requires (!is_const_ref) {
+            auto it = lower_bound(begin(), end(), key, value_key_comp());
+            if (it != end() && key_get(*it) == key) return it;
             return end();
         }
-        
-        const_iterator find(const Key& key) const {
-            auto it = lower_bound(begin(), end(), key, key_comp);
-            if (it != end() && it->first == key) {
-                return it;
-            }
+
+        // Lookup - const
+        const_iterator find(const key_type& key) const {
+            auto it = lower_bound(begin(), end(), key, value_key_comp());
+            if (it != end() && key_get(*it) == key) return it;
             return end();
         }
-        
-        __forceinline Type& operator[](const Key& key) __pure {
-            auto it = lower_bound(begin(), end(), key, key_comp);
-            assert(it != end());
-            return it->second;
-        }
-        __forceinline const_reference operator[](const Key& key) const __pure {
-            auto it = lower_bound(begin(), end(), key, key_comp);
-            assert(it != end());
-            return it->second;
-        }
-        __forceinline reference front() __pure {
-            assert(_size > 0 && "Map is empty");
-            return *this->__buffer()[0].template ptr<0>();
-        }
-        __forceinline const_reference front() const __pure {
-            assert(_size > 0 && "Map is empty");
-            return *this->__buffer()[0].template ptr<0>();
-        }
-        __forceinline reference back() __pure {
-            assert(_size > 0 && "Map is empty");
-            return *this->__buffer()[_size - 1].template ptr<0>();
-        }
-        __forceinline const_reference back() const __pure {
-            assert(_size > 0 && "Map is empty");
-            return *this->__buffer()[_size - 1].template ptr<0>();
+
+        // operator[] - non-const (only for non-const containers)
+        reference operator[](const key_type& key) requires (!is_const_ref) {
+            auto it = find(key);
+            assert(it != end() && "Key not found");
+            return *it;
         }
 
-        iterator insert(const_reference value) {
-            auto it = insert_at(value.first);
-            construct_at(it, value);
-            return it;
+        // operator[] - const
+        const_reference operator[](const key_type& key) const {
+            auto it = find(key);
+            assert(it != end() && "Key not found");
+            return *it;
+        }
+
+        bool contains(const key_type& key) const {
+            return find(key) != end();
+        }
+        
+        // Mutating operations - append (caller ensures ascending order)
+        reference push_back(const_reference value) requires is_mutable {
+            assert(size() == 0 || key_compare(key_get(back()), key_get(value))
+                   && "Key must be ascending");
+            _container.push_back(value);
+            return back();
         }
         
         template<class... Args>
-        iterator emplace(const key_type&& key, Args&&... args) {
-            auto it = insert_at(key);
-            construct_at(it, key, forward<Args>(args)...);
-            return it;
+        reference emplace_back(Args&&... args) requires is_mutable {
+            auto& ref = _container.emplace_back(forward<Args>(args)...);
+            assert(size() <= 1 || key_compare(key_get(*(&ref - 1)), key_get(ref))
+                   && "Key must be ascending");
+            return ref;
         }
         
-        reference push_back(const_reference value) {
-            this->__ensure_capacity(_size + 1, _size);
-            assert(back().first < value.first && "Key is not ascending");
-            return *construct_at(this->__buffer()[_size++].template ptr<0>(), value);
+        // Mutating operations - sorted insert
+        iterator insert(const_reference value) requires is_mutable {
+            auto it = lower_bound(begin(), end(), key_get(value), value_key_comp());
+            return _container.insert(it, value);
         }
         
         template<class... Args>
-        reference emplace_back(const key_type&& key, Args&&... args) {
-            this->__ensure_capacity(_size + 1, _size);
-            assert(back().first < key && "Key is not ascending");
-            return *construct_at(this->__buffer()[_size++].template ptr<0>(), key, forward<Args>(args)...);
+        iterator emplace(Args&&... args) requires is_mutable {
+            value_type temp{forward<Args>(args)...};
+            auto it = lower_bound(begin(), end(), key_get(temp), value_key_comp());
+            return _container.emplace(it, move(temp));
         }
         
-        iterator erase(const_iterator pos) {
-            assert(_size > 0 && "Map is empty");
-            assert(pos >= begin() && pos < end() && "Invalid erase position");
-            destroy_at(pos);
-            iterator ins = (iterator)pos;
-            move((iterator)pos + 1, end(), ins);
-            // Destroy the moved-from duplicate at the old end
-            _size--;
-            destroy_at(end());
-            return ins;
-        }
-
-        iterator erase(const key_type& key) {
-            auto it = lower_bound(begin(), end(), key, key_comp);
-            assert(it != end());
-            assert(it->first == key);
-            return erase(it);
+        // Mutating operations - erase
+        iterator erase(const_iterator pos) requires is_mutable {
+            return _container.erase(pos);
         }
         
-        __forceinline void pop_back() {
-            assert(_size > 0 && "Map is empty");
-            destroy_at(this->__buffer()[--_size].template ptr<0>());
+        iterator erase(const key_type& key) requires is_mutable {
+            auto it = find(key);
+            assert(it != end() && "Key not found");
+            return _container.erase(it);
         }
         
-        void clear() {
-            if constexpr (is_trivially_destructible<Type>::value) {
-                _size = 0;
-            } else {
-                while (_size) {
-                    destroy_at(this->__buffer()[--_size].template ptr<0>());
-                }
-            }
+        void pop_back() requires is_mutable {
+            _container.pop_back();
         }
         
-        __forceinline int capacity() const __pure {
-            return this->__capacity();
+        void clear() requires is_mutable {
+            _container.clear();
         }
-
-        void reserve(int new_cap) requires (Count == 0) {
-            this->__ensure_capacity(new_cap, _size);
+        
+        // Forwarded capacity operations
+        int capacity() const
+        requires requires(const container_type& c) { { c.capacity() } -> convertible_to<int>; }
+        {
+            return _container.capacity();
         }
-
+        
+        void reserve(int n)
+        requires requires(container_type& c, int n) { c.reserve(n); }
+        {
+            _container.reserve(n);
+        }
+        
     private:
-        static constexpr auto comp = [](const_reference a, const_reference b)->bool { return a.first < b.first; };
-        static constexpr auto key_comp = [](const_reference a, const key_type& b)->bool { return a.first < b; };
-
-        iterator insert_at(const key_type& key) {
-            this->__ensure_capacity(_size + 1, _size);
-            auto it = lower_bound(begin(), end(), key, key_comp);
-            if (it != end()) {
-                if (it->first == key) {
-                    destroy_at(it);
-                } else {
-                    uninitialized_move(end() - 1, end(), end());
-                    move_backward(it, end() - 1, end());
-                    ++_size;
-                }
-            } else {
-                ++_size;
-            }
-            return it;
+        // Comparator: compares value's key against a raw key
+        static constexpr auto value_key_comp() {
+            return [](const_reference v, const key_type& k) {
+                return key_compare(key_get(v), k);
+            };
         }
-        void sort_keys() {
-            sort(begin(), end(), comp);
-        }
-        int _size;
+        
+        Container _container;
     };
     
-}
+    /// Convenience alias for map with pair_c<Key, Value> elements and static capacity.
+    template<class Key, class Value, int Count>
+    using pair_map_c = map_c<vector_c<pair_c<Key, Value>, Count>, detail::first_key_get_t>;
+
+    /// Convenience alias for map with Value elements having .id member as key.
+    template<class Value, int Count>
+    using id_map_c = map_c<vector_c<Value, Count>, detail::id_key_get_t>;
+
+} // namespace toybox
+

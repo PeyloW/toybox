@@ -54,6 +54,9 @@ namespace toybox {
     template<class T> struct is_reference : false_type {};
     template<class T> struct is_reference<T&> : true_type {};
     template<class T> struct is_reference<T&&> : true_type {};
+
+    template<class T> struct is_const : false_type {};
+    template<class T> struct is_const<const T> : true_type {};
     
     
 #pragma mark - Type modifications

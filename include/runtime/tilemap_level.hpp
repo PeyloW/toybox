@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "core/map.hpp"
 #include "core/span.hpp"
 #include "runtime/actions.hpp"
 #include "runtime/tilemap.hpp"
@@ -60,11 +61,13 @@ namespace toybox {
         span_c<entity_type_def_s> entity_type_defs() { return {_entity_type_defs.begin(), _entity_type_defs.size()}; };
         span_c<const entity_type_def_s> entity_type_defs() const { return {_entity_type_defs.begin(), _entity_type_defs.size()}; };
 
+        using entity_map_c = map_c<vector_c<entity_s, 0>&, entity_id_get_t>;
+        using const_entity_map_c = map_c<const vector_c<entity_s, 0>&, entity_id_get_t>;
         entity_s& spawn_entity(uint8_t type, uint8_t group, frect_s position);
-        entity_s& get_entity(uint8_t id);
-        const entity_s& get_entity(uint8_t id) const;
-        span_c<entity_s> all_entities() { return {_all_entities.begin(), _all_entities.size()}; }
-        span_c<const entity_s> all_entities() const { return {_all_entities.begin(), _all_entities.size()}; }
+        entity_s& get_entity(uint8_t id) { return all_entities()[id]; };
+        const entity_s& get_entity(uint8_t id) const { return all_entities()[id]; }
+        entity_map_c all_entities() { return entity_map_c{_all_entities}; }
+        const_entity_map_c all_entities() const { return const_entity_map_c{_all_entities}; }
         void destroy_entity(uint8_t id);
         void erase_destroyed_entities();
 

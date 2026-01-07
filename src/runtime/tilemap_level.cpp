@@ -54,33 +54,16 @@ entity_s& tilemap_level_c::spawn_entity(uint8_t type, uint8_t group, frect_s pos
     return entity;
 };
 
-entity_s& tilemap_level_c::get_entity(uint8_t id) {
-    auto it = lower_bound(_all_entities.begin(), _all_entities.end(), id, [](const auto& ent, const uint8_t id){ return ent.id < id; });
-    assert(it != _all_entities.end());
-    assert(it->id == id);
-    return *it;
-}
-
-const entity_s& tilemap_level_c::get_entity(uint8_t id) const {
-    auto it = lower_bound(_all_entities.begin(), _all_entities.end(), id, [](const auto& ent, const uint8_t id){ return ent.id < id; });
-    assert(it != _all_entities.end());
-    assert(it->id == id);
-    return *it;
-}
-
 void tilemap_level_c::destroy_entity(uint8_t id) {
-    auto it = lower_bound(_all_entities.begin(), _all_entities.end(), id, [](const auto& ent, const uint8_t id){ return ent.id < id; });
-    it->active = false;
+    all_entities()[id].active = false;
     _destroy_entities.push_back(id);
 }
 
 void tilemap_level_c::erase_destroyed_entities() {
     if (_destroy_entities.size() > 0) {
-        for (const uint8_t j : _destroy_entities) {
-            auto it = lower_bound(_all_entities.begin(), _all_entities.end(), j, [](const auto& ent, const uint8_t id){ return ent.id < id; });
-            assert(it != _all_entities.end());
-            assert(it->id == j);
-            _all_entities.erase(it);
+        auto entities = all_entities();
+        for (const uint8_t id : _destroy_entities) {
+            entities.erase(id);
         }
         _destroy_entities.clear();
     }
