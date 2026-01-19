@@ -67,46 +67,41 @@ static uint8_t circle_16x16[16][16] = {
  };
 
 static void make_dither_mask(canvas_c::stencil_t stencil, const uint8_t mask_8x8[8][8], int shade) {
-    int y;
-    do_dbra(y, 7) {
+    for (int y = 0; y < 8; y++) {
         uint16_t row = 0;
-        int x;
-        do_dbra(x, 7) {
+        for (int x = 0; x < 8; x++) {
             if (mask_8x8[x][y] < shade) {
                 row |= (0x101 << x);
             }
-        } while_dbra(x);
+        }
         stencil[y] = row;
         stencil[y + 8] = row;
-    } while_dbra(y);
+    }
 }
 
 void make_dither_mask(canvas_c::stencil_t stencil, const uint8_t mask_16x16[16][16], int shade) {
-    int y;
-    do_dbra(y, 15) {
+    for (int y = 0; y < 16; y++) {
         uint16_t row = 0;
         int x;
-        do_dbra(x, 15) {
+        for (int x = 0; x < 16; x++) {
             if (mask_16x16[x][y] < shade) {
                 row |= (0x1 << x);
             }
-        } while_dbra(x);
+        }
         stencil[y] = row;
-    } while_dbra(y);
+    }
 }
 
 void make_dither_mask(canvas_c::stencil_t stencil, int (*func)(int), int shade) {
-    int y;
-    do_dbra(y, 15) {
+    for (int y = 0; y < 16; y++) {
         uint16_t row = 0;
-        int x;
-        do_dbra(x, 15) {
+        for (int x = 0; x < 16; x++) {
             if (func(x + y * 16) < shade) {
                 row |= (0x1 << x);
             }
-        } while_dbra(x);
+        }
         stencil[y] = row;
-    } while_dbra(y);
+    }
 }
 
 void canvas_c::make_stencil(stencil_t stencil, stencil_e type, int shade) {
@@ -139,13 +134,11 @@ const canvas_c::stencil_t* const canvas_c::stencil(stencil_e type, int shade) {
     static bool _initialized = false;
     static stencil_t _stencils[4][canvas_c::STENCIL_FULLY_OPAQUE + 1];
     if (!_initialized) {
-        int i;
-        do_dbra(i, 3) {
-            int j;
-            do_dbra(j, canvas_c::STENCIL_FULLY_OPAQUE) {
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j <= canvas_c::STENCIL_FULLY_OPAQUE; j++) {
                 canvas_c::make_stencil(_stencils[i][j], (canvas_c::stencil_e)(i + 1), j);
-            } while_dbra(j);
-        } while_dbra(i);
+            }
+        }
         _initialized = true;
     }
     if (type == stencil_e::none) {

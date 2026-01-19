@@ -50,8 +50,7 @@ void mouse_c::set_limits(const rect_s& limits) {
 }
 
 static void update_mouse_state() {
-    int button;
-    do_dbra(button, 1) {
+    for (int button = 0; button < 2; button++) {
         if (g_mouse_buttons & (1 << button)) {
             g_mouse_button_states[button] = button_state_e::pressed;
         } else if (g_prev_mouse_buttons & (1 << button)) {
@@ -59,7 +58,7 @@ static void update_mouse_state() {
         } else {
             g_mouse_button_states[button] = button_state_e::released;
         }
-    } while_dbra(button);
+    }
     g_prev_mouse_buttons = g_mouse_buttons;
 }
 
@@ -97,8 +96,7 @@ directions_e controller_c::directions() const {
 }
 
 static void update_joystick_state() {
-    int joystick;
-    do_dbra(joystick, 1) {
+    for (int joystick = 0; joystick < 2; joystick++) {
         const auto& joy = controller_c::shared((controller_c::port_e)joystick);
         if (joy.is_pressed(controller_c::fire)) {
             g_joystick_button_states[joystick] = button_state_e::pressed;
@@ -107,7 +105,7 @@ static void update_joystick_state() {
         } else {
             g_joystick_button_states[joystick] = button_state_e::released;
         }
-    } while_dbra(joystick);
+    }
 }
 
 bool controller_c::is_pressed(button_e button) const {

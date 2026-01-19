@@ -60,8 +60,7 @@ namespace toybox {
             if (this == &other) {
                 return true;
             } else {
-                int i;
-                while_dbra_count(i, Count) {
+                for (int i; i < Count; i++) {
                     if (_data[i] != other._data[i]) {
                         return false;
                     }

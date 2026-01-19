@@ -41,8 +41,7 @@ void fullscreen_scene_c::update(display_list_c& display_list, int ticks) {
     const auto idx = timer_c::shared(timer_c::timer_e::vbl).tick() % 64;
     const auto pos = _mouse.position();
     _pos[idx] = pos;
-    int i;
-    while_dbra_count(i, 4) {
+    for (int i = 3; i >= 0; i--) {
         const int p = (idx - i * 20) % 64;
         back_viewport.draw(_sprites, i, _pos[p]);
     }

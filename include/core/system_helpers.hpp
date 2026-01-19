@@ -29,27 +29,6 @@ namespace toybox {
 #endif
     }
 
-#if __M68000__
-#define do_dbra(var, from) \
-    var = from; \
-    __asm__ volatile ("" : : "d"(var) :); \
-    do
-#define while_dbra_count(var,count) \
-    var = count; \
-    __asm__ volatile ("" : : "d"(var) :); \
-    while (--var != ((decltype(var))~0))
-#else
-#define do_dbra(var, from) \
-    var = from; \
-    hard_assert(var >= 0); \
-    do
-#define while_dbra_count(var,count) \
-    var = count; \
-    while (--var != ((decltype(var))~0))
-#endif
-#define while_dbra(var) \
-    while (--var != ((decltype(var))~0))
-
 #ifdef __M68000__
     struct codegen_s {
         // Buffer must be 16 bytes

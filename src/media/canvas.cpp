@@ -180,30 +180,29 @@ size_s canvas_c::draw(const font_c& font, const char* text, point_s at, alignmen
     size_s size = font.char_rect(' ').size;
     size.width = 0;
     if (len == 0) return size;
-    int i;
-    do_dbra(i, len - 1) {
+    for (int i = 0; i < len; i++) {
         size.width += font.char_rect(text[i]).size.width;
-    } while_dbra(i);
+    }
     switch (alignment) {
-        case alignment_e::left:
+        case alignment_e::right:
             at.x += size.width;
             break;
         case alignment_e::center:
-            at.x += size.width / 2;
+            at.x -= size.width / 2;
             break;
         default:
             break;
     }
     if (_dirtymap) {
-        rect_s dirty_rect(point_s(at.x - size.width, at.y), size);
+        rect_s dirty_rect(point_s(at.x, at.y), size);
         _dirtymap->mark(dirty_rect);
     }
     const_cast<canvas_c*>(this)->with_dirtymap(nullptr, [&] {
-        do_dbra(i, len - 1) {
+        for (int i = 0; i < len; i++) {
             const rect_s& rect = font.char_rect(text[i]);
-            at.x -= rect.size.width;
             draw(*font.image(), rect, at, color);
-        } while_dbra(i);
+            at.x += rect.size.width;
+        }
     });
     return size;
 }

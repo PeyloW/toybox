@@ -127,11 +127,10 @@ public:
 
         // Convert psgplay_stereo to interleaved int16_t format for SDL with volume scaling
         int16_t* output = reinterpret_cast<int16_t*>(stream);
-        int i;
-        do_dbra(i, read - 1) {
+        for (int i = 0; i < read; i++) {
             output[i * 2] = static_cast<int16_t>(buffer[i].left * _music_volume);
             output[i * 2 + 1] = static_cast<int16_t>(buffer[i].right * _music_volume);
-        } while_dbra(i);
+        }
 
         // Fill remaining with silence if we got fewer samples than requested
         if (read < sample_count) {

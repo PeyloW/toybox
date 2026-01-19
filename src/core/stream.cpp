@@ -54,8 +54,7 @@ stream_c& stream_c::operator<<(int32_t i) {
         int fillc = _width - len;
         if (fillc > 0) {
             char buf[fillc];
-            int i;
-            while_dbra_count(i, fillc) buf[i] = _fill;
+            for (int i = 0; i < fillc; i++) buf[i] = _fill;
             write(reinterpret_cast<uint8_t*>(buf), fillc);
         }
     }

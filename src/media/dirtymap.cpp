@@ -151,17 +151,16 @@ void dirtymap_c::mark(const rect_s& rect) {
                 *data &= (first_byte_mask | last_byte_mask);
             }
         } else {
+            const int mid_bytes = end_byte - start_byte - 1;
             if constexpr (mark_type == mark_type_e::dirty) {
                 *data++ |= first_byte_mask;
-                int j;
-                while_dbra_count(j, end_byte - start_byte - 1) {
+                for (int j = 0; j < mid_bytes; j++) {
                     *data++ = 0xff;
                 }
                 *data |= last_byte_mask;
             } else {
                 *data++ &= first_byte_mask;
-                int j;
-                while_dbra_count(j, end_byte - start_byte - 1) {
+                for (int j = 0; j < mid_bytes; j++) {
                     *data++ = 0x00;
                 }
                 *data &= last_byte_mask;
@@ -178,19 +177,18 @@ void dirtymap_c::mark(const rect_s& rect) {
                 data += _line_bytes;
             }
         } else {
+            const int mid_bytes = end_byte - start_byte - 1;
             for (int16_t y = 0; y <= extra_rows; y++) {
                 auto line_data = data;
                 if constexpr (mark_type == mark_type_e::dirty) {
                     *line_data++ |= first_byte_mask;
-                    int j;
-                    while_dbra_count(j, end_byte - start_byte - 1) {
+                    for (int j = 0; j < mid_bytes; j++) {
                         *line_data++ = 0xff;
                     }
                     *line_data |= last_byte_mask;
                 } else {
                     *line_data++ &= first_byte_mask;
-                    int j;
-                    while_dbra_count(j, end_byte - start_byte - 1) {
+                    for (int j = 0; j < mid_bytes; j++) {
                         *line_data++ = 0x00;
                     }
                     *line_data &= last_byte_mask;
@@ -205,15 +203,15 @@ template void dirtymap_c::mark<dirtymap_c::mark_type_e::clean>(const rect_s& rec
 template void dirtymap_c::mark<dirtymap_c::mark_type_e::mask>(const rect_s& rect);
 
 void dirtymap_c::merge(const dirtymap_c& dirtymap) {
+    assert(this != &dirtymap && "Merging dirtymap with self");
     assert(_tilespace_size.width == dirtymap._tilespace_size.width);   // Widths must match
     assert(_tilespace_size.height >= dirtymap._tilespace_size.height); // Other height may be smaller
     if (!dirtymap.is_dirty()) return;
     _is_dirty = true;
     uint32_t* l_dest = (uint32_t*)_data;
     const uint32_t* l_source = (uint32_t*)dirtymap._data;
-    int16_t i;
     const int16_t long_count = (dirtymap._line_bytes * dirtymap._tilespace_size.height + 3) / 4;
-    while_dbra_count(i, long_count) {
+    for (int i = 0; i < long_count; i++) {
         const uint32_t v = *l_source++;
         if (v) {
             *l_dest++ |= v;
@@ -251,10 +249,8 @@ void dirtymap_c::restore(function_c<void(const rect_s&)>& func) {
 #endif
     auto data = _data;
     point_s at = {0, 0};
-    int row;
-    while_dbra_count(row, _tilespace_size.height) {
-        int col;
-        while_dbra_count(col, _line_bytes) {
+    for (int row = 0; row < _tilespace_size.height; row++) {
+        for (int col = 0; col < _line_bytes; col++) {
             const uint8_t byte = *data;
             if (byte) {
                 const int16_t height = [&] {
@@ -267,8 +263,7 @@ void dirtymap_c::restore(function_c<void(const rect_s&)>& func) {
                 }();
                 auto bitrunlist = lookup_table[(int16_t)byte];
                 int16_t* bitrun = (int16_t*)bitrunlist->bit_runs;
-                int r;
-                while_dbra_count(r, bitrunlist->num_runs) {
+                for (int r = 0; r < bitrunlist->num_runs; r++) {
                     rect_s rect;
                     rect.origin = point_s(at.x + *bitrun++, at.y);
                     rect.size = size_s(*bitrun++, height);
@@ -328,10 +323,8 @@ void dirtymap_c::print_debug(const char* name) const {
     ((byte) & 0x40 ? '1' : '0'), \
     ((byte) & 0x80 ? '1' : '0')
     auto data = _data;
-    int row;
-    while_dbra_count(row, _tilespace_size.height) {
-        int col;
-        while_dbra_count(col, _line_bytes) {
+    for (int row = 0; row < _tilespace_size.height; row++) {
+        for (int col = 0; col < _line_bytes; col++) {
             const auto byte = *data++;
             printf(BYTE_TO_BINARY_PATTERN,  BYTE_TO_BINARY(byte));
         }
