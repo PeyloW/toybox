@@ -36,9 +36,14 @@ namespace toybox {
             uint32_t t = x;
             return t * y;
         } else {
-            uint32_t r;
-            __asm__ ("mulu %[y],%[r]" : [r]"=d"(r) : "[r]"(x), [y]"dmi"(y));
-            return r;
+            if (__builtin_constant_p(x) || __builtin_constant_p(y)) {
+                uint32_t t = x;
+                return t * y;
+            } else {
+                uint32_t r;
+                __asm__ ("mulu %[y],%[r]" : [r]"=d"(r) : "[r]"(x), [y]"dmi"(y));
+                return r;
+            }
         }
     }
     template<>
@@ -47,9 +52,14 @@ namespace toybox {
             int32_t t = x;
             return t * y;
         } else {
-            int32_t r;
-            __asm__ ("muls %[y],%[r]" : [r]"=d"(r) : "[r]"(x), [y]"dmi"(y));
-            return r;
+            if (__builtin_constant_p(x) || __builtin_constant_p(y)) {
+                int32_t t = x;
+                return t * y;
+            } else {
+                int32_t r;
+                __asm__ ("muls %[y],%[r]" : [r]"=d"(r) : "[r]"(x), [y]"dmi"(y));
+                return r;
+            }
         }
     }
 #endif
@@ -69,9 +79,13 @@ namespace toybox {
         if consteval {
             return div_t<uint16_t>{ static_cast<uint16_t>(x % y), static_cast<uint16_t>(x / y) };
         } else {
-            div_t<uint16_t> r;
-            __asm__ ("divu %[y],%[r]" : [r]"=d"(r) : "[r]"(x), [y]"dmi"(y));
-            return r;
+            if (__builtin_constant_p(y)) {
+                return div_t<uint16_t>{ static_cast<uint16_t>(x % y), static_cast<uint16_t>(x / y) };
+            } else {
+                div_t<uint16_t> r;
+                __asm__ ("divu %[y],%[r]" : [r]"=d"(r) : "[r]"(x), [y]"dmi"(y));
+                return r;
+            }
         }
     }
     template<>
@@ -79,9 +93,13 @@ namespace toybox {
         if consteval {
             return div_t<int16_t>{ static_cast<int16_t>(x % y), static_cast<int16_t>(x / y) };
         } else {
-            div_t<int16_t> r;
-            __asm__ ("divs %[y],%[r]" : [r]"=d"(r) : "[r]"(x), [y]"dmi"(y));
-            return r;
+            if (__builtin_constant_p(y)) {
+                return div_t<int16_t>{ static_cast<int16_t>(x % y), static_cast<int16_t>(x / y) };
+            } else {
+                div_t<int16_t> r;
+                __asm__ ("divs %[y],%[r]" : [r]"=d"(r) : "[r]"(x), [y]"dmi"(y));
+                return r;
+            }
         }
     }
 #endif

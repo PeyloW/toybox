@@ -172,7 +172,7 @@ static void image_read_packbits(iffstream_c& file, uint16_t line_words, int heig
                     return; // Failed read
                 }
                 while (cmd++ <= 0) {
-                    move_inc_to(data, buffer);
+                    *buffer++ = data;
                 }
             }
         }

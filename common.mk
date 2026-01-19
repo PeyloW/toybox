@@ -66,8 +66,15 @@ else ifeq ($(HOST),none)
 	FLAGS+=-flto
 	STRIP?=on
 	INFO=Building for atari target
-	CC=/opt/cross-mint/bin/m68k-atari-mintelf-c++
-	AR=/opt/cross-mint/bin/m68k-atari-mintelf-gcc-ar
+ifeq ($(GCC),exp)
+	GCC_PATH=/Users/peylow/m68k-atari-mint-gcc/build/gcc
+	CC=$(GCC_PATH)/g++-cross -B$(GCC_PATH)
+	AR=$(GCC_PATH)/gcc-ar -B$(GCC_PATH)
+else
+	GCC_PATH=/opt/cross-mint/bin
+	CC=$(GCC_PATH)/m68k-atari-mintelf-c++
+	AR=$(GCC_PATH)/m68k-atari-mintelf-gcc-ar
+endif
 	FLAGS+=-m68000 -mshort -mfastcall
 	FLAGS+=-DNDEBUG
 ifeq ($(STRIP),on)
@@ -79,7 +86,7 @@ else
 endif
 #	FLAGS+=-S
 	FLAGS+=-DTOYBOX_DEBUG_CPU=1
-	CFLAGS+=-O3 -fomit-frame-pointer -fno-threadsafe-statics
+	CFLAGS+=-O2 -fomit-frame-pointer -fno-threadsafe-statics
 	CFLAGS+=-fgcse-after-reload -fpredictive-commoning -ftree-partial-pre -funswitch-loops
 	CFLAGS+=-fno-exceptions -Wno-write-strings -Wno-pointer-arith -Wno-packed-not-aligned -fno-rtti
 	CFLAGS+=-I $(LIBCMINIINC)
