@@ -164,7 +164,7 @@ static shared_ptr_c<display_list_c> make_display_list(const scene_c::configurati
     shared_ptr_c<display_list_c> listptr(new display_list_c());
     auto pal = new palette_c();
     if (configuration.palette) {
-        copy(configuration.palette->begin(), configuration.palette->end(), pal->begin());
+        copy(*configuration.palette, pal->begin());
     }
     auto vpt = new viewport_c(configuration.viewport_size);
     vpt->set_offset(point_s(0,0));
@@ -216,7 +216,7 @@ void scene_manager_c::configure_display_lists(const scene_c::configuration_s& co
     if (configuration.palette) {
         for (int i = 0; i < _display_lists.size(); ++i) {
             auto pal = _display_lists[i]->get(PRIMARY_PALETTE).palette_ptr().get();
-            copy(configuration.palette->begin(), configuration.palette->end(), pal->begin());
+            copy(*configuration.palette, pal->begin());
         }
     }
     while (_display_lists.size() < configuration.buffer_count) {

@@ -17,7 +17,7 @@ __neverinline void test_algorithms() {
 
     hard_assert(!is_sorted(begin(numbers), end(numbers)) && "Unsorted array should not be sorted");
 
-    copy(begin(numbers), end(numbers), begin(buffer));
+    copyn(begin(numbers), 4, begin(buffer));
     hard_assert(!is_sorted(begin(buffer), end(buffer)) && "Copied unsorted array should not be sorted");
     sort(begin(buffer), end(buffer));
     hard_assert(is_sorted(begin(buffer), end(buffer)) && "Array should be sorted after sort");

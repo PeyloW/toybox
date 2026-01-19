@@ -34,6 +34,11 @@ namespace toybox {
         return d_first;
     }
 
+    template<container C, forward_iterator J>
+    J copy(const C& container, J d_first) {
+        return copyn(container.begin(), container.size(), d_first);
+    }
+
     template<const_backward_iterator I, backward_iterator J>
     J copy_backward(I first, I last, J d_last) {
         while (first != last) {

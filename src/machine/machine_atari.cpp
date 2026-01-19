@@ -172,7 +172,7 @@ void machine_c::set_active_palette(const shared_ptr_c<const palette_c>& palette)
 #ifdef __M68000__
 #   if TOYBOX_TARGET_ATARI
     if (palette) {
-        copy(palette->begin(), palette->end(), reinterpret_cast<color_c*>(0xffff8240));
+        copy(*palette, reinterpret_cast<color_c*>(0xffff8240));
     }
 #   else
 #       error "Unsupported target"

@@ -63,7 +63,7 @@ namespace toybox {
     class basic_palette_c : public array_s<color_c, Count> {
     public:
         constexpr basic_palette_c() = default;
-        constexpr basic_palette_c(uint16_t* cs) { copy(cs, cs + Count, this->begin()); }
+        constexpr basic_palette_c(uint16_t* cs) { copyn(cs, Count, this->begin()); }
         constexpr basic_palette_c(uint8_t* c) {
             for (int i = 0; i < Count; i++) {
                 this->_data[i] = color_c(c[0], c[1], c[2]);

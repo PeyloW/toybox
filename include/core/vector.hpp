@@ -56,7 +56,7 @@ namespace toybox {
             if (this == &o) return *this;
             clear();
             this->__ensure_capacity(o._size, _size);
-            uninitialized_copy(o.begin(), o.end(), begin());
+            uninitialized_copyn(o.begin(), o.size(), begin());
             _size = o._size;
             return *this;
         }
@@ -145,58 +145,63 @@ namespace toybox {
             return *construct_at(this->__buffer()[_size++].template ptr<0>(), forward<Args>(args)...);
         }
 
-        iterator insert(const_iterator pos, const_reference value) {
-            this->__ensure_capacity(_size + 1, _size);
-            assert(pos >= begin() && pos <= end() && "Invalid insert position");
-            iterator ins = (iterator)pos;
-            // Construct new element at end first (into uninitialized memory)
-            construct_at(end(), value);
-            _size++;
-            // Rotate the new element into position using move-assignment
-            if (ins != end() - 1) {
-                Type temp = move(*(end() - 1));
-                move_backward(ins, end() - 1, end());
-                *ins = move(temp);
-            }
-            return ins;
+        __forceinline iterator insert(const_iterator pos, const_reference value) {
+            return insert((int)(pos - begin()), value);
         }
-        __forceinline iterator insert(unsigned at, const_reference value) {
-            return insert(begin() + at, forward<value_type>(value));
+        iterator insert(int at, const_reference value) {
+            assert(at >= 0 && at <= (int)_size && "Invalid insert position");
+            if (at == (int)_size) {
+                push_back(value);
+                return end() - 1;
+            }
+            this->__ensure_capacity(_size + 1, _size);
+            const iterator pos = begin() + at;
+            const unsigned count = _size - at - 1;
+            construct_at(end(), move(*(end() - 1)));
+            _size++;
+            if (count > 0) {
+                moven_backward(pos + count, count, pos + count + 1);
+            }
+            *pos = value;
+            return pos;
         }
         template<class... Args>
-        iterator emplace(Type* pos, Args&&... args) {
-            this->__ensure_capacity(_size + 1, _size);
-            assert(pos >= begin() && pos <= end() && "Invalid insert position");
-            iterator ins = (iterator)pos;
-            // Construct new element at end first (into uninitialized memory)
-            construct_at(end(), forward<Args>(args)...);
-            _size++;
-            // Rotate the new element into position using move-assignment
-            if (ins != end() - 1) {
-                Type temp = move(*(end() - 1));
-                move_backward(ins, end() - 1, end());
-                *ins = move(temp);
-            }
-            return ins;
+        __forceinline iterator emplace(Type* pos, Args&&... args) {
+            return emplace((int)(pos - begin()), forward<Args>(args)...);
         }
         template<class... Args>
-        __forceinline iterator emplace(int at, Args&&... args) {
-            return emplace(begin() + at, forward<Args>(args)...);
+        iterator emplace(int at, Args&&... args) {
+            assert(at >= 0 && at <= (int)_size && "Invalid emplace position");
+            if (at == (int)_size) {
+                emplace_back(forward<Args>(args)...);
+                return end() - 1;
+            }
+            this->__ensure_capacity(_size + 1, _size);
+            const iterator pos = begin() + at;
+            const unsigned count = _size - at - 1;
+            construct_at(end(), move(*(end() - 1)));
+            _size++;
+            if (count > 0) {
+                moven_backward(pos + count, count, pos + count + 1);
+            }
+            destroy_at(pos);
+            construct_at(pos, forward<Args>(args)...);
+            return pos;
         }
 
         iterator erase(const_iterator pos) {
-            assert(_size > 0 && "Vector is empty");
-            assert(pos >= begin() && pos < end() && "Invalid erase position");
-            destroy_at(pos);
-            iterator ins = (iterator)pos;
-            move((iterator)pos + 1, end(), ins);
-            // Destroy the moved-from duplicate at the old end
-            _size--;
-            destroy_at(end());
-            return ins;
+            return erase(pos - begin());
         }
         iterator erase(int at) {
-            return erase(begin() + at);
+            assert(_size > 0 && "Vector is empty");
+            assert(at >= 0 && at < (int)_size && "Invalid erase position");
+            const iterator pos = begin() + at;
+            destroy_at(pos);
+            _size--;
+            const unsigned count = _size - at;
+            moven(pos + 1, count, pos);
+            destroy_at(end());
+            return pos;
         }
         void clear() {
             if constexpr (is_trivially_destructible<Type>::value) {
