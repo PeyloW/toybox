@@ -11,7 +11,7 @@
 
 namespace toybox {
     
-    template<typename Type, int Count>
+    template<typename Type, unsigned Count>
     struct array_s {
         using value_type = Type;
         using pointer = value_type* ;
@@ -27,7 +27,7 @@ namespace toybox {
         __forceinline constexpr const_iterator begin() const __pure { return &_data[0]; }
         __forceinline constexpr iterator end() __pure { return &_data[Count]; }
         __forceinline constexpr const_iterator end() const __pure { return &_data[Count]; }
-        __forceinline constexpr int size() const __pure { return Count; }
+        __forceinline constexpr unsigned size() const __pure { return Count; }
         __forceinline constexpr pointer data() { return _data[0].ptr(); }
         __forceinline constexpr const_pointer data() const { return _data[0].ptr(); }
 
@@ -60,7 +60,7 @@ namespace toybox {
             if (this == &other) {
                 return true;
             } else {
-                for (int i; i < Count; i++) {
+                for (unsigned i = 0; i < Count; i++) {
                     if (_data[i] != other._data[i]) {
                         return false;
                     }

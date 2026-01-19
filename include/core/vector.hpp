@@ -17,7 +17,7 @@ namespace toybox {
      When Count > 0: Uses statically allocated backing store for performance.
      When Count == 0: Uses dynamically allocated backing store with automatic growth.
      */
-    template<class Type, int Count>
+    template<class Type, unsigned Count>
     class vector_c : public nocopy_c,
                      private conditional<Count == 0,
                                         detail::base_buffer_dynamic_c<Type>,
@@ -34,16 +34,16 @@ namespace toybox {
         
         vector_c() : _size(0) {}
         constexpr vector_c(initializer_list<Type> init) : _size(0) {
-            this->__ensure_capacity((int)init.size(), _size);
-            copy(init.begin(), init.end(), begin());
-            _size = (int)init.size();
+            this->__ensure_capacity((unsigned)init.size(), _size);
+            copyn(init.begin(), (unsigned)init.size(), begin());
+            _size = (unsigned)init.size();
         }
         constexpr vector_c(const vector_c& o) requires (Count == 0) : _size(0) {
             this->__ensure_capacity(o._size, _size);
-            uninitialized_copy(o.begin(), o.end(), begin());
+            uninitialized_copyn(o.begin(), o.size(), begin());
             _size = o._size;
         }
-        constexpr vector_c(vector_c&& o) requires (Count == 0) : _size(o._size) {
+        constexpr vector_c(vector_c&& __restrict o) requires (Count == 0) : _size(o._size) {
             this->__take_ownership(o);
             o._size = 0;
         }
@@ -89,18 +89,18 @@ namespace toybox {
         __forceinline const_pointer data() const {
             return this->__buffer()[0].template ptr<0>();
         }
-        __forceinline int size() const __pure { return _size; }
+        __forceinline unsigned size() const __pure { return _size; }
         
-        void resize(int size) {
+        void resize(unsigned size) {
             if (_size == size) return;
             if (_size < size) {
                 this->__ensure_capacity(size, _size);
-                for (int i = _size; i < size; ++i) {
+                for (unsigned i = _size; i < size; ++i) {
                     construct_at(this->__buffer()[i].template ptr<0>());
                 }
             } else {
                 if constexpr (!is_trivially_destructible<Type>::value) {
-                    for (int i = size; i < _size; ++i) {
+                    for (unsigned i = size; i < _size; ++i) {
                         destroy_at(this->__buffer()[i].template ptr<0>());
                     }
                 }
@@ -160,7 +160,7 @@ namespace toybox {
             }
             return ins;
         }
-        __forceinline iterator insert(int at, const_reference value) {
+        __forceinline iterator insert(unsigned at, const_reference value) {
             return insert(begin() + at, forward<value_type>(value));
         }
         template<class... Args>
@@ -212,16 +212,16 @@ namespace toybox {
             destroy_at(this->__buffer()[--_size].template ptr<0>());
         }
 
-        __forceinline int capacity() const __pure {
+        __forceinline unsigned capacity() const __pure {
             return this->__capacity();
         }
 
-        void reserve(int new_cap) requires (Count == 0) {
+        void reserve(unsigned new_cap) requires (Count == 0) {
             this->__ensure_capacity(new_cap, _size);
         }
 
     private:
-        int _size;
+        unsigned _size;
     };
     
 }

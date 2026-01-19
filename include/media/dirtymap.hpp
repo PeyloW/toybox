@@ -38,7 +38,7 @@ namespace toybox {
         enum class mark_type_e : uint8_t { dirty, clean, mask };
         template<mark_type_e = mark_type_e::dirty>
         void mark(const rect_s& rect);
-        void merge(const dirtymap_c& dirtymap);
+        void merge(const dirtymap_c& __restrict dirtymap);
         bool is_dirty() const { return _is_dirty; }
         void restore(canvas_c& canvas, const image_c& clean_image);
         void restore(restore_f& func);

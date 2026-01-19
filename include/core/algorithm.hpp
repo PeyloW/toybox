@@ -25,9 +25,25 @@ namespace toybox {
         return d_first;
     }
 
+    template<const_forward_iterator I, forward_iterator J>
+    J copyn(I first, unsigned count, J d_first) {
+        while (count--) {
+            *(d_first) = *(first);
+            ++d_first; ++first;
+        }
+        return d_first;
+    }
+
     template<const_backward_iterator I, backward_iterator J>
     J copy_backward(I first, I last, J d_last) {
         while (first != last) {
+            *(--d_last) = *(--last);
+        }
+        return d_last;
+    }
+    template<const_backward_iterator I, backward_iterator J>
+    J copyn_backward(I last, unsigned count, J d_last) {
+        while (count--) {
             *(--d_last) = *(--last);
         }
         return d_last;
@@ -42,9 +58,26 @@ namespace toybox {
         return d_first;
     }
 
+    template<forward_iterator I, forward_iterator J>
+    J moven(I first, unsigned count, J d_first) {
+        while (count--) {
+            *(d_first) = move(*(first));
+            ++d_first; ++first;
+        }
+        return d_first;
+    }
+
     template<backward_iterator I, backward_iterator J>
     I move_backward(I first, I last, J d_last) {
         while (first != last) {
+            *(--d_last) = move(*(--last));
+        }
+        return d_last;
+    }
+
+    template<backward_iterator I, backward_iterator J>
+    I moven_backward(I last, unsigned count, J d_last) {
+        while (count--) {
             *(--d_last) = move(*(--last));
         }
         return d_last;
@@ -58,10 +91,28 @@ namespace toybox {
         }
         return d_first;
     }
+    
+    template<const_forward_iterator I, forward_iterator J>
+    J uninitialized_moven(I first, unsigned count, J d_first) {
+        while (count--) {
+            construct_at(&*d_first, move(*first));
+            ++d_first; ++first;
+        }
+        return d_first;
+    }
 
     template<const_forward_iterator I, forward_iterator J>
     J uninitialized_copy(I first, I last, J d_first) {
         while (first != last) {
+            construct_at(&*d_first, *first);
+            ++d_first; ++first;
+        }
+        return d_first;
+    }
+
+    template<const_forward_iterator I, forward_iterator J>
+    J uninitialized_copyn(I first, unsigned count, J d_first) {
+        while (count--) {
             construct_at(&*d_first, *first);
             ++d_first; ++first;
         }

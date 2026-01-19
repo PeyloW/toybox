@@ -111,7 +111,7 @@ namespace toybox {
         timer_c& clock;
 
         display_list_c& display_list(display_list_e id);
-        int display_list_count() const { return _display_lists.size(); }
+        unsigned display_list_count() const { return _display_lists.size(); }
         
     private:
         scene_manager_c();

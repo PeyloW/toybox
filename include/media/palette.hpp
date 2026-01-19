@@ -59,18 +59,16 @@ namespace toybox {
      A `basic_palette_c` is an arbitrary list of colors.
      */
     static_assert(!is_polymorphic<nocopy_c>::value);
-    template<int Count>
+    template<unsigned Count>
     class basic_palette_c : public array_s<color_c, Count> {
     public:
         constexpr basic_palette_c() = default;
         constexpr basic_palette_c(uint16_t* cs) { copy(cs, cs + Count, this->begin()); }
         constexpr basic_palette_c(uint8_t* c) {
-            c += 3 * Count;
-            int i = Count - 1;
-            do {
-                c -= 3;
+            for (int i = 0; i < Count; i++) {
                 this->_data[i] = color_c(c[0], c[1], c[2]);
-            }  while (--i != ~0);
+                c += 3;
+            }
         }
     };
         

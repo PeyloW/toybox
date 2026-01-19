@@ -21,7 +21,7 @@ namespace toybox {
         class remap_table_c : nocopy_c {
         public:
             constexpr remap_table_c() { for (int i = -1; i < 16; i++) _table[i + 1] = i; }
-            template<int Count>
+            template<unsigned Count>
             constexpr remap_table_c(const pair_c<int, int> (&maps)[Count]) : remap_table_c() {
                 for (const auto& map : maps) {
                     assert(map.first >= -1 && map.first <16);
@@ -128,17 +128,17 @@ namespace toybox {
         uint16_t _tileset_line_words;
         bool _clipping = true;
         
-        void imp_fill(uint8_t ci, const rect_s& rect) const;
-        void imp_draw_aligned(const image_c& srcImage, const rect_s& rect, point_s point) const;
-        void imp_draw(const image_c& srcImage, const rect_s& rect, point_s point) const;
-        void imp_draw_masked(const image_c& srcImage, const rect_s& rect, point_s point) const;
-        void imp_draw_color(const image_c& srcImage, const rect_s& rect, point_s point, uint16_t color) const;
+        __neverinline void imp_fill(uint8_t ci, const rect_s& rect) const;
+        __neverinline void imp_draw_aligned(const image_c& srcImage, const rect_s& rect, point_s point) const;
+        __neverinline void imp_draw(const image_c& srcImage, const rect_s& rect, point_s point) const;
+        __neverinline void imp_draw_masked(const image_c& srcImage, const rect_s& rect, point_s point) const;
+        __neverinline void imp_draw_color(const image_c& srcImage, const rect_s& rect, point_s point, uint16_t color) const;
 
-        void imp_init_draw_tile(const tileset_c& srcTileset);
-        void imp_fill_tile(uint8_t ci, point_s point) const;
-        void imp_draw_tile(const image_c& srcImage, const rect_s& rect, point_s point) const;
+        __neverinline void imp_init_draw_tile(const tileset_c& srcTileset);
+        __neverinline void imp_fill_tile(uint8_t ci, point_s point) const;
+        __neverinline void imp_draw_tile(const image_c& srcImage, const rect_s& rect, point_s point) const;
 
-        void imp_draw_rect_SLOW(const image_c& srcImage, const rect_s& rect, point_s point) const;
+        __neverinline void imp_draw_rect_SLOW(const image_c& srcImage, const rect_s& rect, point_s point) const;
         
         
     };

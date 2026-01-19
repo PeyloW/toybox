@@ -94,7 +94,7 @@ namespace toybox {
         __forceinline const_iterator begin() const { return _container.begin(); }
         __forceinline const_iterator end() const { return _container.end(); }
         __forceinline const_pointer data() const { return _container.data(); }
-        __forceinline int size() const { return _container.size(); }
+        __forceinline unsigned size() const { return _container.size(); }
 
         // Element access - non-const (only for non-const containers)
         __forceinline reference front() requires (!is_const_ref) { return _container.front(); }
@@ -185,14 +185,14 @@ namespace toybox {
         }
         
         // Forwarded capacity operations
-        int capacity() const
-        requires requires(const container_type& c) { { c.capacity() } -> convertible_to<int>; }
+        unsigned capacity() const
+        requires requires(const container_type& c) { { c.capacity() } -> convertible_to<unsigned>; }
         {
             return _container.capacity();
         }
         
-        void reserve(int n)
-        requires requires(container_type& c, int n) { c.reserve(n); }
+        void reserve(unsigned n)
+        requires requires(container_type& c, unsigned n) { c.reserve(n); }
         {
             _container.reserve(n);
         }
@@ -209,11 +209,11 @@ namespace toybox {
     };
     
     /// Convenience alias for map with pair_c<Key, Value> elements and static capacity.
-    template<class Key, class Value, int Count>
+    template<class Key, class Value, unsigned Count>
     using pair_map_c = map_c<vector_c<pair_c<Key, Value>, Count>, detail::first_key_get_t>;
 
     /// Convenience alias for map with Value elements having .id member as key.
-    template<class Value, int Count>
+    template<class Value, unsigned Count>
     using id_map_c = map_c<vector_c<Value, Count>, detail::id_key_get_t>;
 
 } // namespace toybox

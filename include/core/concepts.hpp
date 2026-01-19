@@ -102,18 +102,18 @@ namespace toybox {
     };
     
     template<typename I>
-    concept const_random_accessible = const_dereferencable<I> && requires(I i, int n) {
+    concept const_random_accessible = const_dereferencable<I> && requires(I i, int n, unsigned m) {
         { i += n } -> same_as<I&>;
         { i +  n } -> same_as<I>;
         { n +  i } -> same_as<I>;
         { i -= n } -> same_as<I&>;
         { i -  n } -> same_as<I>;
-        {  i[n]  } -> same_as<decltype(*I{})>;
+        {  i[m]  } -> same_as<decltype(*I{})>;
     };
     template<typename I>
     concept random_accessible = const_random_accessible<I> && dereferencable<I> &&
-    requires(I i, int n, typename indirectly_readable_traits<I>::value_type&& v) {
-        { i[n] = static_cast<typename indirectly_readable_traits<I>::value_type&&>(v) };
+    requires(I i, unsigned m, typename indirectly_readable_traits<I>::value_type&& v) {
+        { i[m] = static_cast<typename indirectly_readable_traits<I>::value_type&&>(v) };
     };
     
 #pragma mark - Iterator concepts
@@ -145,7 +145,7 @@ namespace toybox {
         typename C::value_type;
         { cc.begin() } -> const_random_access_iterator;
         { cc.end() } -> const_random_access_iterator;
-        { cc.size() } -> convertible_to<int>;
+        { cc.size() } -> convertible_to<unsigned>;
     };
 
     template<class C>

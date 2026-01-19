@@ -29,7 +29,7 @@ namespace toybox {
             __forceinline T* operator->() const __pure  { return _ptr; }
             __forceinline T& operator*() const __pure  { return *(_ptr); }
             __forceinline T& operator[](int i) const __pure  { return _ptr[i]; }
-            __forceinline T* operator+(int32_t i) const __pure  { return _ptr + i; }
+            __forceinline T* operator+(int i) const __pure  { return _ptr + i; }
             
             __forceinline explicit operator bool() const __pure  { return _ptr != nullptr; }
             __forceinline bool operator==(const basic_ptr_c& o) const __pure { return _ptr == o._ptr; }

@@ -202,7 +202,7 @@ template void dirtymap_c::mark<dirtymap_c::mark_type_e::dirty>(const rect_s& rec
 template void dirtymap_c::mark<dirtymap_c::mark_type_e::clean>(const rect_s& rect);
 template void dirtymap_c::mark<dirtymap_c::mark_type_e::mask>(const rect_s& rect);
 
-void dirtymap_c::merge(const dirtymap_c& dirtymap) {
+void dirtymap_c::merge(const dirtymap_c& __restrict dirtymap) {
     assert(this != &dirtymap && "Merging dirtymap with self");
     assert(_tilespace_size.width == dirtymap._tilespace_size.width);   // Widths must match
     assert(_tilespace_size.height >= dirtymap._tilespace_size.height); // Other height may be smaller

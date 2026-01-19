@@ -23,7 +23,7 @@ namespace toybox {
         using const_iterator = const value_type*;
 
         span_c() : _begin(nullptr), _size(0) {}
-        span_c(iterator begin, int size) : _begin(begin), _size(size) {}
+        span_c(iterator begin, unsigned size) : _begin(begin), _size(size) {}
         span_c(const span_c& o) = default;
         span_c(span_c&& o) = default;
         span_c& operator=(const span_c& o) = default;
@@ -35,7 +35,7 @@ namespace toybox {
         __forceinline const_iterator end() const { return _begin + _size; }
         __forceinline pointer data() { return _begin; }
         __forceinline const_pointer data() const { return _begin; }
-        __forceinline int size() const __pure { return _size; }
+        __forceinline unsigned size() const __pure { return _size; }
 
         reference operator[](int i) {
             assert(i < _size && "Index out of bounds");
@@ -66,7 +66,7 @@ namespace toybox {
 
     private:
         iterator _begin;
-        int _size;
+        unsigned _size;
     };
     
 }

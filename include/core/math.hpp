@@ -16,22 +16,22 @@
 
 namespace toybox {
 
-    constexpr float truncf(float x) {
+    __purest constexpr float truncf(float x) {
         return (float)(int32_t)x;
     }
     
-    constexpr float roundf(float x) {
+    __purest constexpr float roundf(float x) {
         return truncf(x + (x < 0 ? -0.5f : 0.5f));
     }
     
     template<integral Int>
-    static __forceinline constexpr next_larger<Int>::type mul_fast(Int x, Int y) {
+    __purest __forceinline constexpr next_larger<Int>::type mul_fast(Int x, Int y) {
         typename next_larger<Int>::type t = x;
         return t * y;
     }
 #if __M68000__
     template<>
-    __forceinline constexpr uint32_t mul_fast(uint16_t x, uint16_t y) {
+    __purest __forceinline constexpr uint32_t mul_fast(uint16_t x, uint16_t y) {
         if consteval {
             uint32_t t = x;
             return t * y;
@@ -47,7 +47,7 @@ namespace toybox {
         }
     }
     template<>
-    __forceinline constexpr int32_t mul_fast(int16_t x, int16_t y) {
+    __purest __forceinline constexpr int32_t mul_fast(int16_t x, int16_t y) {
         if consteval {
             int32_t t = x;
             return t * y;
@@ -70,12 +70,12 @@ namespace toybox {
         constexpr operator Int() const { return quot; }
     };
     template<integral Int>
-    static constexpr div_t<Int> div_fast(typename next_larger<Int>::type x, Int y) {
+    __purest __forceinline constexpr div_t<Int> div_fast(typename next_larger<Int>::type x, Int y) {
         return div_t<Int>{ static_cast<Int>(x % y), static_cast<Int>(x / y) };
     }
 #if __M68000__
     template<>
-    __forceinline constexpr div_t<uint16_t> div_fast(uint32_t x, uint16_t y) {
+    __purest __forceinline constexpr div_t<uint16_t> div_fast(uint32_t x, uint16_t y) {
         if consteval {
             return div_t<uint16_t>{ static_cast<uint16_t>(x % y), static_cast<uint16_t>(x / y) };
         } else {
@@ -89,7 +89,7 @@ namespace toybox {
         }
     }
     template<>
-    __forceinline constexpr div_t<int16_t> div_fast(int32_t x, int16_t y) {
+    __purest __forceinline constexpr div_t<int16_t> div_fast(int32_t x, int16_t y) {
         if consteval {
             return div_t<int16_t>{ static_cast<int16_t>(x % y), static_cast<int16_t>(x / y) };
         } else {
@@ -106,6 +106,7 @@ namespace toybox {
     
     template<integral Int, int Bits>
     struct base_fix_t {
+        static_assert(Bits >= 0 && Bits < (sizeof(Int) * 8));
         using LargerInt = next_larger<Int>::type;
         Int raw;
 
@@ -124,16 +125,20 @@ namespace toybox {
         constexpr explicit operator OInt() const { return static_cast<OInt>(raw >> Bits); }
         constexpr explicit operator float() const { return static_cast<float>(raw) / (static_cast<LargerInt>(1) << Bits); }
         
-        constexpr base_fix_t operator+(const base_fix_t o) const {
-            return base_fix_t(static_cast<Int>(raw + o.raw), true);
+        __purest friend constexpr base_fix_t operator+(const base_fix_t lhs, const base_fix_t rhs) {
+            return base_fix_t(static_cast<Int>(lhs.raw + rhs.raw), true);
         }
         constexpr base_fix_t& operator+=(const base_fix_t o) {
             raw += o.raw;
             return *this;
         }
         template<integral OInt>
-        constexpr base_fix_t operator+(OInt o) const {
-            return *this + base_fix_t(o);
+        __purest friend constexpr base_fix_t operator+(const base_fix_t lhs, OInt rhs) {
+            return lhs + base_fix_t(rhs);
+        }
+        template<integral OInt>
+        __purest friend constexpr base_fix_t operator+(OInt lhs, const base_fix_t rhs) {
+            return base_fix_t(lhs) + rhs;
         }
         template<integral OInt>
         constexpr base_fix_t& operator+=(OInt o) {
@@ -141,16 +146,20 @@ namespace toybox {
             return *this;
         }
         
-        constexpr base_fix_t operator-(const base_fix_t o) const {
-            return base_fix_t(static_cast<Int>(raw - o.raw), true);
+        __purest friend constexpr base_fix_t operator-(const base_fix_t lhs, const base_fix_t rhs) {
+            return base_fix_t(static_cast<Int>(lhs.raw - rhs.raw), true);
         }
         constexpr base_fix_t& operator-=(const base_fix_t o) {
             raw -= o.raw;
             return *this;
         }
         template<integral OInt>
-        constexpr base_fix_t operator-(OInt o) const {
-            return *this - base_fix_t(o);
+        __purest friend constexpr base_fix_t operator-(const base_fix_t lhs, OInt rhs) {
+            return lhs - base_fix_t(rhs);
+        }
+        template<integral OInt>
+        __purest friend constexpr base_fix_t operator-(OInt lhs, const base_fix_t rhs) {
+            return base_fix_t(lhs) - rhs;
         }
         template<integral OInt>
         constexpr base_fix_t& operator-=(OInt o) {
@@ -158,12 +167,12 @@ namespace toybox {
             return *this;
         }
 
-        constexpr base_fix_t operator-() const {
-            return base_fix_t(-raw, true);
+        __purest friend constexpr base_fix_t operator-(const base_fix_t v) {
+            return base_fix_t(-v.raw, true);
         }
 
-        constexpr base_fix_t operator*(const base_fix_t o) const {
-            const auto r = mul_fast(raw, o.raw);
+        __purest friend constexpr base_fix_t operator*(const base_fix_t lhs, const base_fix_t rhs) {
+            const auto r = mul_fast(lhs.raw, rhs.raw);
             return base_fix_t(static_cast<Int>(r >> Bits), true);
         }
         constexpr base_fix_t operator*=(const base_fix_t o) {
@@ -172,23 +181,27 @@ namespace toybox {
             return *this;
         }
         template<integral OInt>
-        constexpr base_fix_t operator*(OInt o) const {
-            return base_fix_t(raw * static_cast<Int>(o), true);
+        __purest friend constexpr base_fix_t operator*(const base_fix_t lhs, OInt rhs) {
+            return base_fix_t(lhs.raw * static_cast<Int>(rhs), true);
+        }
+        template<integral OInt>
+        __purest friend constexpr base_fix_t operator*(OInt lhs, const base_fix_t rhs) {
+            return base_fix_t(static_cast<Int>(rhs) * rhs.raw, true);
         }
         template<integral OInt>
         constexpr base_fix_t& operator*=(OInt o) {
             raw *= static_cast<Int>(o);
             return *this;
         }
-        constexpr base_fix_t mul(base_fix_t o) const {
+        __pure constexpr base_fix_t mul(base_fix_t o) const {
             static constexpr auto half = (LargerInt)1 << (Bits - 1);
             const auto r = mul_fast(raw, o.raw);
             return base_fix_t(static_cast<Int>((r + (r >= 0 ? half : -half)) >> Bits), true);
         }
         
-        constexpr base_fix_t operator/(const base_fix_t o) const {
-            const auto eraw = (LargerInt)raw << Bits;
-            const auto r = div_fast(eraw, o.raw);
+        __purest friend constexpr base_fix_t operator/(const base_fix_t lhs, const base_fix_t rhs) {
+            const auto eraw = (LargerInt)lhs.raw << Bits;
+            const auto r = div_fast(eraw, rhs.raw);
             return base_fix_t(r.quot, true);
         }
         constexpr base_fix_t operator/=(const base_fix_t o) {
@@ -197,15 +210,19 @@ namespace toybox {
             return *this;
         }
         template<integral OInt>
-        constexpr base_fix_t operator/(OInt o) const {
-            return base_fix_t(raw / static_cast<Int>(o), true);
+        __purest friend constexpr base_fix_t operator/(const base_fix_t lhs, OInt rhs) {
+            return base_fix_t(lhs.raw / static_cast<Int>(rhs), true);
+        }
+        template<integral OInt>
+        __purest friend constexpr base_fix_t operator/(OInt lhs, const base_fix_t rhs) {
+            return base_fix_t(lhs) / rhs;
         }
         template<integral OInt>
         constexpr base_fix_t& operator/=(OInt o) {
             raw /= static_cast<Int>(o);
             return *this;
         }
-        constexpr base_fix_t div(base_fix_t o) const {
+        __pure constexpr base_fix_t div(base_fix_t o) const {
             const bool sign_match = ((raw >= 0) == (o.raw >= 0));
             const auto eraw = (LargerInt)raw << Bits;
             const auto half_div = o.raw >> 1;
@@ -214,16 +231,20 @@ namespace toybox {
             return base_fix_t(div_fast(adjusted, o.raw), true);
         }
         
-        constexpr base_fix_t operator%(const base_fix_t o) const {
-            return base_fix_t(raw % o.raw, true);
+        __purest friend constexpr base_fix_t operator%(const base_fix_t lhs, const base_fix_t rhs) {
+            return base_fix_t(lhs.raw % rhs.raw, true);
         }
         constexpr base_fix_t operator%=(const base_fix_t o) {
             raw = raw % o.raw;
             return *this;
         }
         template<integral OInt>
-        constexpr base_fix_t operator%(OInt o) const {
-            return base_fix_t(raw % (static_cast<Int>(o) << Bits), true);
+        __purest friend constexpr base_fix_t operator%(const base_fix_t lhs, OInt rhs) {
+            return base_fix_t(lhs.raw % (static_cast<Int>(rhs) << Bits), true);
+        }
+        template<integral OInt>
+        __purest friend constexpr base_fix_t operator%(OInt lhs, const base_fix_t rhs) {
+            return base_fix_t(lhs) % rhs;
         }
         template<integral OInt>
         constexpr base_fix_t& operator%=(OInt o) {
@@ -231,8 +252,8 @@ namespace toybox {
             return *this;
         }
         template<integral OInt>
-        constexpr base_fix_t operator<<(OInt s) const {
-            return base_fix_t(raw << s, true);
+        __purest friend constexpr base_fix_t operator<<(const base_fix_t lhs, OInt rhs) {
+            return base_fix_t(lhs.raw << rhs, true);
         }
         template<integral OInt>
         constexpr base_fix_t& operator<<=(OInt s) const {
@@ -240,8 +261,8 @@ namespace toybox {
             return *this;
         }
         template<integral OInt>
-        constexpr base_fix_t operator>>(OInt s) const {
-            return base_fix_t(raw >> s, true);
+        __purest friend constexpr base_fix_t operator>>(const base_fix_t lhs, OInt rhs) {
+            return base_fix_t(lhs.raw >> rhs, true);
         }
         template<integral OInt>
         constexpr base_fix_t& operator>>=(OInt s) const {
@@ -249,42 +270,50 @@ namespace toybox {
             return *this;
         }
 
-        constexpr bool operator==(const base_fix_t o) const {
-            return raw == o.raw;
+        __purest friend constexpr bool operator==(const base_fix_t lhs, const base_fix_t rhs) {
+            return lhs.raw == rhs.raw;
         }
         template<integral OInt>
-        constexpr bool operator==(OInt o) const {
-            return raw == base_fix_t(o).raw;
-        }
-        constexpr bool operator<(const base_fix_t o) const {
-            return raw < o.raw;
+        __purest friend constexpr bool operator==(const base_fix_t lhs, OInt rhs) {
+            return lhs.raw == base_fix_t(rhs).raw;
         }
         template<integral OInt>
-        constexpr bool operator<(OInt o) const {
-            return raw < base_fix_t(o).raw;
+        __purest friend constexpr bool operator==(OInt lhs, const base_fix_t rhs) {
+            return base_fix_t(lhs).raw == rhs.raw;
+        }
+        __purest friend constexpr bool operator<(const base_fix_t lhs, const base_fix_t rhs) {
+            return lhs.raw < rhs.raw;
+        }
+        template<integral OInt>
+        __purest friend constexpr bool operator<(const base_fix_t lhs, OInt rhs) {
+            return lhs.raw < base_fix_t(rhs).raw;
+        }
+        template<integral OInt>
+        __purest friend constexpr bool operator<(OInt lhs, const base_fix_t rhs) {
+            return base_fix_t(lhs).raw < rhs.raw;
         }
 
-        friend constexpr base_fix_t abs(base_fix_t x) {
+        __purest friend constexpr base_fix_t abs(base_fix_t x) {
             return base_fix_t(ABS(x.raw), true);
         }
-        friend constexpr base_fix_t trunc(base_fix_t x) {
+        __purest friend constexpr base_fix_t trunc(base_fix_t x) {
             return base_fix_t(x.raw & (static_cast<Int>(~0) << Bits), true);
         }
-        friend constexpr base_fix_t floor(base_fix_t x) {
+        __purest friend constexpr base_fix_t floor(base_fix_t x) {
             Int truncated = x.raw & (static_cast<Int>(~0) << Bits);
             if (x.raw < 0 && x.raw != truncated) {
                 truncated -= (static_cast<Int>(1) << Bits);
             }
             return base_fix_t(truncated, true);
         }
-        friend constexpr base_fix_t ceil(base_fix_t x) {
+        __purest friend constexpr base_fix_t ceil(base_fix_t x) {
             Int truncated = x.raw & (static_cast<Int>(~0) << Bits);
             if (x.raw > 0 && x.raw != truncated) {
                 truncated += (static_cast<Int>(1) << Bits);
             }
             return base_fix_t(truncated, true);
         }
-        friend constexpr base_fix_t round(base_fix_t x) {
+        __purest friend constexpr base_fix_t round(base_fix_t x) {
             static constexpr Int half = static_cast<Int>(1) << (Bits - 1);
             static constexpr Int frac_mask = (static_cast<Int>(1) << Bits) - 1;
             const Int frac = x.raw & frac_mask;
@@ -308,14 +337,14 @@ namespace toybox {
         static inline constexpr fix16_t log2 = fix16_t(0.6875f);
     }
 
-    fix16_t pow(fix16_t base, fix16_t exp); // Perf: integer exp; O(log n), good to horrible (1-many muls), otherwise O(1), horrible (~19 muls + 17 divs).
-    fix16_t sqrt(fix16_t x); // Perf: O(1), bad to horrible (up to 6 divs, typically 2-3)
+    __purest fix16_t pow(fix16_t base, fix16_t exp); // Perf: integer exp; O(log n), good to horrible (1-many muls), otherwise O(1), horrible (~19 muls + 17 divs).
+    __purest fix16_t sqrt(fix16_t x); // Perf: O(1), bad to horrible (up to 6 divs, typically 2-3)
 
-    fix16_t sin(fix16_t x);  // Perf: O(1), good (1 div)
-    fix16_t cos(fix16_t x);  // Perf: O(1), good (1 div via sin)
-    fix16_t tan(fix16_t x);  // Perf: O(1), bad (3 divs)
+    __purest fix16_t sin(fix16_t x);  // Perf: O(1), good (1 div)
+    __purest fix16_t cos(fix16_t x);  // Perf: O(1), good (1 div via sin)
+    __purest fix16_t tan(fix16_t x);  // Perf: O(1), bad (3 divs)
 
-    fix16_t exp(fix16_t x);  // Perf: O(1), horrible (~12 muls + 12 divs)
-    fix16_t log(fix16_t x);  // Perf: O(1), horrible (~6 muls + 5 divs)
+    __purest fix16_t exp(fix16_t x);  // Perf: O(1), horrible (~12 muls + 12 divs)
+    __purest fix16_t log(fix16_t x);  // Perf: O(1), horrible (~6 muls + 5 divs)
     
 }

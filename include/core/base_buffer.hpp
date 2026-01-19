@@ -15,7 +15,7 @@ namespace toybox {
          Static storage base class for vector_c and map_c when Count > 0.
          Provides fixed-capacity storage using a statically allocated array.
          */
-        template<class Type, int Count>
+        template<class Type, unsigned Count>
         class base_buffer_static_c {
         protected:
             // Storage interface for vector_c
@@ -25,10 +25,10 @@ namespace toybox {
             __forceinline const aligned_membuf_s<Type>* __buffer() const __pure {
                 return _buffer;
             }
-            __forceinline constexpr int __capacity() const __pure {
+            __forceinline constexpr unsigned __capacity() const __pure {
                 return Count;
             }
-            __forceinline void __ensure_capacity(int needed, int current_size) const {
+            __forceinline void __ensure_capacity(unsigned needed, unsigned current_size) const {
                 (void)current_size;  // Unused for static storage
                 assert(needed <= Count && "Vector capacity exceeded");
             }
@@ -54,13 +54,13 @@ namespace toybox {
             __forceinline const aligned_membuf_s<Type>* __buffer() const __pure {
                 return _buffer;
             }
-            __forceinline int __capacity() const __pure {
+            __forceinline unsigned __capacity() const __pure {
                 return _capacity;
             }
 
-            void __ensure_capacity(int needed, int current_size) {
+            void __ensure_capacity(unsigned needed, unsigned current_size) {
                 if (needed <= _capacity) return;
-                int new_cap = needed;
+                unsigned new_cap = needed;
                 if (_capacity > 0) {
                     new_cap = _capacity * 2;
                     if (new_cap < needed) new_cap = needed;
@@ -100,7 +100,7 @@ namespace toybox {
 
         private:
             aligned_membuf_s<Type>* _buffer = nullptr;
-            int _capacity = 0;
+            unsigned _capacity = 0;
         };
 
     } // namespace detail

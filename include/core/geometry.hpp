@@ -84,7 +84,7 @@ namespace toybox {
         __forceinline constexpr Type max_y() const { return origin.y + size.height - 1; }
         constexpr base_point_s<Type> center() const { return base_point_s<Type>(origin.x + size.width / 2, origin.y + size.height / 2); }
         constexpr bool operator==(const Type& r) const {
-            return origin == r.origin && size == r.size;
+            return this == &r || (origin == r.origin && size == r.size);
         }
         template<typename OType>
         constexpr explicit operator base_rect_s<OType>() const {
@@ -113,7 +113,8 @@ namespace toybox {
                    (origin.y < rect.origin.y + rect.size.height) &&
                    (origin.y + size.height > rect.origin.y);
         }
-        constexpr bool intersection(const base_rect_s& rect, base_rect_s& intersection_out) const {
+        constexpr bool intersection(const base_rect_s& rect, base_rect_s& __restrict intersection_out) const {
+            assert(this != &intersection_out);
             const auto x1 = max(origin.x, rect.origin.x);
             const auto x2 = min(origin.x + size.width, rect.origin.x + rect.size.width);
             if (x2 <= x1) return false;
@@ -139,7 +140,8 @@ namespace toybox {
 
         /// Clip this rect to the bounds of clip_bounds, adjusting at accordingly.
         /// Returns true if the rect was completely clipped (size became <= 0).
-        bool clip_to(const base_rect_s& clip_bounds, point_s& at) {
+        bool clip_to(const base_rect_s& __restrict clip_bounds, point_s& at) {
+            assert(this != &clip_bounds);
             bool did_clip = false;
 
             // Clip left edge

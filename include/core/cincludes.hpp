@@ -13,6 +13,7 @@
 extern "C" {
     
 #define __pure __attribute__ ((pure))
+#define __purest __attribute__ ((const))
 #define __forceinline __attribute__((__always_inline__)) inline
 #define __forceinline_lambda __attribute__((__always_inline__))
 #define __neverinline __attribute__((noinline))

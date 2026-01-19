@@ -15,8 +15,8 @@ namespace toybox {
     class bitset_c {
         friend class reference_c;
     public:
-        static constexpr int begin_bit = 0;
-        static constexpr int end_bit = sizeof(Int) * 8;
+        static constexpr uint8_t begin_bit = 0;
+        static constexpr uint8_t end_bit = sizeof(Int) * 8;
         
         class reference_c {
             friend class bitset_c;
@@ -31,7 +31,7 @@ namespace toybox {
                 return *this;
             }
         private:
-            constexpr reference_c(bitset_c& bs, int bit) : _bitset(bs), _mask(1 << bit) {
+            constexpr reference_c(bitset_c& bs, uint8_t bit) : _bitset(bs), _mask(1 << bit) {
                 assert(bit >= begin_bit && bit < end_bit);
             }
             bitset_c& _bitset;
@@ -51,7 +51,7 @@ namespace toybox {
                 ++(*this);
                 return tmp;
             }
-            constexpr int operator*() const {
+            constexpr uint8_t operator*() const {
                 return _bit;
             }
             constexpr bool operator==(const iterator_c& other) const {
@@ -61,7 +61,7 @@ namespace toybox {
                 return !(*this == other);
             }
         private:
-            constexpr iterator_c(const bitset_c& bs, int bit) : _bitset(bs), _bit(bit) {
+            constexpr iterator_c(const bitset_c& bs, uint8_t bit) : _bitset(bs), _bit(bit) {
                 next_set_bit();
             }
             constexpr void next_set_bit() {
@@ -70,7 +70,7 @@ namespace toybox {
                 }
             }
             const bitset_c& _bitset;
-            int _bit;
+            uint8_t _bit;
         };
         
         constexpr bitset_c() = default;
@@ -110,7 +110,7 @@ namespace toybox {
         struct tag_s{};
         constexpr bitset_c(Int raw, tag_s tag) : _raw(raw) {}
 #ifdef TOYBOX_HOST
-        static constexpr void check_bit(int bit) {
+        static constexpr void check_bit(uint8_t bit) {
             assert(bit >= begin_bit && bit < end_bit);
         }
 #endif
