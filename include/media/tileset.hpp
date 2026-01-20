@@ -34,7 +34,7 @@ namespace toybox {
 
         __forceinline size_s tile_size() const __pure { return _rects[0].size; }
         
-        int16_t max_index() const __pure { return _max_tile.x * _max_tile.y; };
+        int16_t max_index() const __pure { return _max_index; };
         point_s max_tile() const __pure { return _max_tile; };
 
         __forceinline const rect_s& operator[](int i) const __pure {
@@ -59,6 +59,7 @@ namespace toybox {
     private:
         const shared_ptr_c<image_c> _image;
         const point_s _max_tile;
+        const int16_t _max_index = 0; // Precompute to avoid mul
         unique_ptr_c<rect_s> _rects;
         array_s<uint16_t, 6> _data;
     };

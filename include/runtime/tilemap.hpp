@@ -14,6 +14,12 @@
 namespace toybox {
 
     struct tile_s  {
+        /*
+        tile_s() {}
+        tile_s(const tile_s& o) = default;
+        tile_s(tile_s&& o) = default;
+        tile_s& operator=(const tile_s& o) = default;
+        tile_s& operator=(tile_s&& o) = default; */
         enum class type_e : uint8_t {
             none      = 0,
             water     = 1,
@@ -44,6 +50,7 @@ namespace toybox {
         
         __forceinline tile_s& operator[](point_s p) __pure { return (*this)[p.x, p.y]; }
         __forceinline const tile_s& operator[](point_s p) const __pure { return (*this)[p.x, p.y]; }
+        // TODO: This muls is in quite hot path, may want a lookup table
         __forceinline tile_s& operator[](int x, int y) __pure { return _tiles[x + y * _tilespace_bounds.size.width]; }
         __forceinline const tile_s& operator[](int x, int y) const __pure { return _tiles[x + y * _tilespace_bounds.size.width]; }
 

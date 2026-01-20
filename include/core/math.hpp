@@ -118,7 +118,7 @@ namespace toybox {
 
         template<integral OInt>
         constexpr base_fix_t(OInt v) : raw(static_cast<Int>(v) << Bits) {}
-        constexpr base_fix_t(float v) : raw(static_cast<Int>(roundf(v * (static_cast<LargerInt>(1) << Bits)))) {}
+        constexpr explicit base_fix_t(float v) : raw(static_cast<Int>(roundf(v * (static_cast<LargerInt>(1) << Bits)))) {}
         
         constexpr explicit operator bool() const { return raw != 0; }
         template<integral OInt>

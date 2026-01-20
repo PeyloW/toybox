@@ -49,7 +49,7 @@ namespace toybox {
     private:
         dirtymap_c(const size_s size);
         const size_s _tilespace_size;
-        const int8_t _line_bytes;
+        const int8_t _line_bytes; // TODO: Multiplied by for every mark
         bool _is_dirty;
         uint8_t _data[];    // _data **must** be on an even address.
     };

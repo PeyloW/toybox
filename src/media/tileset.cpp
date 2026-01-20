@@ -14,6 +14,7 @@ using namespace toybox;
 tileset_c::tileset_c(const shared_ptr_c<image_c> &image, size_s tile_size) :
     _image(image),
     _max_tile(image->size().width / tile_size.width, image->size().height / tile_size.height),
+    _max_index(_max_tile.x * _max_tile.y),
     _rects(), _data()
 {
     assert(_max_tile.x > 0 && _max_tile.y > 0 && "Tileset must have at least one tile");

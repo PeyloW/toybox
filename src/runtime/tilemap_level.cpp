@@ -229,7 +229,7 @@ __forceinline static void enmerate_level_tiles(Level& level, const frect_s& _rec
     const auto tile_y_max = rect.max_y() >> 4;
     for (int16_t y = tile_y_min; y <= tile_y_max; ++y) {
         for (int16_t x = tile_x_min; x <= tile_x_max; ++x) {
-            auto& tile = level[x, y];
+            auto& tile = level[x, y]; // TODO: Investigate muls here.
             func(tile);
         }
     }
