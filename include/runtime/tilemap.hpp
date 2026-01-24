@@ -51,8 +51,14 @@ namespace toybox {
         __forceinline tile_s& operator[](point_s p) __pure { return (*this)[p.x, p.y]; }
         __forceinline const tile_s& operator[](point_s p) const __pure { return (*this)[p.x, p.y]; }
         // TODO: This muls is in quite hot path, may want a lookup table
-        __forceinline tile_s& operator[](int x, int y) __pure { return _tiles[x + y * _tilespace_bounds.size.width]; }
-        __forceinline const tile_s& operator[](int x, int y) const __pure { return _tiles[x + y * _tilespace_bounds.size.width]; }
+        __forceinline tile_s& operator[](int x, int y) __pure {
+            assert(x + y * _tilespace_bounds.size.width < (0x8000 / sizeof(tile_s)));
+            return _tiles[x + y * _tilespace_bounds.size.width];
+        }
+        __forceinline const tile_s& operator[](int x, int y) const __pure {
+            assert(x + y * _tilespace_bounds.size.width < (0x8000 / sizeof(tile_s)));
+            return _tiles[x + y * _tilespace_bounds.size.width];
+        }
 
         __forceinline rect_s tilespace_bounds() const { return _tilespace_bounds; }
         

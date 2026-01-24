@@ -33,10 +33,12 @@ namespace toybox {
 
         __forceinline constexpr reference operator[](int i) __pure {
             assert(i >= 0 && i < Count && "Index out of bounds");
+            __assume_count(i, Count);
             return _data[i];
         }
         __forceinline constexpr const_reference operator[](int i) const __pure {
             assert(i >= 0 && i < Count && "Index out of bounds");
+            __assume_count(i, Count);
             return _data[i];
         }
         __forceinline constexpr reference front() __pure {

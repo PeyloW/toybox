@@ -17,6 +17,8 @@ namespace toybox {
          */
         template<class Type, int Count>
         class base_buffer_static_c {
+        public:
+            static constexpr int max_size = Count;
         protected:
             // Storage interface for vector_c
             __forceinline aligned_membuf_s<Type>* __buffer() __pure {
@@ -42,6 +44,8 @@ namespace toybox {
          */
         template<class Type>
         class base_buffer_dynamic_c {
+        public:
+            static constexpr int max_size = 0x8000 / sizeof(Type);
         protected:
             ~base_buffer_dynamic_c() {
                 if (_buffer) delete[] _buffer;

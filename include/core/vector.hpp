@@ -19,7 +19,7 @@ namespace toybox {
      */
     template<class Type, int Count>
     class vector_c : public nocopy_c,
-                     private conditional<Count == 0,
+                     public conditional<Count == 0,
                                         detail::base_buffer_dynamic_c<Type>,
                                         detail::base_buffer_static_c<Type, Count>>::type
     {
@@ -72,16 +72,16 @@ namespace toybox {
         }
     
         __forceinline iterator begin() __pure {
-            return this->__buffer()[0].template ptr<0>();
+            return (iterator)data();
         }
         __forceinline const_iterator begin() const __pure {
-            return this->__buffer()[0].template ptr<0>();
+            return (iterator)data();
         }
         __forceinline iterator end() __pure {
-            return this->__buffer()[_size].template ptr<0>();
+            return (iterator)data() + _size;
         }
         __forceinline const_iterator end() const __pure {
-            return this->__buffer()[_size].template ptr<0>();
+            return (iterator)data() + _size;
         }
         __forceinline pointer data() {
             return this->__buffer()[0].template ptr<0>();
@@ -96,12 +96,12 @@ namespace toybox {
             if (_size < size) {
                 this->__ensure_capacity(size, _size);
                 for (int i = _size; i < size; ++i) {
-                    construct_at(this->__buffer()[i].template ptr<0>());
+                    construct_at(&data()[i]);
                 }
             } else {
                 if constexpr (!is_trivially_destructible<Type>::value) {
                     for (int i = size; i < _size; ++i) {
-                        destroy_at(this->__buffer()[i].template ptr<0>());
+                        destroy_at(&data()[i]);
                     }
                 }
             }
@@ -111,38 +111,48 @@ namespace toybox {
         __forceinline reference operator[](int i) __pure {
             assert(i < _size && "Index out of bounds");
             assert(i >= 0 && "Index must be non-negative");
-            return *this->__buffer()[i].template ptr<0>();
+            __assume_count(i, this->max_size);
+            return data()[i];
         }
         __forceinline const_reference operator[](int i) const __pure {
             assert(i < _size && "Index out of bounds");
             assert(i >= 0 && "Index must be non-negative");
-            return *this->__buffer()[i].template ptr<0>();
+            __assume_count(i, this->max_size);
+            return data()[i];
         }
         __forceinline reference front() __pure {
             assert(_size > 0 && "Vector is empty");
-            return *this->__buffer()[0].template ptr<0>();
+            return data()[0];
         }
         __forceinline const_reference front() const __pure {
             assert(_size > 0 && "Vector is empty");
-            return *this->__buffer()[0].template ptr<0>();
+            return data()[0];
         }
         __forceinline reference back() __pure {
             assert(_size > 0 && "Vector is empty");
-            return *this->__buffer()[_size - 1].template ptr<0>();
+            __assume_count(_size - 1, this->max_size);
+            return data()[_size - 1];
         }
         __forceinline const_reference back() const __pure {
             assert(_size > 0 && "Vector is empty");
-            return *this->__buffer()[_size - 1].template ptr<0>();
+            __assume_count(_size - 1, this->max_size);
+            return data()[_size - 1];
         }
 
         __forceinline void push_back(const_reference value) {
             this->__ensure_capacity(_size + 1, _size);
-            construct_at(this->__buffer()[_size++].template ptr<0>(), value);
+            const int i = _size;
+            __assume_count(i, this->max_size);
+            construct_at(&data()[i], value);
+            _size++;
         }
         template<class... Args>
         __forceinline reference emplace_back(Args&&... args) {
             this->__ensure_capacity(_size + 1, _size);
-            return *construct_at(this->__buffer()[_size++].template ptr<0>(), forward<Args>(args)...);
+            __assume_count(_size, this->max_size);
+            auto r = construct_at(&data()[_size], forward<Args>(args)...);
+            _size++;
+            return *r;
         }
 
         __forceinline iterator insert(const_iterator pos, const_reference value) {
@@ -150,6 +160,7 @@ namespace toybox {
         }
         iterator insert(int at, const_reference value) {
             assert(at >= 0 && at <= (int)_size && "Invalid insert position");
+            __assume_count(at, this->max_size);
             if (at == (int)_size) {
                 push_back(value);
                 return end() - 1;
@@ -172,6 +183,7 @@ namespace toybox {
         template<class... Args>
         iterator emplace(int at, Args&&... args) {
             assert(at >= 0 && at <= (int)_size && "Invalid emplace position");
+            __assume_count(at, this->max_size);
             if (at == (int)_size) {
                 emplace_back(forward<Args>(args)...);
                 return end() - 1;
@@ -195,6 +207,7 @@ namespace toybox {
         iterator erase(int at) {
             assert(_size > 0 && "Vector is empty");
             assert(at >= 0 && at < (int)_size && "Invalid erase position");
+            __assume_count(at, this->max_size);
             const iterator pos = begin() + at;
             destroy_at(pos);
             _size--;
@@ -208,13 +221,15 @@ namespace toybox {
                 _size = 0;
             } else {
                 while (_size) {
-                    destroy_at(this->__buffer()[--_size].template ptr<0>());
+                    __assume_count(--_size, this->max_size);
+                    destroy_at(&data()[--_size]);
                 }
             }
         }
         __forceinline void pop_back() {
             assert(_size > 0 && "Vector is empty");
-            destroy_at(this->__buffer()[--_size].template ptr<0>());
+            __assume_count(--_size, this->max_size);
+            destroy_at(&data()[--_size]);
         }
 
         __forceinline int capacity() const __pure {

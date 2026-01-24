@@ -39,6 +39,7 @@ namespace toybox {
 
         __forceinline const rect_s& operator[](int i) const __pure {
             assert(i >= 0 && i < max_index() && "Tile index out of bounds");
+            __assume_count(i, 0x8000 / sizeof(rect_s));
             return _rects[i];
         }
         __forceinline const rect_s& operator[](point_s p) const __pure {
@@ -46,7 +47,7 @@ namespace toybox {
         }
         __forceinline const rect_s& operator[](int x, int y) const __pure {
             assert(x >= 0 && x < _max_tile.x && y >= 0 && y < _max_tile.y && "Tile coordinates out of bounds");
-            return _rects[x + _max_tile.x * y];
+            return (*this)[x + _max_tile.x * y];
         }
         
         __forceinline array_s<uint16_t, 6>& data() { return _data; }

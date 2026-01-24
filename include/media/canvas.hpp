@@ -29,8 +29,16 @@ namespace toybox {
                     _table[map.first + 1] = map.second;
                 }
             }
-            int& operator[](int i) { assert(i >= -1 && i < 16); return _table[i + 1]; }
-            const int& operator[](int i) const { assert(i >= -1 && i < 16); return _table[i + 1]; }
+            int& operator[](int i) {
+                assert(i >= -1 && i < 16);
+                __assume_range(i, -1, 16);
+                return _table[i + 1];
+            }
+            const int& operator[](int i) const {
+                assert(i >= -1 && i < 16);
+                __assume_range(i, -1, 16);
+                return _table[i + 1];
+            }
         private:
             int _table[17];
         };
