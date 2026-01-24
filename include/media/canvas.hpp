@@ -21,11 +21,11 @@ namespace toybox {
         class remap_table_c : nocopy_c {
         public:
             constexpr remap_table_c() { for (int i = -1; i < 16; i++) _table[i + 1] = i; }
-            template<unsigned Count>
+            template<int Count>
             constexpr remap_table_c(const pair_c<int, int> (&maps)[Count]) : remap_table_c() {
                 for (const auto& map : maps) {
-                    assert(map.first >= -1 && map.first <16);
-                    assert(map.second >= -1 && map.second <16);
+                    assert(map.first >= -1 && map.first < 16);
+                    assert(map.second >= -1 && map.second < 16);
                     _table[map.first + 1] = map.second;
                 }
             }

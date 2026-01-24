@@ -119,8 +119,8 @@ namespace toybox {
         __forceinline const_iterator end() const __pure { return const_iterator(nullptr); }
 
         /// Returns number of elements. O(n) operation as list must be traversed.
-        unsigned size() const __pure {
-            unsigned count = 0;
+        int size() const __pure {
+            int count = 0;
             auto it = before_begin();
             while (it._node->next) {
                 ++count;

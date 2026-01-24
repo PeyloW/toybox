@@ -59,7 +59,7 @@ namespace toybox {
      A `basic_palette_c` is an arbitrary list of colors.
      */
     static_assert(!is_polymorphic<nocopy_c>::value);
-    template<unsigned Count>
+    template<int Count>
     class basic_palette_c : public array_s<color_c, Count> {
     public:
         constexpr basic_palette_c() = default;

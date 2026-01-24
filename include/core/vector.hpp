@@ -17,7 +17,7 @@ namespace toybox {
      When Count > 0: Uses statically allocated backing store for performance.
      When Count == 0: Uses dynamically allocated backing store with automatic growth.
      */
-    template<class Type, unsigned Count>
+    template<class Type, int Count>
     class vector_c : public nocopy_c,
                      private conditional<Count == 0,
                                         detail::base_buffer_dynamic_c<Type>,
@@ -34,9 +34,9 @@ namespace toybox {
         
         vector_c() : _size(0) {}
         constexpr vector_c(initializer_list<Type> init) : _size(0) {
-            this->__ensure_capacity((unsigned)init.size(), _size);
-            copyn(init.begin(), (unsigned)init.size(), begin());
-            _size = (unsigned)init.size();
+            this->__ensure_capacity((int)init.size(), _size);
+            copyn(init.begin(), (int)init.size(), begin());
+            _size = (int)init.size();
         }
         constexpr vector_c(const vector_c& o) requires (Count == 0) : _size(0) {
             this->__ensure_capacity(o._size, _size);
@@ -89,18 +89,18 @@ namespace toybox {
         __forceinline const_pointer data() const {
             return this->__buffer()[0].template ptr<0>();
         }
-        __forceinline unsigned size() const __pure { return _size; }
+        __forceinline int size() const __pure { return _size; }
         
-        void resize(unsigned size) {
+        void resize(int size) {
             if (_size == size) return;
             if (_size < size) {
                 this->__ensure_capacity(size, _size);
-                for (unsigned i = _size; i < size; ++i) {
+                for (int i = _size; i < size; ++i) {
                     construct_at(this->__buffer()[i].template ptr<0>());
                 }
             } else {
                 if constexpr (!is_trivially_destructible<Type>::value) {
-                    for (unsigned i = size; i < _size; ++i) {
+                    for (int i = size; i < _size; ++i) {
                         destroy_at(this->__buffer()[i].template ptr<0>());
                     }
                 }
@@ -156,7 +156,7 @@ namespace toybox {
             }
             this->__ensure_capacity(_size + 1, _size);
             const iterator pos = begin() + at;
-            const unsigned count = _size - at - 1;
+            const int count = _size - at - 1;
             construct_at(end(), move(*(end() - 1)));
             _size++;
             if (count > 0) {
@@ -178,7 +178,7 @@ namespace toybox {
             }
             this->__ensure_capacity(_size + 1, _size);
             const iterator pos = begin() + at;
-            const unsigned count = _size - at - 1;
+            const int count = _size - at - 1;
             construct_at(end(), move(*(end() - 1)));
             _size++;
             if (count > 0) {
@@ -198,7 +198,7 @@ namespace toybox {
             const iterator pos = begin() + at;
             destroy_at(pos);
             _size--;
-            const unsigned count = _size - at;
+            const int count = _size - at;
             moven(pos + 1, count, pos);
             destroy_at(end());
             return pos;
@@ -217,16 +217,16 @@ namespace toybox {
             destroy_at(this->__buffer()[--_size].template ptr<0>());
         }
 
-        __forceinline unsigned capacity() const __pure {
+        __forceinline int capacity() const __pure {
             return this->__capacity();
         }
 
-        void reserve(unsigned new_cap) requires (Count == 0) {
+        void reserve(int new_cap) requires (Count == 0) {
             this->__ensure_capacity(new_cap, _size);
         }
 
     private:
-        unsigned _size;
+        int _size;
     };
     
 }

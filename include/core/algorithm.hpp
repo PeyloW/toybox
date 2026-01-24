@@ -26,7 +26,7 @@ namespace toybox {
     }
 
     template<const_forward_iterator I, forward_iterator J>
-    J copyn(I first, unsigned count, J d_first) {
+    J copyn(I first, int count, J d_first) {
         while (count--) {
             *(d_first) = *(first);
             ++d_first; ++first;
@@ -47,7 +47,7 @@ namespace toybox {
         return d_last;
     }
     template<const_backward_iterator I, backward_iterator J>
-    J copyn_backward(I last, unsigned count, J d_last) {
+    J copyn_backward(I last, int count, J d_last) {
         while (count--) {
             *(--d_last) = *(--last);
         }
@@ -64,7 +64,7 @@ namespace toybox {
     }
 
     template<forward_iterator I, forward_iterator J>
-    J moven(I first, unsigned count, J d_first) {
+    J moven(I first, int count, J d_first) {
         while (count--) {
             *(d_first) = move(*(first));
             ++d_first; ++first;
@@ -81,7 +81,7 @@ namespace toybox {
     }
 
     template<backward_iterator I, backward_iterator J>
-    I moven_backward(I last, unsigned count, J d_last) {
+    I moven_backward(I last, int count, J d_last) {
         while (count--) {
             *(--d_last) = move(*(--last));
         }
@@ -98,7 +98,7 @@ namespace toybox {
     }
     
     template<const_forward_iterator I, forward_iterator J>
-    J uninitialized_moven(I first, unsigned count, J d_first) {
+    J uninitialized_moven(I first, int count, J d_first) {
         while (count--) {
             construct_at(&*d_first, move(*first));
             ++d_first; ++first;
@@ -116,7 +116,7 @@ namespace toybox {
     }
 
     template<const_forward_iterator I, forward_iterator J>
-    J uninitialized_copyn(I first, unsigned count, J d_first) {
+    J uninitialized_copyn(I first, int count, J d_first) {
         while (count--) {
             construct_at(&*d_first, *first);
             ++d_first; ++first;

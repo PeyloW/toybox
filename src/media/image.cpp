@@ -119,7 +119,7 @@ namespace toybox {
     };
 }
 
-static void image_read(iffstream_c& file, uint16_t line_words, unsigned height, uint16_t* bitmap, uint16_t* maskmap) {
+static void image_read(iffstream_c& file, uint16_t line_words, int height, uint16_t* bitmap, uint16_t* maskmap) {
     uint16_t word_buffer[line_words];
     const int bp_count = (maskmap ? 5 : 4);
     while (height--) {
@@ -146,7 +146,7 @@ static void image_read(iffstream_c& file, uint16_t line_words, unsigned height, 
     }
 }
 
-static void image_read_packbits(iffstream_c& file, uint16_t line_words, unsigned height, uint16_t* bitmap, uint16_t* maskmap) {
+static void image_read_packbits(iffstream_c& file, uint16_t line_words, int height, uint16_t* bitmap, uint16_t* maskmap) {
     const int bp_count = (maskmap ? 5 : 4);
     uint16_t word_buffer[line_words * bp_count];
     while (height--) {
@@ -285,7 +285,7 @@ image_c::image_c(const char* path, int masked_cidx, const iffstream_c::unknown_r
 }
 
 
-static void image_write(iffstream_c& file, uint16_t line_words, uint16_t next_line_words, unsigned height, uint16_t* bitmap, uint16_t* maskmap) {
+static void image_write(iffstream_c& file, uint16_t line_words, uint16_t next_line_words, int height, uint16_t* bitmap, uint16_t* maskmap) {
     const int bp_count = (maskmap ? 5 : 4);
     uint16_t word_buffer[line_words * bp_count];
     while (height--) {
@@ -388,7 +388,7 @@ static int image_packbits_into_body(uint8_t* body, const uint8_t* row_buffer, in
     return (int)(body - body_begin);
 }
 
-static void image_write_packbits(iffstream_c& file, uint16_t line_words, uint16_t next_line_words, unsigned height, uint16_t* bitmap, uint16_t* maskmap) {
+static void image_write_packbits(iffstream_c& file, uint16_t line_words, uint16_t next_line_words, int height, uint16_t* bitmap, uint16_t* maskmap) {
     const int bp_count = (maskmap ? 5 : 4);
     uint16_t word_buffer[line_words * bp_count];
     while (height--) {

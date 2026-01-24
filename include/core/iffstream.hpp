@@ -23,7 +23,7 @@ namespace toybox {
         // Must be max 4 characters in range 32 to 127 (except '?'), ubytes is padded with ' '.
         consteval cc4_t(const char* cc4) {
             assert(cc4 != nullptr && "CC4 must not be null.");
-            for (unsigned i = 0; i < 4; i++) {
+            for (int i = 0; i < 4; i++) {
                 ubytes[i] = *cc4 == '*' ? '?' : (*cc4 ? *cc4++ : ' ');
                 assert(ubytes[i] >= 32 && "Invalid CC4 character.");
             }
@@ -31,13 +31,13 @@ namespace toybox {
         // Must be initialized with big endian uint32_t.
         constexpr cc4_t(uint32_t ul) : ulong(ul) {
 #ifndef __M68000__
-            for (unsigned i = 0; i < 4; i++) {
+            for (int i = 0; i < 4; i++) {
                 assert(ubytes[i] >= 32 && "Invalid CC4 character.");
             }
 #endif
         }
         constexpr cc4_t(const uint8_t ub[4]) {
-            for (unsigned i = 0; i < 4; i++) {
+            for (int i = 0; i < 4; i++) {
                 ubytes[i] = ub[i];
                 assert(ubytes[i] >= 32 && "Invalid CC4 character.");
             }
