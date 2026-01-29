@@ -36,7 +36,9 @@ namespace toybox {
             if (c < 32 || c > 127) {
                 return _rects[0];
             } else {
-                return _rects[c - 32];
+                short i = c - 32;
+                __assume_count(i, 96);
+                return _rects[i];
             }
         }
         
