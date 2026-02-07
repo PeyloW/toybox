@@ -379,6 +379,8 @@ namespace toybox {
         T2 second;
     };
 
+    struct empty_t {};
+
     template< class T1, class T2 >
     __forceinline pair_c<T1, T1> make_pair( T1&& f, T2&& s) { return pair_c<T1, T2>(forward<T1>(f), forward<T2>(s)); }
 

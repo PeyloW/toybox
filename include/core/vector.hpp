@@ -32,7 +32,7 @@ namespace toybox {
         using iterator = value_type*;
         using const_iterator = const value_type*;
         
-        vector_c() : _size(0) {}
+        constexpr vector_c() : _size(0) {}
         constexpr vector_c(initializer_list<Type> init) : _size(0) {
             this->__ensure_capacity((int)init.size(), _size);
             copyn(init.begin(), (int)init.size(), begin());

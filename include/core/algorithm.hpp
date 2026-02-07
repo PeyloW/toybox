@@ -12,6 +12,20 @@
 
 namespace toybox {
     
+    
+    namespace detail {
+        
+        template<typename I>
+        concept is_copy_unroll_candidate = 
+            is_trivially_copyable<typename iterator_traits<I>::value_type>::value && 
+            sizeof(typename iterator_traits<I>::value_type) <= 4;
+        
+        template<typename I>
+        concept is_move_unroll_candidate = 
+            is_trivially_movable<typename iterator_traits<I>::value_type>::value &&
+            sizeof(typename iterator_traits<I>::value_type) <= 4;
+        
+    }
     /*
      This file contains a minimal set of functionality from C++ stdlib.
      */
@@ -27,9 +41,17 @@ namespace toybox {
 
     template<const_forward_iterator I, forward_iterator J>
     J copyn(I first, int count, J d_first) {
-        while (count--) {
-            *(d_first) = *(first);
-            ++d_first; ++first;
+        if constexpr (detail::is_copy_unroll_candidate<I>) {
+            #pragma GCC unroll 8
+            while (count--) {
+                *(d_first) = *(first);
+                ++d_first; ++first;
+            }
+        } else {
+            while (count--) {
+                *(d_first) = *(first);
+                ++d_first; ++first;
+            }
         }
         return d_first;
     }
@@ -48,8 +70,15 @@ namespace toybox {
     }
     template<const_backward_iterator I, backward_iterator J>
     J copyn_backward(I last, int count, J d_last) {
-        while (count--) {
-            *(--d_last) = *(--last);
+        if constexpr (detail::is_copy_unroll_candidate<I>) {
+            #pragma GCC unroll 8
+            while (count--) {
+                *(--d_last) = *(--last);
+            }
+        } else {
+            while (count--) {
+                *(--d_last) = *(--last);
+            }
         }
         return d_last;
     }
@@ -65,9 +94,17 @@ namespace toybox {
 
     template<forward_iterator I, forward_iterator J>
     J moven(I first, int count, J d_first) {
-        while (count--) {
-            *(d_first) = move(*(first));
-            ++d_first; ++first;
+        if constexpr (detail::is_move_unroll_candidate<I>) {
+            #pragma GCC unroll 8
+            while (count--) {
+                *(d_first) = move(*(first));
+                ++d_first; ++first;
+            }
+        } else {
+            while (count--) {
+                *(d_first) = move(*(first));
+                ++d_first; ++first;
+            }
         }
         return d_first;
     }
@@ -82,8 +119,15 @@ namespace toybox {
 
     template<backward_iterator I, backward_iterator J>
     I moven_backward(I last, int count, J d_last) {
-        while (count--) {
-            *(--d_last) = move(*(--last));
+        if constexpr (detail::is_move_unroll_candidate<I>) {
+            #pragma GCC unroll 8
+            while (count--) {
+                *(--d_last) = move(*(--last));
+            }
+        } else {
+            while (count--) {
+                *(--d_last) = move(*(--last));
+            }
         }
         return d_last;
     }
@@ -99,9 +143,17 @@ namespace toybox {
     
     template<const_forward_iterator I, forward_iterator J>
     J uninitialized_moven(I first, int count, J d_first) {
-        while (count--) {
-            construct_at(&*d_first, move(*first));
-            ++d_first; ++first;
+        if constexpr (detail::is_move_unroll_candidate<I>) {
+            #pragma GCC unroll 8
+            while (count--) {
+                construct_at(&*d_first, move(*first));
+                ++d_first; ++first;
+            }
+        } else {
+            while (count--) {
+                construct_at(&*d_first, move(*first));
+                ++d_first; ++first;
+            }
         }
         return d_first;
     }
@@ -117,9 +169,17 @@ namespace toybox {
 
     template<const_forward_iterator I, forward_iterator J>
     J uninitialized_copyn(I first, int count, J d_first) {
-        while (count--) {
-            construct_at(&*d_first, *first);
-            ++d_first; ++first;
+        if constexpr (detail::is_copy_unroll_candidate<I>) {
+            #pragma GCC unroll 8
+            while (count--) {
+                construct_at(&*d_first, *first);
+                ++d_first; ++first;
+            }
+        } else {
+            while (count--) {
+                construct_at(&*d_first, *first);
+                ++d_first; ++first;
+            }
         }
         return d_first;
     }

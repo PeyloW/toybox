@@ -45,9 +45,7 @@ pair_c<int, entity_type_def_s&> tilemap_level_c::add_entity_type_def(tileset_c* 
 }
 
 entity_s& tilemap_level_c::spawn_entity(uint8_t type, uint8_t group, frect_s position) {
-    const uint8_t new_id = _all_entities.size() ? _all_entities.back().id + 1 : 0;
     auto& entity = _all_entities.emplace_back();
-    entity.id = new_id;
     entity.type = type;
     entity.group = group;
     entity.position = position;
@@ -61,17 +59,12 @@ void tilemap_level_c::destroy_entity(uint8_t id) {
 
 void tilemap_level_c::erase_destroyed_entities() {
     if (_destroy_entities.size() > 0) {
-        auto entities = all_entities();
+        auto& entities = all_entities();
         for (const uint8_t id : _destroy_entities) {
             entities.erase(id);
         }
         _destroy_entities.clear();
     }
-}
-
-static bool verify_entity_ids(const tilemap_level_c& level) {
-    const auto& entities = level.all_entities();
-    return is_sorted(entities.begin(), entities.end(), [](const auto& a, const auto& b){ return a.id < b.id; });
 }
 
 void tilemap_level_c::update(viewport_c& viewport, int display_id, int ticks) {
@@ -83,7 +76,6 @@ void tilemap_level_c::update(viewport_c& viewport, int display_id, int ticks) {
         debug_cpu_color(0x010);
         update_level();
         erase_destroyed_entities();
-        assert(verify_entity_ids(*this) && "Invalid entity id detected");
     }
     {
         // Update the AI for entities.
@@ -91,7 +83,6 @@ void tilemap_level_c::update(viewport_c& viewport, int display_id, int ticks) {
         debug_cpu_color(0x020);
         update_actions();
         erase_destroyed_entities();
-        assert(verify_entity_ids(*this) && "Invalid entity id detected");
     }
     {
         // AI may update tiles, so we need to dirty viewports to redraw them
@@ -112,13 +103,11 @@ void tilemap_level_c::update(viewport_c& viewport, int display_id, int ticks) {
         // Draw all the tiles, both updates, and previously dirtied by drawing sprites
         debug_cpu_color(0x122);
         draw_tiles();
-        assert(verify_entity_ids(*this) && "Invalid entity id detected");
     }
     {
         // And lastly draw all the sprites needed
         debug_cpu_color(0x221);
         draw_entities();
-        assert(verify_entity_ids(*this) && "Invalid entity id detected");
     }
     _viewport = nullptr;
 }

@@ -11,6 +11,7 @@ int main(int argc, const char* argv[]) {
     // Test collections
     test_array_and_vector();
     test_dynamic_vector();
+    test_sparse_vector();
     test_list();
     test_map();
     

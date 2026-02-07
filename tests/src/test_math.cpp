@@ -32,7 +32,7 @@ __neverinline void test_math() {
     fix16_t zero = 0;
     hard_assert(!zero);
 
-    hard_assert(fix16_t(1.5) * fix16_t(1.5) == 2.25);
+    hard_assert(fix16_t(1.5) * fix16_t(1.5) == fix16_t(2.25));
     hard_assert(fix16_t(1.5) * 2 == 3);
     hard_assert(fix16_t(-10) * fix16_t(-3.1415) == fix16_t(31.25)); // Should be 31.375, but * does not round.
 
@@ -75,10 +75,10 @@ __neverinline void test_math_functions() {
     using namespace rel_ops;
     using namespace numbers;
 
-    hard_assert(pow(2, 2) == fix16_t(4));
-    hard_assert(pow(3.0f, 3.0f) == fix16_t(27.0f));
-    hard_assert(pow(25, 0.5f) == fix16_t(5));
-    hard_assert(pow(10, 1.5f) == fix16_t(31.6228));
+    hard_assert(pow(fix16_t(2), fix16_t(2)) == fix16_t(4));
+    hard_assert(pow(fix16_t(3.0f), fix16_t(3.0f)) == fix16_t(27.0f));
+    hard_assert(pow(fix16_t(25), fix16_t(0.5f)) == fix16_t(5));
+    hard_assert(pow(fix16_t(10), fix16_t(1.5f)) == fix16_t(31.6228));
 
     hard_assert(sqrti(25) == 5);
     hard_assert(sqrti(22500) == 150);

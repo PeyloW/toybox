@@ -139,6 +139,10 @@ namespace toybox {
     
     template<typename T> struct is_trivially_copyable : public bool_constant<__is_trivially_copyable(T)> {};
   
+    template<typename T> struct is_trivially_move_constructible : public bool_constant<__is_trivially_constructible(T, T&&)> {};
+    template<typename T> struct is_trivially_move_assignable : public bool_constant<__is_trivially_assignable(T, T&&)> {};
+    template<typename T> struct is_trivially_movable : public bool_constant<is_trivially_move_constructible<T>::value && is_trivially_move_assignable<T>::value> {};
+
     template<typename T> struct is_trivial : public bool_constant<__is_trivial(T)> {};
 
     template<typename T> struct is_polymorphic : public bool_constant<__is_polymorphic(T)> {};

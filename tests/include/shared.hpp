@@ -59,6 +59,7 @@ void test_array_and_vector();
 void test_map();
 void test_dynamic_vector();
 void test_list();
+void test_sparse_vector();
 void test_display_list();
 void test_algorithms();
 void test_math();

@@ -11,6 +11,7 @@
 #include "core/vector.hpp"
 #include "core/list.hpp"
 #include "core/map.hpp"
+#include "core/sparse_vector.hpp"
 
 __neverinline void test_array_and_vector() {
     printf("== Start: test_array_and_vector\n\r");
@@ -634,3 +635,276 @@ void test_map() {
 
     printf("test_map pass.\n\r");
 }
+__neverinline void test_sparse_vector_basic() {
+    printf("== Start: test_sparse_vector_basic\n\r");
+    
+    // Test with simple int type (no identifier)
+    sparse_vector_c<int, 10> sv;
+    hard_assert(sv.size() == 0 && "Initial size should be 0");
+    
+    // Test push_back and key assignment
+    int key1 = sv.push_back(100);
+    hard_assert(sv.size() == 1 && "Size should be 1 after first push");
+    hard_assert(sv[key1] == 100 && "Value should be accessible via key");
+    
+    int key2 = sv.push_back(200);
+    hard_assert(sv.size() == 2 && "Size should be 2");
+    hard_assert(sv[key2] == 200 && "Second value accessible via key");
+    hard_assert(sv[key1] == 100 && "First value still accessible");
+    
+    int key3 = sv.push_back(300);
+    hard_assert(sv.size() == 3 && "Size should be 3 after emplace");
+    hard_assert(sv[key3] == 300 && "Emplaced value accessible");
+    
+    // Test iteration - values should be in dense array
+    int sum = 0;
+    for (const auto& val : sv) {
+        sum += val;
+    }
+    hard_assert(sum == 600 && "Sum of all values should be 600");
+    
+    // Test data() access
+    hard_assert(sv.data()[0] == 100 && "Direct data access works");
+    hard_assert(sv.data()[1] == 200 && "Direct data access works");
+    hard_assert(sv.data()[2] == 300 && "Direct data access works");
+    
+    printf("  test_sparse_vector_basic pass.\n\r");
+}
+
+__neverinline void test_sparse_vector_erase() {
+    printf("== Start: test_sparse_vector_erase\n\r");
+    
+    sparse_vector_c<int, 10> sv = {100, 200, 300, 400 };
+    int key1 = 0;
+    int key2 = 1;
+    int key3 = 2;
+    int key4 = 3;
+    
+    // Erase middle element by key
+    sv.erase(key2);
+    hard_assert(sv.size() == 3 && "Size should be 3 after erase");
+    hard_assert(sv[key1] == 100 && "key1 still accessible");
+    hard_assert(sv[key3] == 300 && "key3 still accessible");
+    hard_assert(sv[key4] == 400 && "key4 still accessible");
+    
+    // The last element (400) should have been swapped with erased element (200)
+    // So data()[1] should now be 400
+    hard_assert(sv.data()[0] == 100 && "First element unchanged");
+    hard_assert(sv.data()[1] == 400 && "Last element swapped to erased position");
+    hard_assert(sv.data()[2] == 300 && "Third element unchanged");
+    
+    // Erase first element
+    sv.erase(key1);
+    hard_assert(sv.size() == 2 && "Size should be 2 after second erase");
+    hard_assert(sv[key3] == 300 && "key3 still accessible");
+    hard_assert(sv[key4] == 400 && "key4 still accessible");
+    
+    // Erase by iterator
+    auto it = sv.begin();
+    sv.erase(it);
+    hard_assert(sv.size() == 1 && "Size should be 1 after iterator erase");
+    
+    printf("  test_sparse_vector_erase pass.\n\r");
+}
+
+__neverinline void test_sparse_vector_with_pairs() {
+    printf("== Start: test_sparse_vector_with_pairs\n\r");
+    
+    // Test with pair type (has .first as identifier)
+    using pair_t = pair_c<int, int>;
+    sparse_vector_c<pair_t, 10> sv;
+    
+    int key1 = sv.push_back({0, 1000});
+    hard_assert(sv.size() == 1 && "Size should be 1");
+    hard_assert(sv[key1].first == key1 && "Pair's first should match key");
+    hard_assert(sv[key1].second == 1000 && "Pair's second should be 1000");
+    
+    int key2 = sv.emplace_back(0, 2000).first;
+    hard_assert(sv.size() == 2 && "Size should be 2");
+    hard_assert(sv[key2].first == key2 && "Pair's first should match key");
+    hard_assert(sv[key2].second == 2000 && "Pair's second should be 2000");
+    
+    // Verify iteration works
+    int total = 0;
+    for (const auto& p : sv) {
+        total += p.second;
+    }
+    hard_assert(total == 3000 && "Sum of pair.second values should be 3000");
+    
+    // Test erase and verify keys still work
+    sv.erase(key1);
+    hard_assert(sv.size() == 1 && "Size should be 1 after erase");
+    hard_assert(sv[key2].second == 2000 && "Remaining element accessible");
+    
+    printf("  test_sparse_vector_with_pairs pass.\n\r");
+}
+
+struct id_struct {
+    int id;
+    int value;
+};
+
+__neverinline void test_sparse_vector_with_id() {
+    printf("== Start: test_sparse_vector_with_id\n\r");
+    
+    // Test with struct that has .id member (is_identifier)
+    sparse_vector_c<id_struct, 10> sv;
+    
+    int key1 = sv.emplace_back(0, 100).id;
+    hard_assert(sv.size() == 1 && "Size should be 1");
+    hard_assert(sv[key1].id == key1 && "id should match key");
+    hard_assert(sv[key1].value == 100 && "value should be 100");
+    
+    int key2 = sv.emplace_back(0, 200).id;
+    hard_assert(sv[key2].id == key2 && "id should match key");
+    hard_assert(sv[key2].value == 200 && "value should be 200");
+    
+    int key3 = sv.emplace_back(0, 300).id;
+    
+    // Test erase and key reuse
+    sv.erase(key2);
+    hard_assert(sv.size() == 2 && "Size should be 2 after erase");
+    hard_assert(sv[key1].value == 100 && "key1 still valid");
+    hard_assert(sv[key3].value == 300 && "key3 still valid");
+    
+    // Add new element - should potentially reuse freed key
+    int key4 = sv.emplace_back(0, 400).id;
+    hard_assert(sv.size() == 3 && "Size should be 3");
+    hard_assert(sv[key4].value == 400 && "New element accessible");
+    hard_assert(sv[key4].id == key4 && "New element id matches key");
+    
+    // Verify all keys are still valid
+    hard_assert(sv[key1].value == 100 && "key1 still valid");
+    hard_assert(sv[key3].value == 300 && "key3 still valid");
+    
+    printf("  test_sparse_vector_with_id pass.\n\r");
+}
+
+__neverinline void test_sparse_vector_non_trivial() {
+    printf("== Start: test_sparse_vector_non_trivial\n\r");
+    
+    // Test with non_trivial_s to verify proper construction/destruction
+    sparse_vector_c<non_trivial_s, 10> sv;
+    
+    const int destructors_before = non_trivial_s::s_destructors;
+    
+    int key1 = sv.push_back(non_trivial_s(100));
+    hard_assert(sv.size() == 1 && "Size should be 1");
+    hard_assert(sv[key1].value == 100 && "Value should be 100");
+    
+    sv.emplace_back(200);
+    int key2 = 1;
+    hard_assert(sv[key2].value == 200 && "Emplaced value should be 200");
+    hard_assert(sv[key2].generation == 0 && "Emplaced element should have generation 0");
+    
+    // Erase should call destructor
+    sv.erase(key1);
+    hard_assert(sv.size() == 1 && "Size should be 1 after erase");
+    hard_assert(non_trivial_s::s_destructors > destructors_before && "Destructor should be called");
+    
+    // Clear should destroy all elements
+    const int destructors_before_clear = non_trivial_s::s_destructors;
+    sv.clear();
+    hard_assert(sv.size() == 0 && "Size should be 0 after clear");
+    hard_assert(non_trivial_s::s_destructors > destructors_before_clear && "Clear should destroy all elements");
+    
+    printf("  test_sparse_vector_non_trivial pass.\n\r");
+}
+
+__neverinline void test_sparse_vector_reserve() {
+    printf("== Start: test_sparse_vector_reserve\n\r");
+    
+    sparse_vector_c<int, 0> sv;  // Dynamic allocation
+    
+    hard_assert(sv.size() == 0 && "Initial size should be 0");
+    
+    // Reserve space
+    sv.reserve(100);
+    hard_assert(sv.size() == 0 && "Size should remain 0 after reserve");
+    
+    // Add elements - should not trigger reallocation
+    for (int i = 0; i < 50; ++i) {
+        sv.push_back(i * 10);
+    }
+    hard_assert(sv.size() == 50 && "Size should be 50");
+    
+    // Verify all values are correct
+    for (int i = 0; i < 50; ++i) {
+        // Note: keys are assigned sequentially starting from 0
+        hard_assert(sv[i] == i * 10 && "Values should be correct");
+    }
+    
+    printf("  test_sparse_vector_reserve pass.\n\r");
+}
+
+__neverinline void test_sparse_vector_stable_iteration() {
+    printf("== Start: test_sparse_vector_stable_iteration\n\r");
+    
+    sparse_vector_c<int, 10> sv;
+    
+    // Add multiple elements
+    vector_c<int, 10> keys;
+    for (int i = 0; i < 5; ++i) {
+        keys.push_back(sv.push_back(i * 100));
+    }
+    
+    // Erase middle elements - this swaps with last
+    sv.erase(keys[1]); // Erase 100
+    sv.erase(keys[2]); // Erase 200
+    
+    hard_assert(sv.size() == 3 && "Size should be 3");
+    
+    // Remaining keys should still be accessible
+    hard_assert(sv[keys[0]] == 0 && "key[0] should still work");
+    hard_assert(sv[keys[3]] == 300 && "key[3] should still work");
+    hard_assert(sv[keys[4]] == 400 && "key[4] should still work");
+    
+    // Verify we can iterate over remaining elements
+    int count = 0;
+    for (auto& val : sv) {
+        (void)val; // Suppress unused warning
+        ++count;
+    }
+    hard_assert(count == 3 && "Should iterate over exactly 3 elements");
+    
+    printf("  test_sparse_vector_stable_iteration pass.\n\r");
+}
+
+__neverinline void test_sparse_vector_index_resuse() {
+    printf("== Start: test_sparse_vector_index_resuse\n\r");
+    
+    // Keys are reused for integer values
+    sparse_vector_c<int, 8> sv1 = {100, 200, 300, 400};
+    hard_assert(sv1.size() == 4 && "Size should be 4");
+    sv1.erase(1);
+    sv1.erase(2);
+    hard_assert(sv1.size() == 2 && "Size should be 2");
+    hard_assert(sv1.push_back(500) < 4 && "key should be reused");
+    hard_assert(sv1.push_back(600) < 4 && "key should be reused");
+
+    // Keys are reused for id_struct values
+    sparse_vector_c<id_struct, 8> sv2 = {{0, 100}, {0, 200}, {0, 300}, {0, 400}};
+    hard_assert(sv2.size() == 4 && "Size should be 4");
+    sv2.erase(1);
+    sv2.erase(2);
+    hard_assert(sv2.size() == 2 && "Size should be 2");
+    hard_assert(sv2.emplace_back(0, 500).id < 4 && "key should be reused");
+    hard_assert(sv2.emplace_back(0, 600).id < 4 && "key should be reused");
+    
+    printf("  test_sparse_vector_index_resuse pass.\n\r");
+}
+
+void test_sparse_vector() {
+    printf("== Start: test_sparse_vector\n\r");
+    test_sparse_vector_basic();
+    test_sparse_vector_erase();
+    test_sparse_vector_with_pairs();
+    test_sparse_vector_with_id();
+    test_sparse_vector_non_trivial();
+    test_sparse_vector_reserve();
+    test_sparse_vector_stable_iteration();
+    test_sparse_vector_index_resuse();
+    printf("test_sparse_vector pass.\n\r");
+}
+
+
