@@ -67,7 +67,7 @@ else ifeq ($(HOST),none)
 	STRIP?=on
 	INFO=Building for atari target
 ifeq ($(GCC),exp)
-	GCC_PATH=/Users/peylow/m68k-atari-mint-gcc/build/gcc
+	GCC_PATH=/Users/peylow/m68k-atari-mint-gcc/build/build-host/gcc
 	CC=$(GCC_PATH)/g++-cross -B$(GCC_PATH)
 	AR=$(GCC_PATH)/gcc-ar -B$(GCC_PATH)
 else

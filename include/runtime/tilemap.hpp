@@ -52,11 +52,17 @@ namespace toybox {
         __forceinline const tile_s& operator[](point_s p) const __pure { return (*this)[p.x, p.y]; }
         // TODO: This muls is in quite hot path, may want a lookup table
         __forceinline tile_s& operator[](int x, int y) __pure {
-            assert(x + y * _tilespace_bounds.size.width < (0x8000 / sizeof(tile_s)));
-            return _tiles[x + y * _tilespace_bounds.size.width];
+            assert(_mul_table.get());
+            __assume_count(y, 256);
+            const int idx = x + _mul_table[y];
+            __assume_count(idx, (0x8000 / sizeof(tile_s)));
+            return _tiles[idx];
         }
         __forceinline const tile_s& operator[](int x, int y) const __pure {
-            assert(x + y * _tilespace_bounds.size.width < (0x8000 / sizeof(tile_s)));
+            assert(_mul_table.get());
+            __assume_count(y, 256);
+            const int idx = x + _mul_table[y];
+            __assume_count(idx, (0x8000 / sizeof(tile_s)));
             return _tiles[x + y * _tilespace_bounds.size.width];
         }
 
@@ -69,6 +75,7 @@ namespace toybox {
         rect_s _tilespace_bounds;
         vector_c<tile_s, 0> _tiles;
         vector_c<int8_t,0> _activate_entity_idxs;
+        unique_ptr_c<int16_t> _mul_table;
     };
     
     // Shared file format structures for level editor and game runtime

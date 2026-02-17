@@ -384,4 +384,13 @@ namespace toybox {
     template< class T1, class T2 >
     __forceinline pair_c<T1, T1> make_pair( T1&& f, T2&& s) { return pair_c<T1, T2>(forward<T1>(f), forward<T2>(s)); }
 
+    template<integral Int>
+    Int* create_multable(int count, Int mul) {
+        Int* t = (Int*)_malloc(sizeof(Int) * count);
+        for (int i = 0; i < count; i++) {
+            t[i] = i * mul;
+        }
+        return t;
+    }
+    
 }

@@ -19,11 +19,11 @@ extern "C" {
 #define __neverinline __attribute__((noinline))
     
 #ifdef __M68000__
-#define __assume(p) __attribute__((assume(x)))
+#define __assume(p) __attribute__((assume(p)))
 #define __assume_range(v, l, u) __attribute__((assume(v >=l && v <= u)))
 #define __assume_count(i, c) __attribute__((assume(i >= 0 && i < c)))
 #else
-#define __assume(p) assert((x) != 0)
+#define __assume(p) assert((p) != 0)
 #define __assume_range(v, l, u) assert((v >=l && v <= u) != 0)
 #define __assume_count(i, c) assert((i >= 0 && i < c) != 0)
 #endif

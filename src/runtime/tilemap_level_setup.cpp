@@ -37,6 +37,7 @@ tilemap_c(rect_s()), _is_initialized(false)
             for (auto& tile : _tiles) {
                 tile.type = tile_s::type_e::invalid;
             }
+            _mul_table.reset(create_multable(header.size.height, header.size.width));
         } else if (chunk.id == cc4::NAME) {
             char* name = (char*)_malloc(chunk.size);
             file.read((uint8_t*)name, chunk.size);

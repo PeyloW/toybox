@@ -138,6 +138,13 @@ namespace toybox {
             return base_rect_s(origin.x + dx, origin.y + dy, size.width - dx * 2, size.height - dy * 2);
         }
 
+        constexpr base_rect_s inset(const Type left, const Type right, const Type top, const Type bottom) const {
+            return base_rect_s(origin.x + left,
+                               origin.y + top,
+                               size.width - (left + right),
+                               size.height - (top + bottom));
+        }
+
         /// Clip this rect to the bounds of clip_bounds, adjusting at accordingly.
         /// Returns true if the rect was completely clipped (size became <= 0).
         bool clip_to(const base_rect_s& __restrict clip_bounds, point_s& at) {

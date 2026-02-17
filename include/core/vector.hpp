@@ -143,15 +143,17 @@ namespace toybox {
 
         __forceinline void push_back(const_reference value) {
             this->__ensure_capacity(_size + 1, _size);
-            __assume_count(_size, this->max_size);
-            construct_at(&data()[_size], value);
+            const int idx = _size;
+            __assume_count(idx, this->max_size);
+            construct_at(&data()[idx], value);
             _size++;
         }
         template<class... Args>
         __forceinline reference emplace_back(Args&&... args) {
             this->__ensure_capacity(_size + 1, _size);
-            __assume_count(_size, this->max_size);
-            auto r = construct_at(&data()[_size], forward<Args>(args)...);
+            const int idx = _size;
+            __assume_count(idx, this->max_size);
+            auto r = construct_at(&data()[idx], forward<Args>(args)...);
             _size++;
             return *r;
         }
@@ -223,16 +225,18 @@ namespace toybox {
             } else {
                 while (_size) {
                     --_size;
-                    __assume_count(_size, this->max_size);
-                    destroy_at(&data()[_size]);
+                    const int idx = _size;
+                    __assume_count(idx, this->max_size);
+                    destroy_at(&data()[idx]);
                 }
             }
         }
         __forceinline void pop_back() {
             assert(_size > 0 && "Vector is empty");
             --_size;
-            __assume_count(_size, this->max_size);
-            destroy_at(&data()[_size]);
+            const int idx = _size;
+            __assume_count(idx, this->max_size);
+            destroy_at(&data()[idx]);
         }
 
         __forceinline int capacity() const __pure {
