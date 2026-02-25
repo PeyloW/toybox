@@ -76,6 +76,8 @@ else
 	AR=$(GCC_PATH)/m68k-atari-mintelf-gcc-ar
 endif
 	FLAGS+=-m68000 -mshort -mfastcall
+	# FLAGS+=-mno-m68k-highword-opt -mno-m68k-elim-andi
+	FLAGS+=-mlra -fgcse-after-reload
 	FLAGS+=-DNDEBUG
 ifeq ($(STRIP),on)
 	FLAGS+=-s

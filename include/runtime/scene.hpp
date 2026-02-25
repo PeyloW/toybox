@@ -34,10 +34,11 @@ namespace toybox {
          The `configuration_s` defines how to display and configures a `scene_c.`
          */
         struct configuration_s {
-            size_s viewport_size;
-            shared_ptr_c<palette_c> palette; // May be empty
-            int buffer_count;
-            bool use_clear;
+            size_s viewport_size = viewport_c::min_size;
+            shared_ptr_c<palette_c> palette = nullptr; // May be empty
+            int buffer_count = 2;
+            int vbls = 1;
+            bool use_clear = false;
         };
         scene_c();
         virtual ~scene_c() {};

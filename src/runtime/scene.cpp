@@ -12,7 +12,7 @@
 using namespace toybox;
 
 scene_c::scene_c() : manager(scene_manager_c::shared()) {}
-scene_c::configuration_s scene_c::default_configuration = { viewport_c::min_size, nullptr, 2, true };
+scene_c::configuration_s scene_c::default_configuration = {};
 const scene_c::configuration_s& scene_c::configuration() const {
     return default_configuration;
 }
@@ -83,8 +83,10 @@ void scene_manager_c::run(unique_ptr_c<scene_c> rootscene, unique_ptr_c<transiti
     
     vbl.reset_tick();
     int32_t previous_tick = vbl.tick();
+    int vbls = 1;
     while (_scene_stack.size() > 0) {
-        vbl.wait();
+        vbl.wait(vbls - 1);
+        vbls = 1;
         int32_t tick = vbl.tick();
         int32_t ticks = tick - previous_tick;
         previous_tick = tick;
@@ -106,6 +108,7 @@ void scene_manager_c::run(unique_ptr_c<scene_c> rootscene, unique_ptr_c<transiti
                     update_clear();
                 }
                 update_scene(scene, ticks);
+                vbls = config.vbls;
             }
             _deletion_scenes.clear();
         }

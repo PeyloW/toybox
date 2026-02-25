@@ -22,7 +22,7 @@ fullscreen_scene_c::fullscreen_scene_c() :
 };
 
 scene_c::configuration_s &fullscreen_scene_c::configuration() const {
-    static scene_c::configuration_s config{default_configuration.viewport_size, asset_manager_c::shared().image(ASSET_BACKGROUND).palette(), 2, true};
+    static scene_c::configuration_s config{ .palette =  asset_manager_c::shared().image(ASSET_BACKGROUND).palette(), .use_clear = true };
     return config;
 }
 

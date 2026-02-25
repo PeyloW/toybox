@@ -153,7 +153,7 @@ tilemap_scene_c::tilemap_scene_c() :
 }
 
 const scene_c::configuration_s& tilemap_scene_c::configuration() const {
-    static scene_c::configuration_s config{_level.total_bounds().size, asset_manager_c::shared().tileset(ASSET_TILESET_SPR).image()->palette(), 2, false};
+    static scene_c::configuration_s config{ .viewport_size = _level.total_bounds().size, .palette = asset_manager_c::shared().tileset(ASSET_TILESET_SPR).image()->palette() };
     return config;
 }
 
