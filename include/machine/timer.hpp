@@ -58,12 +58,13 @@ namespace toybox {
         
         uint32_t tick();
         void reset_tick();
-        void wait(int ticks = 0);
+        void wait(int ticks = 1);
         
     private:
         timer_c(timer_e timer);
         ~timer_c();
         timer_e _timer;
+        uint32_t _previous_tick = ~0;
     };
     
 }

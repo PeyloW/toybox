@@ -80,6 +80,7 @@ namespace toybox {
         void splice_subtilemap(int index);
     
     protected:
+        virtual bool do_catchup_updates() const { return false; }
         virtual void update_level();
         virtual void update_actions();
         virtual void draw_tiles();

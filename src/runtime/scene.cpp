@@ -85,7 +85,7 @@ void scene_manager_c::run(unique_ptr_c<scene_c> rootscene, unique_ptr_c<transiti
     int32_t previous_tick = vbl.tick();
     int vbls = 1;
     while (_scene_stack.size() > 0) {
-        vbl.wait(vbls - 1);
+        vbl.wait(vbls);
         vbls = 1;
         int32_t tick = vbl.tick();
         int32_t ticks = tick - previous_tick;

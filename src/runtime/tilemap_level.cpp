@@ -69,20 +69,23 @@ void tilemap_level_c::erase_destroyed_entities() {
 
 void tilemap_level_c::update(viewport_c& viewport, int display_id, int ticks) {
     hard_assert(_is_initialized && "Must call init() on load construction.");
+    int count = do_catchup_updates() ? ticks : 1;
     _viewport = &viewport;
-    {
-        // Update the AI for the level world.
-        // This may dirty the tiles dirty map, and both add and remove entities.
-        debug_cpu_color(0x010);
-        update_level();
-        erase_destroyed_entities();
-    }
-    {
-        // Update the AI for entities.
-        // This may dirty the tiles dirty map, and both add and remove entities.
-        debug_cpu_color(0x020);
-        update_actions();
-        erase_destroyed_entities();
+    while (count--  > 0) {
+        {
+            // Update the AI for the level world.
+            // This may dirty the tiles dirty map, and both add and remove entities.
+            debug_cpu_color(0x010);
+            update_level();
+            erase_destroyed_entities();
+        }
+        {
+            // Update the AI for entities.
+            // This may dirty the tiles dirty map, and both add and remove entities.
+            debug_cpu_color(0x020);
+            update_actions();
+            erase_destroyed_entities();
+        }
     }
     {
         // AI may update tiles, so we need to dirty viewports to redraw them
