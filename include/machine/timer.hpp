@@ -64,7 +64,7 @@ namespace toybox {
         timer_c(timer_e timer);
         ~timer_c();
         timer_e _timer;
-        uint32_t _previous_tick = ~0;
+        uint32_t _previous_tick = 0;
     };
     
 }

@@ -132,7 +132,7 @@ void timer_c::reset_tick() {
 }
 
 void timer_c::wait(int ticks) {
-    const auto wait_tick = (_previous_tick == ~0 ? tick() : _previous_tick) + ticks;
+    const auto wait_tick = max(tick() + 1, _previous_tick + ticks);
     while (wait_tick > (_previous_tick = tick())) {
 #ifndef __M68000__
         host_bridge_c::shared().yield();

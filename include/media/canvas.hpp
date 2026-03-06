@@ -145,6 +145,7 @@ namespace toybox {
         __neverinline void imp_init_draw_tile(const tileset_c& srcTileset);
         __neverinline void imp_fill_tile(uint8_t ci, point_s point) const;
         __neverinline void imp_draw_tile(const image_c& srcImage, const rect_s& rect, point_s point) const;
+        __neverinline void imp_draw_tile_masked(const image_c& srcImage, const rect_s& rect, point_s point) const;
 
         __neverinline void imp_draw_rect_SLOW(const image_c& srcImage, const rect_s& rect, point_s point) const;
         
