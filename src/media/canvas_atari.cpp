@@ -42,7 +42,7 @@ void canvas_c::imp_fill(uint8_t color, const rect_s& rect) const {
     auto blitter = pBlitter;
 
     const int16_t dst_max_x = rect.max_x();
-    const int16_t dst_words_dec_1  = ((dst_max_x / 16) - (rect.origin.x / 16));
+    const int16_t dst_words_dec_1  = ((dst_max_x >> 4) - (rect.origin.x >> 4));
 
     // Source
     blitter->srcIncX = 0;
@@ -52,7 +52,7 @@ void canvas_c::imp_fill(uint8_t color, const rect_s& rect) const {
     // Dest
     blitter->dstIncX  = 8;
     blitter->dstIncY = (_image._line_words * 8 - (dst_words_dec_1 * 8));
-    const int16_t dst_word_offset = (rect.origin.y * _image._line_words) + (rect.origin.x / 16);
+    const int16_t dst_word_offset = (rect.origin.y * _image._line_words) + (rect.origin.x >> 4);
     uint16_t* dst_bitmap = _image._bitmap + dst_word_offset * 4l;
 
     // Mask
@@ -107,18 +107,18 @@ void canvas_c::imp_draw_aligned(const image_c& srcImage, const rect_s& rect, poi
     assert(rect.contained_by(srcImage.size()) && "Source rect must be within source image bounds");
         
     auto blitter = pBlitter;
-    const int16_t copy_words = (rect.size.width / 16);
+    const int16_t copy_words = (rect.size.width >> 4);
 
     // Source
     blitter->srcIncX  = 2;
     blitter->srcIncY = (srcImage._line_words - copy_words) * 8 + 2;
-    const int16_t src_word_offset = (rect.origin.y * srcImage._line_words) + (rect.origin.x / 16);
+    const int16_t src_word_offset = (rect.origin.y * srcImage._line_words) + (rect.origin.x >> 4);
     blitter->pSrc = srcImage._bitmap + src_word_offset * 4l;
 
     // Dest
     blitter->dstIncX  = 2;
     blitter->dstIncY = (_image._line_words - copy_words) * 8 + 2;
-    const int16_t dst_word_offset = (at.y * _image._line_words) + (at.x / 16);
+    const int16_t dst_word_offset = (at.y * _image._line_words) + (at.x >> 4);
     blitter->pDst = _image._bitmap + dst_word_offset * 4l;
 
     // Mask
@@ -162,19 +162,19 @@ void canvas_c::imp_draw(const image_c& srcImage, const rect_s& rect, point_s at)
 
     const int16_t src_max_x       = rect.max_x();
     const int16_t dst_max_x       = (at.x + rect.size.width - 1);
-    const int16_t src_words_dec_1 = ((src_max_x / 16) - (rect.origin.x / 16));
-    const int16_t dst_words_dec_1 = ((dst_max_x / 16) - (at.x / 16));
+    const int16_t src_words_dec_1 = ((src_max_x >> 4) - (rect.origin.x >> 4));
+    const int16_t dst_words_dec_1 = ((dst_max_x >> 4) - (at.x >> 4));
 
     // Source
     blitter->srcIncX = 8;
     blitter->srcIncY = ((srcImage._line_words - src_words_dec_1) * 8);
-    const int16_t src_word_offset = (rect.origin.y * srcImage._line_words) + (rect.origin.x / 16);
+    const int16_t src_word_offset = (rect.origin.y * srcImage._line_words) + (rect.origin.x >> 4);
     uint16_t* src_bitmap  = srcImage._bitmap + src_word_offset * 4l;
     
     // Dest
     blitter->dstIncX  = 8;
     blitter->dstIncY = ((_image._line_words - dst_words_dec_1) * 8);
-    const uint16_t dst_word_offset = (at.y * _image._line_words) + (at.x / 16);
+    const uint16_t dst_word_offset = (at.y * _image._line_words) + (at.x >> 4);
     uint16_t* dst_bitmap  = _image._bitmap + dst_word_offset * 4l;
 
     // Mask
@@ -233,19 +233,19 @@ void canvas_c::imp_draw_masked(const image_c& srcImage, const rect_s& rect, poin
 
     const int16_t src_max_x       = rect.max_x();
     const int16_t dst_max_x       = (at.x + rect.size.width - 1);
-    const int16_t src_words_dec_1 = ((src_max_x / 16) - (rect.origin.x / 16));
-    const int16_t dst_words_dec_1 = ((dst_max_x / 16) - (at.x / 16));
+    const int16_t src_words_dec_1 = ((src_max_x >> 4) - (rect.origin.x >> 4));
+    const int16_t dst_words_dec_1 = ((dst_max_x >> 4) - (at.x >> 4));
     
     // Source
     blitter->srcIncX = 2;
     blitter->srcIncY = ((srcImage._line_words - src_words_dec_1) * 2);
-    const int16_t src_word_offset = (rect.origin.y * srcImage._line_words) + (rect.origin.x / 16);
+    const int16_t src_word_offset = (rect.origin.y * srcImage._line_words) + (rect.origin.x >> 4);
     uint16_t* src_maskmap  = srcImage._maskmap + src_word_offset;
 
     // Dest
     blitter->dstIncX  = 8;
     blitter->dstIncY = (_image._line_words * 8 - (dst_words_dec_1 * 8));
-    const int16_t dst_word_offset = (at.y * _image._line_words) + (at.x / 16);
+    const int16_t dst_word_offset = (at.y * _image._line_words) + (at.x >> 4);
     uint16_t* dst_bitmap  = _image._bitmap + dst_word_offset * 4l;
 
     // Mask
@@ -326,19 +326,19 @@ void canvas_c::imp_draw_color(const image_c& srcImage, const rect_s& rect, point
 
     const int16_t src_max_x       = rect.max_x();
     const int16_t dst_max_x       = (at.x + rect.size.width - 1);
-    const int16_t src_words_dec_1 = ((src_max_x / 16) - (rect.origin.x / 16));
-    const int16_t dst_words_dec_1 = ((dst_max_x / 16) - (at.x / 16));
+    const int16_t src_words_dec_1 = ((src_max_x >> 4) - (rect.origin.x >> 4));
+    const int16_t dst_words_dec_1 = ((dst_max_x >> 4) - (at.x >> 4));
 
     // Source
     blitter->srcIncX = 2;
     blitter->srcIncY = ((srcImage._line_words - src_words_dec_1) * 2);
-    const int16_t src_word_offset = (rect.origin.y * srcImage._line_words) + (rect.origin.x / 16);
+    const int16_t src_word_offset = (rect.origin.y * srcImage._line_words) + (rect.origin.x >> 4);
     uint16_t* src_maskmap  = srcImage._maskmap + src_word_offset;
     
     // Dest
     blitter->dstIncX  = 8;
     blitter->dstIncY = (_image._line_words * 8 - (dst_words_dec_1 * 8));
-    const int16_t dst_word_offset = (at.y * _image._line_words) + (at.x / 16);
+    const int16_t dst_word_offset = (at.y * _image._line_words) + (at.x >> 4);
     uint16_t* dst_bitmap  = _image._bitmap + dst_word_offset * 4l;
 
     // Mask
@@ -429,7 +429,7 @@ void canvas_c::imp_fill_tile(uint8_t ci, point_s at) const {
     auto blitter = pBlitter;
 
     // Destination address
-    const int16_t dst_word_offset = (at.y * _image._line_words) + (at.x / 16);
+    const int16_t dst_word_offset = (at.y * _image._line_words) + (at.x >> 4);
     uint16_t* dst_bitmap = _image._bitmap + dst_word_offset * 4;
     blitter->pDst = dst_bitmap;
 
@@ -459,13 +459,13 @@ void canvas_c::imp_draw_tile(const image_c& srcImage, const rect_s& rect, point_
 
     // Calculate source address (tile in tileset)
     const int16_t src_word_offset = (rect.origin.y * _tileset_line_words)
-                                  + (rect.origin.x / 16);
+                                  + (rect.origin.x >> 4);
     uint16_t* src_bitmap = srcImage._bitmap + src_word_offset * 4;
     blitter->pSrc = src_bitmap;
 
     // Calculate destination address (screen position)
     const int16_t dst_word_offset = (at.y * _image._line_words)
-                                  + (at.x / 16);
+                                  + (at.x >> 4);
     uint16_t* dst_bitmap = _image._bitmap + dst_word_offset * 4;
     blitter->pDst = dst_bitmap;
 
@@ -489,7 +489,7 @@ void canvas_c::imp_draw_tile_masked(const image_c& srcImage, const rect_s& rect,
 
     // Calculate source address (tile in tileset)
     const int16_t src_word_offset = (rect.origin.y * _tileset_line_words)
-                                  + (rect.origin.x / 16);
+                                  + (rect.origin.x >> 4);
     uint16_t* src_maskmap = srcImage._maskmap + src_word_offset;
     blitter->pSrc = src_maskmap;
     blitter->srcIncX = _tileset_line_words * 2;
@@ -497,7 +497,7 @@ void canvas_c::imp_draw_tile_masked(const image_c& srcImage, const rect_s& rect,
 
     // Calculate destination address (screen position)
     const int16_t dst_word_offset = (at.y * _image._line_words)
-                                  + (at.x / 16);
+                                  + (at.x >> 4);
     uint16_t* dst_bitmap = _image._bitmap + dst_word_offset * 4;
 
     blitter->pDst = dst_bitmap;

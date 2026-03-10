@@ -37,7 +37,7 @@ void blitter_s::start(bool hog) {
         }
     };
     const auto inc_src = [this, &buffer] (bool is_last) {
-        pSrc += (is_last ? srcIncY : srcIncX) / 2;
+        pSrc += (is_last ? srcIncY : srcIncX) >> 1;
     };
     const auto write_dst = [this, &buffer] (uint16_t mask) {
         uint16_t src;
@@ -65,7 +65,7 @@ void blitter_s::start(bool hog) {
         }
     };
     const auto inc_dst = [this] (bool is_last) {
-        pDst += (is_last ? dstIncY : dstIncX) / 2;
+        pDst += (is_last ? dstIncY : dstIncX) >> 1;
     };
     do {
         // First word

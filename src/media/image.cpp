@@ -15,7 +15,7 @@ using namespace toybox;
 image_c::image_c(const size_s size, bool masked, shared_ptr_c<palette_c> palette) {
     _palette = palette;
     _size = size;
-    _line_words = ((size.width + 15) / 16);
+    _line_words = ((size.width + 15) >> 4);
     uint16_t bitmap_words = (_line_words * size.height) << 2;
     uint16_t mask_bytes = masked ? (_line_words * size.height) : 0;
     _bitmap.reset(reinterpret_cast<uint16_t*>(_calloc(bitmap_words + mask_bytes, 2)));
@@ -34,7 +34,7 @@ int image_c::get_pixel(point_s at) const {
 }
 
 int image_c::imp_get_pixel(point_s at) const {
-    int word_offset = (at.x / 16) + at.y * _line_words;
+    int word_offset = (at.x >> 4) + at.y * _line_words;
     const uint16_t bit = 1 << (15 - at.x & 15);
     if (_maskmap != nullptr) {
         uint16_t* maskmap = _maskmap + word_offset;
@@ -56,7 +56,7 @@ int image_c::imp_get_pixel(point_s at) const {
 
 void image_c::put_pixel(int ci, point_s at) const {
     if (_size.contains(at)) {
-        int word_offset = (at.x / 16) + at.y * _line_words;
+        int word_offset = (at.x >> 4) + at.y * _line_words;
         const uint16_t bit = 1 << (15 - at.x & 15);
         const uint16_t mask = ~bit;
         if (_maskmap != nullptr) {
@@ -237,7 +237,7 @@ image_c::image_c(const char* path, int masked_cidx, const iffstream_c::unknown_r
             }
             _palette.reset(new palette_c(&cmpa[0]));
         } else if (chunk.id == ::cc4::BODY) {
-            _line_words = ((_size.width + 15) / 16);
+            _line_words = ((_size.width + 15) >> 4);
             const uint16_t bitmap_words = (_line_words * _size.height) << 2;
             const bool needs_mask_words = masked || (bmhd.mask_type == mask_type_e::plane);
             const uint16_t mask_words = needs_mask_words ? (bitmap_words >> 2) : 0;
@@ -467,14 +467,14 @@ bool image_c::save(const char* path, image_c::compression_type_e compression, bo
             ilbm.begin(::cc4::BODY, chunk);
             switch (compression) {
                 case compression_type_e::none:
-                    image_write(ilbm, (_size.width + 15) / 16, _line_words, _size.height, _bitmap.get(),  header.mask_type == mask_type_e::plane ? _maskmap : nullptr);
+                    image_write(ilbm, (_size.width + 15) >> 4, _line_words, _size.height, _bitmap.get(),  header.mask_type == mask_type_e::plane ? _maskmap : nullptr);
                     break;
                 case compression_type_e::packbits:
-                    image_write_packbits(ilbm, (_size.width + 15) / 16, _line_words, _size.height, _bitmap.get(), header.mask_type == mask_type_e::plane ? _maskmap : nullptr);
+                    image_write_packbits(ilbm, (_size.width + 15) >> 4, _line_words, _size.height, _bitmap.get(), header.mask_type == mask_type_e::plane ? _maskmap : nullptr);
                     break;
 #if TOYBOX_ILBM_SUPPORTS_DEFLATE
                 case compression_type_e::deflate:
-                    image_write_deflate(ilbm, (_size.width + 15) / 16, _line_words, _size.height, _bitmap.get(), header.mask_type == mask_type_plane ? _maskmap : nullptr);
+                    image_write_deflate(ilbm, (_size.width + 15) >> 4, _line_words, _size.height, _bitmap.get(), header.mask_type == mask_type_plane ? _maskmap : nullptr);
                     break;
 #endif
                 default:

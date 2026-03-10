@@ -51,7 +51,7 @@ static void init_lookup_table_if_needed() {
 }
 
 static __forceinline uint8_t __line_bytes(size_s tilespace_size) {
-    return (tilespace_size.width + 8) / 8;
+    return (tilespace_size.width + 8) >> 3;
 }
 
 static __forceinline size_s __tilespace_size(size_s size) {
@@ -112,9 +112,9 @@ void dirtymap_c::mark(const rect_s& rect) {
         }
         return;
     }
-    const int16_t x1 = rect.origin.x / tile_size.width;
-    const int16_t x2 = (rect.max_x()) / tile_size.width;
-    const int16_t y1 = rect.origin.y / tile_size.height;
+    const int16_t x1 = (uint16_t)rect.origin.x / tile_size.width;
+    const int16_t x2 = ((uint16_t)rect.max_x()) / tile_size.width;
+    const int16_t y1 = (uint16_t)rect.origin.y / tile_size.height;
     assert(y1 < _tilespace_size.height && "Y coordinate must be within dirtymap height");
     static constexpr uint8_t s_first_byte_masks[8] = {
         0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80
@@ -123,11 +123,11 @@ void dirtymap_c::mark(const rect_s& rect) {
         0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F, 0xFF
     };
 
-    const int16_t extra_rows = ((rect.origin.y + rect.size.height - 1) / tile_size.height - y1);
+    const int16_t extra_rows = ((uint16_t)(rect.origin.y + rect.size.height - 1) / tile_size.height - y1);
     assert(y1 + extra_rows < _tilespace_size.height && "Y extent must be within dirtymap height");
-    const int16_t start_byte = x1 / 8;
+    const int16_t start_byte = x1 >> 3;
     assert(start_byte < _line_bytes && "Start byte must be within dirtymap width");
-    const int16_t end_byte = x2 / 8;
+    const int16_t end_byte = x2 >> 3;
     assert(end_byte < _line_bytes && "End byte must be within dirtymap width");
     const int16_t start_bit = x1 % 8;
     assert(start_bit < 8 && "Start bit must be less than 8");
@@ -210,7 +210,7 @@ void dirtymap_c::merge(const dirtymap_c& __restrict dirtymap) {
     _is_dirty = true;
     uint32_t* l_dest = (uint32_t*)_data;
     const uint32_t* l_source = (uint32_t*)dirtymap._data;
-    const int16_t long_count = (dirtymap._line_bytes * dirtymap._tilespace_size.height + 3) / 4;
+    const int16_t long_count = (dirtymap._line_bytes * dirtymap._tilespace_size.height + 3) >> 2;
     for (int i = 0; i < long_count; i++) {
         const uint32_t v = *l_source++;
         if (v) {
@@ -293,7 +293,7 @@ rect_s dirtymap_c::dirty_bounds() const {
     int16_t maxY = 0;
     for (int16_t y = 0; y < _tilespace_size.height; ++y) {
         for (int16_t x = 0; x < _tilespace_size.width; ++x) {
-            int byte = (x / 8) + y * _line_bytes;
+            int byte = (x >> 3) + y * _line_bytes;
             uint8_t bit = 1 << (x & 0x7);
             if ((_data[byte] & bit) != 0) {
                 minX = min(minX, x);
