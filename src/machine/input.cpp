@@ -44,8 +44,8 @@ const rect_s& mouse_c::limits() const {
 void mouse_c::set_limits(const rect_s& limits) {
     _limits = limits;
     g_mouse_position = point_s(
-        limits.origin.x + _limits.size.width >> 1,
-        limits.origin.y + _limits.size.height >> 1
+        limits.origin.x + (_limits.size.width >> 1),
+        limits.origin.y + (_limits.size.height >> 1)
     );
 }
 

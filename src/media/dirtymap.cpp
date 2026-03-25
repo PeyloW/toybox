@@ -35,7 +35,7 @@ static void init_lookup_table_if_needed() {
         for (int16_t i = 0; i < 8; ) {
             // If the current bit is 1, start a new run
             if ((input >> i) & 1) {
-                int16_t start = i * dirtymap_c::tile_size.width;
+                int16_t start = i << dirtymap_c::tile_size_shift;
                 int16_t length = dirtymap_c::tile_size.width;
                 result->bit_runs[result->num_runs].start = start;
                 while ((input >> (i + 1)) & 1) {
@@ -56,8 +56,8 @@ static __forceinline uint8_t __line_bytes(size_s tilespace_size) {
 
 static __forceinline size_s __tilespace_size(size_s size) {
     return size_s(
-        (size.width + dirtymap_c::tile_size.width - 1) / dirtymap_c::tile_size.width,
-        (size.height + dirtymap_c::tile_size.height - 1) / dirtymap_c::tile_size.height
+        (size.width + dirtymap_c::tile_size.width - 1) >> dirtymap_c::tile_size_shift,
+        (size.height + dirtymap_c::tile_size.height - 1) >> dirtymap_c::tile_size_shift
     );
 }
 
@@ -112,9 +112,9 @@ void dirtymap_c::mark(const rect_s& rect) {
         }
         return;
     }
-    const int16_t x1 = (uint16_t)rect.origin.x / tile_size.width;
-    const int16_t x2 = ((uint16_t)rect.max_x()) / tile_size.width;
-    const int16_t y1 = (uint16_t)rect.origin.y / tile_size.height;
+    const int16_t x1 = (uint16_t)rect.origin.x >> tile_size_shift;
+    const int16_t x2 = ((uint16_t)rect.max_x()) >> tile_size_shift;
+    const int16_t y1 = (uint16_t)rect.origin.y >> tile_size_shift;
     assert(y1 < _tilespace_size.height && "Y coordinate must be within dirtymap height");
     static constexpr uint8_t s_first_byte_masks[8] = {
         0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80
@@ -123,7 +123,7 @@ void dirtymap_c::mark(const rect_s& rect) {
         0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F, 0xFF
     };
 
-    const int16_t extra_rows = ((uint16_t)(rect.origin.y + rect.size.height - 1) / tile_size.height - y1);
+    const int16_t extra_rows = (((uint16_t)(rect.origin.y + rect.size.height - 1) >> tile_size_shift) - y1);
     assert(y1 + extra_rows < _tilespace_size.height && "Y extent must be within dirtymap height");
     const int16_t start_byte = x1 >> 3;
     assert(start_byte < _line_bytes && "Start byte must be within dirtymap width");

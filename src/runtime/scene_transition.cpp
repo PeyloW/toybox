@@ -119,7 +119,7 @@ public:
         for (int i = 0; i <= 16; i++) {
             _palettes.emplace_back(new palette_c());
             auto& palette = *_palettes.back();
-            int shade = i * color_c::MIX_FULLY_OTHER >> 4;
+            int shade = (i * color_c::MIX_FULLY_OTHER) >> 4;
             for (int j = 0; j < 16; j++) {
                 palette[j] = from_palette[j].mix(_through, shade);
             }
@@ -127,7 +127,7 @@ public:
         for (int i = 15; i >= 0; i--) {
             _palettes.emplace_back(new palette_c());
             auto&palette = *_palettes.back();
-            int shade = i * color_c::MIX_FULLY_OTHER >> 4;
+            int shade = (i * color_c::MIX_FULLY_OTHER) >> 4;
             for (int j = 0; j < 16; j++) {
                 palette[j] = to_palette[j].mix(_through, shade);
             }

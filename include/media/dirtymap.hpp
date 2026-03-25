@@ -26,7 +26,8 @@ namespace toybox {
     class dirtymap_c : public nocopy_c {
     public:
         using restore_f = function_c<void(const rect_s&)>;
-        static constexpr size_s tile_size = size_s(16, 16);
+        static constexpr int tile_size_shift = 4;
+        static constexpr size_s tile_size = size_s(1 << tile_size_shift, 1 << tile_size_shift);
         
         static dirtymap_c* create(size_s size);
         
