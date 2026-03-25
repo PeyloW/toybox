@@ -66,7 +66,7 @@ namespace toybox {
         entity_s& get_entity(uint8_t id) { return _all_entities[id]; };
         const entity_s& get_entity(uint8_t id) const { return _all_entities[id]; }
         auto& all_entities() { return _all_entities; }
-        auto& all_entities() const { return _all_entities; }
+        const auto& all_entities() const { return _all_entities; }
         void destroy_entity(uint8_t id);
         void erase_destroyed_entities();
 

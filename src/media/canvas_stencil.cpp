@@ -108,7 +108,7 @@ void canvas_c::make_stencil(stencil_t stencil, stencil_e type, int shade) {
     assert(shade >= STENCIL_FULLY_TRANSPARENT && "Shade must be at least STENCIL_FULLY_TRANSPARENT");
     assert(shade <= STENCIL_FULLY_OPAQUE && "Shade must not exceed STENCIL_FULLY_OPAQUE");
     switch (type) {
-        case stencil_e::orderred:
+        case stencil_e::ordered:
             make_dither_mask(stencil, bayer_8x8, shade);
             break;
         case stencil_e::noise:

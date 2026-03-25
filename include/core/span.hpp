@@ -61,7 +61,7 @@ namespace toybox {
         }
         const_reference back() const {
             assert(_size > 0 && "Span is empty");
-            return _begin + _size;
+            return _begin[_size - 1];
         }
 
     private:

@@ -57,7 +57,7 @@ namespace toybox {
         __target_volatile lop_e LOP;
         __target_volatile uint8_t mode;
         __target_volatile uint8_t skew;
-        
+
         __forceinline uint8_t get_skew() const {
             return skew & skew_mask;
         }

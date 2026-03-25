@@ -211,6 +211,7 @@ size_s canvas_c::draw(const font_c& font, const char* text, point_s at, alignmen
 static char draw_text_buffer[80 * MAX_LINES];
 
 size_s canvas_c::draw(const font_c& font, const char* text, const rect_s& in, uint16_t line_spacing, alignment_e alignment, int color) {
+    assert(strlen(text) < sizeof(draw_text_buffer) && "Text too long for buffer");
     strcpy(draw_text_buffer, text);
     vector_c<const char*, 12> lines;
 
@@ -250,7 +251,7 @@ size_s canvas_c::draw(const font_c& font, const char* text, const rect_s& in, ui
     switch (alignment) {
         case alignment_e::left: at = in.origin; break;
         case alignment_e::center: at = point_s( in.origin.x + (in.size.width >> 1), in.origin.y); break;
-        case alignment_e::right: at = point_s( in.origin.x + (in.size.width >> 1), in.origin.y); break;
+        case alignment_e::right: at = point_s( in.origin.x + in.size.width, in.origin.y); break;
     }
     size_s max_size = {0,0};
     bool first = true;

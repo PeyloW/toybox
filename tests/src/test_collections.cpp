@@ -54,18 +54,18 @@ __neverinline void test_array_and_vector() {
     hard_assert(vec.size() == 4 && "Size should be 4 after resize grow");
     hard_assert(vec[0] == 10 && "First element should be preserved");
     hard_assert(vec[1] == 20 && "Second element should be preserved");
-    hard_assert(vec[2] == 0 && "Third element should be default-constructed");
-    hard_assert(vec[3] == 0 && "Fourth element should be default-constructed");
+    hard_assert(vec[2] == 0 && "Third element is zero-init");
+    hard_assert(vec[3] == 0 && "Fourth element is zero-init");
 
     // Test resize() on static vector - shrink
     vec.resize(1);
     hard_assert(vec.size() == 1 && "Size should be 1 after resize shrink");
-    hard_assert(vec[0] == 10 && "Element should be preserved after resize shrink");
+    hard_assert(vec[0] == 10 && "Element preserved after shrink");
 
     // Test resize() on static vector - same size (no-op)
     vec.resize(1);
-    hard_assert(vec.size() == 1 && "Size should remain 1 after resize to same size");
-    hard_assert(vec[0] == 10 && "Element should be unchanged after resize to same size");
+    hard_assert(vec.size() == 1 && "Size is 1 after resize to same");
+    hard_assert(vec[0] == 10 && "Element unchanged after same resize");
 
     // Test resize() on static vector - to zero
     vec.resize(0);
@@ -101,12 +101,12 @@ __neverinline void test_dynamic_vector() {
 
     // Test reserve
     vec.reserve(100);
-    hard_assert(vec.capacity() >= 100 && "Capacity should be at least 100 after reserve");
+    hard_assert(vec.capacity() >= 100 && "Capacity >= 100 after reserve");
     hard_assert(vec.size() == 10 && "Size should remain 10 after reserve");
 
     // Test that elements are preserved after reserve
     for (int i = 0; i < 10; ++i) {
-        hard_assert(vec[i] == i + 1 && "Elements should be preserved after reserve");
+        hard_assert(vec[i] == i + 1 && "Elements preserved after reserve");
     }
 
     // Test emplace_back
@@ -137,7 +137,7 @@ __neverinline void test_dynamic_vector() {
     // Test clear
     vec.clear();
     hard_assert(vec.size() == 0 && "Size should be 0 after clear");
-    hard_assert(vec.capacity() >= 100 && "Capacity should remain allocated after clear");
+    hard_assert(vec.capacity() >= 100 && "Capacity kept after clear");
 
     // Test growth after clear
     for (int i = 0; i < 5; ++i) {
@@ -152,24 +152,24 @@ __neverinline void test_dynamic_vector() {
     vec.resize(10);
     hard_assert(vec.size() == 10 && "Size should be 10 after resize grow");
     for (int i = 0; i < 5; ++i) {
-        hard_assert(vec[i] == i * 2 && "Existing elements should be preserved after resize grow");
+        hard_assert(vec[i] == i * 2 && "Existing elements preserved on grow");
     }
     for (int i = 5; i < 10; ++i) {
-        hard_assert(vec[i] == 0 && "New elements should be default-constructed (zero) after resize grow");
+        hard_assert(vec[i] == 0 && "New elements are zero-init on grow");
     }
 
     // Test resize() - shrink
     vec.resize(3);
     hard_assert(vec.size() == 3 && "Size should be 3 after resize shrink");
     for (int i = 0; i < 3; ++i) {
-        hard_assert(vec[i] == i * 2 && "Elements should be preserved after resize shrink");
+        hard_assert(vec[i] == i * 2 && "Elements preserved after shrink");
     }
 
     // Test resize() - same size (no-op)
     vec.resize(3);
-    hard_assert(vec.size() == 3 && "Size should remain 3 after resize to same size");
+    hard_assert(vec.size() == 3 && "Size is 3 after resize to same");
     for (int i = 0; i < 3; ++i) {
-        hard_assert(vec[i] == i * 2 && "Elements should be unchanged after resize to same size");
+        hard_assert(vec[i] == i * 2 && "Elements unchanged after same resize");
     }
 
     // Test resize() - grow from zero
@@ -177,7 +177,7 @@ __neverinline void test_dynamic_vector() {
     vec.resize(7);
     hard_assert(vec.size() == 7 && "Size should be 7 after resize from zero");
     for (int i = 0; i < 7; ++i) {
-        hard_assert(vec[i] == 0 && "All elements should be default-constructed after resize from zero");
+        hard_assert(vec[i] == 0 && "All elements zero-init from zero");
     }
 
     // Test resize() - shrink to zero
@@ -198,7 +198,7 @@ __neverinline void test_list_basic_insert(test_list_state_s& state) {
     state.list.push_front(non_trivial_s(100));
     hard_assert(state.list.size() == 1 && "List size should be 1");
     hard_assert(state.list.front().value == 100 && "Front value should be 100");
-    hard_assert(state.list.front().generation == 1 && "Front generation should be 1 (copied from temporary)");
+    hard_assert(state.list.front().generation == 1 && "Front gen is 1 (copied from temp)");
     hard_assert(!state.list.front().moved && "Front should not be marked as moved");
 
     // Store generation of first element to verify it's not copied/moved later
@@ -217,14 +217,14 @@ __neverinline void test_list_basic_insert(test_list_state_s& state) {
     auto it = state.list.begin();
     ++it;
     hard_assert(it->value == 100 && "Second element value should be 100");
-    hard_assert(it->generation == state.first_gen && "Second element generation should not change");
-    hard_assert(it->moved == state.first_moved && "Second element moved flag should not change");
+    hard_assert(it->generation == state.first_gen && "2nd element gen must not change");
+    hard_assert(it->moved == state.first_moved && "2nd element moved flag must not change");
 
     // Test 3: emplace_front - existing elements should not be affected
     state.list.emplace_front(300);
     hard_assert(state.list.size() == 3 && "List size should be 3");
     hard_assert(state.list.front().value == 300 && "Front value should be 300");
-    hard_assert(state.list.front().generation == 0 && "Front generation should be 0 (direct construction)");
+    hard_assert(state.list.front().generation == 0 && "Front gen is 0 (direct construct)");
 
     // Verify previous elements unchanged
     it = state.list.begin();
@@ -333,7 +333,7 @@ __neverinline void test_list_splice_single(test_list_state_s& state) {
     it = state.list.begin();
     ++it;
     hard_assert(it->value == 500 && "Spliced element should be 500");
-    hard_assert(it->generation == splice_gen && "Spliced element generation unchanged (no copy)");
+    hard_assert(it->generation == splice_gen && "Spliced element gen unchanged");
     hard_assert(!it->moved && "Spliced element not marked as moved");
 
     // Verify other elements in list unchanged
@@ -351,7 +351,7 @@ __neverinline void test_list_splice_single(test_list_state_s& state) {
     state.list.splice_front(list2, list2.before_begin());
 
     hard_assert(state.list.size() == 5 && "List size should be 5 after splice_front");
-    hard_assert(list2.size() == 0 && "List2 size should be 0 after splice_front");
+    hard_assert(list2.size() == 0 && "List2 size is 0 after splice_front");
 
     // Verify spliced element at front retains properties
     hard_assert(state.list.front().value == 400 && "Front should be 400 (spliced)");
@@ -413,7 +413,7 @@ __neverinline void test_list_splice_range(test_list_state_s& state) {
     state.list.splice_after(it, list3, splice_first, splice_last);
 
     hard_assert(state.list.size() == 7 && "List size should be 7 after range splice");
-    hard_assert(list3.size() == 2 && "List3 size should be 2 after range splice");
+    hard_assert(list3.size() == 2 && "List3 size is 2 after range splice");
 
     // Verify list3 has 4000 -> 1000
     hard_assert(list3.front().value == 4000 && "List3 front should be 4000");
@@ -466,17 +466,17 @@ __neverinline void test_list_splice_front_range(test_list_state_s& state) {
 
     state.list.splice_front(list4, splice_first, splice_last);
 
-    hard_assert(state.list.size() == 9 && "List size should be 9 after front range splice");
-    hard_assert(list4.size() == 1 && "List4 size should be 1 after front range splice");
+    hard_assert(state.list.size() == 9 && "Size is 9 after front range splice");
+    hard_assert(list4.size() == 1 && "List4 size is 1 after front splice");
     hard_assert(list4.front().value == 7000 && "List4 should only have 7000");
 
     // Verify spliced elements at front
     auto it = state.list.begin();
-    hard_assert(it->value == 9000 && "1st element should be 9000 (spliced to front)");
+    hard_assert(it->value == 9000 && "1st element is 9000 (front splice)");
     hard_assert(it->generation == gen_9000 && "Spliced 9000 generation unchanged");
     hard_assert(!it->moved && "Spliced 9000 not moved");
     ++it;
-    hard_assert(it->value == 8000 && "2nd element should be 8000 (spliced to front)");
+    hard_assert(it->value == 8000 && "2nd element is 8000 (front splice)");
     hard_assert(it->generation == gen_8000 && "Spliced 8000 generation unchanged");
     hard_assert(!it->moved && "Spliced 8000 not moved");
     ++it;
@@ -795,7 +795,7 @@ __neverinline void test_sparse_vector_non_trivial() {
     sv.emplace_back(200);
     int key2 = 1;
     hard_assert(sv[key2].value == 200 && "Emplaced value should be 200");
-    hard_assert(sv[key2].generation == 0 && "Emplaced element should have generation 0");
+    hard_assert(sv[key2].generation == 0 && "Emplaced element gen is 0");
     
     // Erase should call destructor
     sv.erase(key1);

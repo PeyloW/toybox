@@ -219,7 +219,7 @@ namespace toybox {
                 if (n == node) return true;
                 n = n->next;
             }
-            return false;;
+            return false;
         }
         detail::node_s* _head;
     };

@@ -23,7 +23,7 @@ extern "C" {
 }
 
 timer_c::timer_c(timer_e timer) : _timer(timer) {
-    assert(timer == timer_e::vbl || timer == timer_e::clock && "Timer must be VBL or clock");
+    assert((timer == timer_e::vbl || timer == timer_e::clock) && "Timer must be VBL or clock");
     machine_c::shared();
     with_paused_timers([timer] {
         switch (timer) {

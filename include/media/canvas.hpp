@@ -48,7 +48,7 @@ namespace toybox {
         using stencil_t = uint16_t[16];
         enum class stencil_e : uint8_t {
             none,
-            orderred,
+            ordered,
             noise,
             diagonal,
             circle,

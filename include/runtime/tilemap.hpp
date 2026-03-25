@@ -52,18 +52,18 @@ namespace toybox {
         __forceinline const tile_s& operator[](point_s p) const __pure { return (*this)[p.x, p.y]; }
         // TODO: This muls is in quite hot path, may want a lookup table
         __forceinline tile_s& operator[](int x, int y) __pure {
-            assert(_mul_table.get());
+            assert(_mul_table.get() && "Mul table not init");
             __assume_count(y, 256);
             const int idx = x + _mul_table[y];
             __assume_count(idx, (0x8000 / sizeof(tile_s)));
             return _tiles[idx];
         }
         __forceinline const tile_s& operator[](int x, int y) const __pure {
-            assert(_mul_table.get());
+            assert(_mul_table.get() && "Mul table not init");
             __assume_count(y, 256);
             const int idx = x + _mul_table[y];
             __assume_count(idx, (0x8000 / sizeof(tile_s)));
-            return _tiles[x + y * _tilespace_bounds.size.width];
+            return _tiles[idx];
         }
 
         __forceinline rect_s tilespace_bounds() const { return _tilespace_bounds; }

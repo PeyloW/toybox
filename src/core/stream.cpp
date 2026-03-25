@@ -53,9 +53,9 @@ stream_c& stream_c::operator<<(int32_t i) {
         int len = static_cast<int>(strlen(buf));
         int fillc = _width - len;
         if (fillc > 0) {
-            char buf[fillc];
-            for (int i = 0; i < fillc; i++) buf[i] = _fill;
-            write(reinterpret_cast<uint8_t*>(buf), fillc);
+            char fill_buf[fillc];
+            for (int i = 0; i < fillc; i++) fill_buf[i] = _fill;
+            write(reinterpret_cast<uint8_t*>(fill_buf), fillc);
         }
     }
     return *this << static_cast<const char*>(buf);
@@ -183,7 +183,7 @@ ptrdiff_t strstream_c::tell() const {
     return _pos;
 }
 ptrdiff_t strstream_c::seek(ptrdiff_t pos, seekdir_e way) {
-    assert(ABS(pos <= _len) && "Seek position must be within buffer length");
+    assert(pos >= -_len && pos <= _len && "Seek pos out of bounds");
     switch (way) {
         case seekdir_e::beg:
             _pos = static_cast<int>(pos);

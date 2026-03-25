@@ -25,28 +25,28 @@ __neverinline void test_lifetime_direct_semantics() {
     non_trivial_s obj2(obj1);
     hard_assert(obj2.value == 42 && "Copied value should be 42");
     hard_assert(obj2.generation == 1 && "Copied generation should be 1");
-    hard_assert(!obj2.moved && "Copied object should not be marked as moved");
-    hard_assert(!obj1.moved && "Original object should not be marked as moved after copy");
+    hard_assert(!obj2.moved && "Copied object not moved");
+    hard_assert(!obj1.moved && "Original not moved after copy");
 
     non_trivial_s obj3(100);
     obj3 = obj2;
     hard_assert(obj3.value == 42 && "Assigned value should be 42");
     hard_assert(obj3.generation == 2 && "Assigned generation should be 2");
-    hard_assert(!obj3.moved && "Assigned object should not be marked as moved");
+    hard_assert(!obj3.moved && "Assigned object not moved");
 
     // Test direct move semantics
     non_trivial_s obj4(move(obj3));
     hard_assert(obj4.value == 42 && "Moved value should be 42");
     hard_assert(obj4.generation == 2 && "Moved generation should remain 2");
-    hard_assert(!obj4.moved && "Destination object should not be marked as moved");
-    hard_assert(obj3.moved && "Source object should be marked as moved");
+    hard_assert(!obj4.moved && "Move dest not moved");
+    hard_assert(obj3.moved && "Source object is moved");
 
     non_trivial_s obj5(200);
     obj5 = move(obj4);
     hard_assert(obj5.value == 42 && "Move-assigned value should be 42");
     hard_assert(obj5.generation == 2 && "Move-assigned generation should remain 2");
-    hard_assert(!obj5.moved && "Destination object should not be marked as moved");
-    hard_assert(obj4.moved && "Source object should be marked as moved");
+    hard_assert(!obj5.moved && "Move dest not moved");
+    hard_assert(obj4.moved && "Source object is moved");
 
     printf("  test_lifetime_direct_semantics pass.\n\r");
 }
@@ -59,15 +59,15 @@ __neverinline void test_lifetime_static_vector_insert(lifetime_test_state_s& sta
     static_vec.push_back(non_trivial_s(10));
     hard_assert(static_vec.size() == 1 && "Static vector size should be 1");
     hard_assert(static_vec[0].value == 10 && "Back element value should be 10");
-    hard_assert(static_vec[0].generation == 1 && "Back element generation should be 1 (copied from temporary)");
-    hard_assert(!static_vec[0].moved && "Back element should not be moved after push_back");
+    hard_assert(static_vec[0].generation == 1 && "Back element gen is 1 (from temp)");
+    hard_assert(!static_vec[0].moved && "Back element not moved");
 
     // 2. Push back with lvalue (copy)
     non_trivial_s lvalue_vec1(15);
     static_vec.push_back(lvalue_vec1);
     hard_assert(static_vec.size() == 2 && "Static vector size should be 2");
     hard_assert(static_vec[1].value == 15 && "Back element value should be 15");
-    hard_assert(static_vec[1].generation == 1 && "Back element generation should be 1 (copied from lvalue)");
+    hard_assert(static_vec[1].generation == 1 && "Back element gen is 1 (from lvalue)");
     hard_assert(!static_vec[1].moved && "Back element should not be moved");
     hard_assert(!lvalue_vec1.moved && "Original lvalue should not be moved");
 
@@ -75,18 +75,18 @@ __neverinline void test_lifetime_static_vector_insert(lifetime_test_state_s& sta
     static_vec.emplace_back(17);
     hard_assert(static_vec.size() == 3 && "Static vector size should be 3");
     hard_assert(static_vec[2].value == 17 && "Emplaced element value should be 17");
-    hard_assert(static_vec[2].generation == 0 && "Emplaced element generation should be 0 (direct construction)");
+    hard_assert(static_vec[2].generation == 0 && "Emplaced gen is 0 (in-place)");
     hard_assert(!static_vec[2].moved && "Emplaced element should not be moved");
 
     // 4. Insert front (existing elements moved during shift)
     static_vec.insert(static_vec.begin(), non_trivial_s(5));
     hard_assert(static_vec.size() == 4 && "Static vector size should be 4");
     hard_assert(static_vec[0].value == 5 && "Front element should be 5");
-    hard_assert(static_vec[0].generation == 1 && "Front element generation should be 1 (copied from temporary)");
+    hard_assert(static_vec[0].generation == 1 && "Front element gen is 1 (from temp)");
     hard_assert(!static_vec[0].moved && "Front element should not be moved");
     hard_assert(static_vec[1].value == 10 && "Element should be 10");
-    hard_assert(static_vec[1].generation == 1 && "Element generation should remain 1 (moved, not copied)");
-    hard_assert(!static_vec[1].moved && "Element is destination of move, not marked as moved");
+    hard_assert(static_vec[1].generation == 1 && "Element gen remains 1 (moved)");
+    hard_assert(!static_vec[1].moved && "Move dest not moved");
     hard_assert(static_vec[2].value == 15 && "Element should be 15");
     hard_assert(static_vec[3].value == 17 && "Element should be 17");
 
@@ -95,7 +95,7 @@ __neverinline void test_lifetime_static_vector_insert(lifetime_test_state_s& sta
     static_vec.insert(static_vec.begin() + 2, lvalue_vec2);
     hard_assert(static_vec.size() == 5 && "Static vector size should be 5");
     hard_assert(static_vec[2].value == 12 && "Inserted element value should be 12");
-    hard_assert(static_vec[2].generation == 1 && "Inserted element generation should be 1 (copy)");
+    hard_assert(static_vec[2].generation == 1 && "Inserted element gen is 1 (copy)");
     hard_assert(!static_vec[2].moved && "Inserted element should not be moved");
     hard_assert(!lvalue_vec2.moved && "Original lvalue should not be moved");
 
@@ -103,7 +103,7 @@ __neverinline void test_lifetime_static_vector_insert(lifetime_test_state_s& sta
     static_vec.emplace(3, 13);
     hard_assert(static_vec.size() == 6 && "Static vector size should be 6");
     hard_assert(static_vec[3].value == 13 && "Emplaced element value should be 13");
-    hard_assert(static_vec[3].generation == 0 && "Emplaced element generation should be 0 (direct construction)");
+    hard_assert(static_vec[3].generation == 0 && "Emplaced gen is 0 (in-place)");
     hard_assert(!static_vec[3].moved && "Emplaced element should not be moved");
 
     printf("  test_lifetime_static_vector_insert pass.\n\r");
@@ -125,22 +125,22 @@ __neverinline void test_lifetime_static_vector_remove(lifetime_test_state_s& sta
     static_vec.push_back(non_trivial_s(20));
     hard_assert(static_vec.size() == 7 && "Static vector size should be 7");
     hard_assert(static_vec[6].value == 20 && "New back element value should be 20");
-    hard_assert(static_vec[6].generation == 1 && "New back element generation should be 1 (copied from temporary)");
-    hard_assert(!static_vec[6].moved && "New back element should not be moved after push_back");
+    hard_assert(static_vec[6].generation == 1 && "New back element gen is 1 (from temp)");
+    hard_assert(!static_vec[6].moved && "New back element not moved");
 
     // 8. Pop back
     static_vec.pop_back();
-    hard_assert(static_vec.size() == 6 && "Static vector size should be 6 after pop_back");
+    hard_assert(static_vec.size() == 6 && "Static vector size is 6 after pop");
     hard_assert(static_vec[5].value == 17 && "New back element should be 17");
     hard_assert(static_vec[5].generation == 0 && "Back element generation should be 0");
     hard_assert(!static_vec[5].moved && "Back element should not be moved");
 
     // 9. Erase front (elements moved during shift)
     static_vec.erase(static_vec.begin());
-    hard_assert(static_vec.size() == 5 && "Static vector size should be 5 after erase");
-    hard_assert(static_vec[0].value == 10 && "First element should be 10 after erase");
-    hard_assert(static_vec[0].generation == 1 && "First element generation should remain 1 (moved, not copied)");
-    hard_assert(!static_vec[0].moved && "First element is destination of move, not marked as moved");
+    hard_assert(static_vec.size() == 5 && "Static vector size is 5 after erase");
+    hard_assert(static_vec[0].value == 10 && "First element is 10 after erase");
+    hard_assert(static_vec[0].generation == 1 && "First element gen remains 1 (moved)");
+    hard_assert(!static_vec[0].moved && "First element move dest not moved");
     hard_assert(static_vec[1].value == 12 && "Element should be 12");
     hard_assert(static_vec[2].value == 13 && "Element should be 13");
     hard_assert(static_vec[3].value == 15 && "Element should be 15");
@@ -148,7 +148,7 @@ __neverinline void test_lifetime_static_vector_remove(lifetime_test_state_s& sta
 
     // 10. Erase middle
     static_vec.erase(static_vec.begin() + 2);
-    hard_assert(static_vec.size() == 4 && "Static vector size should be 4 after erase");
+    hard_assert(static_vec.size() == 4 && "Static vector size is 4 after erase");
     hard_assert(static_vec[0].value == 10 && "Element should be 10");
     hard_assert(static_vec[1].value == 12 && "Element should be 12");
     hard_assert(static_vec[2].value == 15 && "Element should be 15 (13 erased)");
@@ -162,21 +162,21 @@ __neverinline void test_lifetime_static_vector_remove(lifetime_test_state_s& sta
 __neverinline void test_lifetime_dynamic_vector_insert(lifetime_test_state_s& state) {
     // Test with dynamic vector_c
     vector_c<non_trivial_s, 0> dynamic_vec;
-    hard_assert(dynamic_vec.size() == 0 && "Dynamic vector initial size should be 0");
+    hard_assert(dynamic_vec.size() == 0 && "Dynamic vector initial size is 0");
 
     // 1. Push back with rvalue
     dynamic_vec.push_back(non_trivial_s(100));
     hard_assert(dynamic_vec.size() == 1 && "Dynamic vector size should be 1");
     hard_assert(dynamic_vec[0].value == 100 && "Back element value should be 100");
-    hard_assert(dynamic_vec[0].generation == 1 && "Back element generation should be 1 (copied from temporary)");
-    hard_assert(!dynamic_vec[0].moved && "Back element should not be moved after push_back");
+    hard_assert(dynamic_vec[0].generation == 1 && "Back element gen is 1 (from temp)");
+    hard_assert(!dynamic_vec[0].moved && "Back element not moved");
 
     // 2. Push back with lvalue (copy)
     non_trivial_s lvalue_dyn1(150);
     dynamic_vec.push_back(lvalue_dyn1);
     hard_assert(dynamic_vec.size() == 2 && "Dynamic vector size should be 2");
     hard_assert(dynamic_vec[1].value == 150 && "Back element value should be 150");
-    hard_assert(dynamic_vec[1].generation == 1 && "Back element generation should be 1 (copied from lvalue)");
+    hard_assert(dynamic_vec[1].generation == 1 && "Back element gen is 1 (from lvalue)");
     hard_assert(!dynamic_vec[1].moved && "Back element should not be moved");
     hard_assert(!lvalue_dyn1.moved && "Original lvalue should not be moved");
 
@@ -184,18 +184,18 @@ __neverinline void test_lifetime_dynamic_vector_insert(lifetime_test_state_s& st
     dynamic_vec.emplace_back(175);
     hard_assert(dynamic_vec.size() == 3 && "Dynamic vector size should be 3");
     hard_assert(dynamic_vec[2].value == 175 && "Emplaced element value should be 175");
-    hard_assert(dynamic_vec[2].generation == 0 && "Emplaced element generation should be 0 (direct construction)");
+    hard_assert(dynamic_vec[2].generation == 0 && "Emplaced gen is 0 (in-place)");
     hard_assert(!dynamic_vec[2].moved && "Emplaced element should not be moved");
 
     // 4. Insert front (existing elements moved during shift)
     dynamic_vec.insert(dynamic_vec.begin(), non_trivial_s(50));
     hard_assert(dynamic_vec.size() == 4 && "Dynamic vector size should be 4");
     hard_assert(dynamic_vec[0].value == 50 && "Front element should be 50");
-    hard_assert(dynamic_vec[0].generation == 1 && "Front element generation should be 1 (copied from temporary)");
+    hard_assert(dynamic_vec[0].generation == 1 && "Front element gen is 1 (from temp)");
     hard_assert(!dynamic_vec[0].moved && "Front element should not be moved");
     hard_assert(dynamic_vec[1].value == 100 && "Element should be 100");
-    hard_assert(dynamic_vec[1].generation == 1 && "Element generation should remain 1 (moved, not copied)");
-    hard_assert(!dynamic_vec[1].moved && "Element is destination of move, not marked as moved");
+    hard_assert(dynamic_vec[1].generation == 1 && "Element gen remains 1 (moved)");
+    hard_assert(!dynamic_vec[1].moved && "Move dest not moved");
     hard_assert(dynamic_vec[2].value == 150 && "Element should be 150");
     hard_assert(dynamic_vec[3].value == 175 && "Element should be 175");
 
@@ -204,7 +204,7 @@ __neverinline void test_lifetime_dynamic_vector_insert(lifetime_test_state_s& st
     dynamic_vec.insert(dynamic_vec.begin() + 2, lvalue_dyn2);
     hard_assert(dynamic_vec.size() == 5 && "Dynamic vector size should be 5");
     hard_assert(dynamic_vec[2].value == 125 && "Inserted element value should be 125");
-    hard_assert(dynamic_vec[2].generation == 1 && "Inserted element generation should be 1 (copy)");
+    hard_assert(dynamic_vec[2].generation == 1 && "Inserted element gen is 1 (copy)");
     hard_assert(!dynamic_vec[2].moved && "Inserted element should not be moved");
     hard_assert(!lvalue_dyn2.moved && "Original lvalue should not be moved");
 
@@ -212,7 +212,7 @@ __neverinline void test_lifetime_dynamic_vector_insert(lifetime_test_state_s& st
     dynamic_vec.emplace(3, 137);
     hard_assert(dynamic_vec.size() == 6 && "Dynamic vector size should be 6");
     hard_assert(dynamic_vec[3].value == 137 && "Emplaced element value should be 137");
-    hard_assert(dynamic_vec[3].generation == 0 && "Emplaced element generation should be 0 (direct construction)");
+    hard_assert(dynamic_vec[3].generation == 0 && "Emplaced gen is 0 (in-place)");
     hard_assert(!dynamic_vec[3].moved && "Emplaced element should not be moved");
 
     printf("  test_lifetime_dynamic_vector_insert pass.\n\r");
@@ -234,22 +234,22 @@ __neverinline void test_lifetime_dynamic_vector_remove(lifetime_test_state_s& st
     dynamic_vec.push_back(non_trivial_s(200));
     hard_assert(dynamic_vec.size() == 7 && "Dynamic vector size should be 7");
     hard_assert(dynamic_vec[6].value == 200 && "New back element value should be 200");
-    hard_assert(dynamic_vec[6].generation == 1 && "New back element generation should be 1 (copied from temporary)");
-    hard_assert(!dynamic_vec[6].moved && "New back element should not be moved after push_back");
+    hard_assert(dynamic_vec[6].generation == 1 && "New back element gen is 1 (from temp)");
+    hard_assert(!dynamic_vec[6].moved && "New back element not moved");
 
     // 8. Pop back
     dynamic_vec.pop_back();
-    hard_assert(dynamic_vec.size() == 6 && "Dynamic vector size should be 6 after pop_back");
+    hard_assert(dynamic_vec.size() == 6 && "Dynamic vector size is 6 after pop");
     hard_assert(dynamic_vec[5].value == 175 && "New back element should be 175");
     hard_assert(dynamic_vec[5].generation == 0 && "Back element generation should be 0");
     hard_assert(!dynamic_vec[5].moved && "Back element should not be moved");
 
     // 9. Erase front (elements moved during shift)
     dynamic_vec.erase(dynamic_vec.begin());
-    hard_assert(dynamic_vec.size() == 5 && "Dynamic vector size should be 5 after erase");
-    hard_assert(dynamic_vec[0].value == 100 && "First element should be 100 after erase");
-    hard_assert(dynamic_vec[0].generation == 1 && "First element generation should remain 1 (moved, not copied)");
-    hard_assert(!dynamic_vec[0].moved && "First element is destination of move, not marked as moved");
+    hard_assert(dynamic_vec.size() == 5 && "Dynamic vector size is 5 after erase");
+    hard_assert(dynamic_vec[0].value == 100 && "First element is 100 after erase");
+    hard_assert(dynamic_vec[0].generation == 1 && "First element gen remains 1 (moved)");
+    hard_assert(!dynamic_vec[0].moved && "First element move dest not moved");
     hard_assert(dynamic_vec[1].value == 125 && "Element should be 125");
     hard_assert(dynamic_vec[2].value == 137 && "Element should be 137");
     hard_assert(dynamic_vec[3].value == 150 && "Element should be 150");
@@ -257,7 +257,7 @@ __neverinline void test_lifetime_dynamic_vector_remove(lifetime_test_state_s& st
 
     // 10. Erase middle
     dynamic_vec.erase(dynamic_vec.begin() + 2);
-    hard_assert(dynamic_vec.size() == 4 && "Dynamic vector size should be 4 after erase");
+    hard_assert(dynamic_vec.size() == 4 && "Dynamic vector size is 4 after erase");
     hard_assert(dynamic_vec[0].value == 100 && "Element should be 100");
     hard_assert(dynamic_vec[1].value == 125 && "Element should be 125");
     hard_assert(dynamic_vec[2].value == 150 && "Element should be 150 (137 erased)");
@@ -276,24 +276,24 @@ __neverinline void test_lifetime_list_insert(lifetime_test_state_s& state) {
     list.push_front(non_trivial_s(1000));
     hard_assert(list.size() == 1 && "List size should be 1");
     hard_assert(list.front().value == 1000 && "List front value should be 1000");
-    hard_assert(list.front().generation == 1 && "List front generation should be 1 (copied from temporary)");
-    hard_assert(!list.front().moved && "List front should not be marked as moved");
+    hard_assert(list.front().generation == 1 && "Front gen is 1 (from temp)");
+    hard_assert(!list.front().moved && "Front not moved");
 
     // 2. Test push_front with lvalue (copy)
     non_trivial_s lvalue1(2000);
     list.push_front(lvalue1);
     hard_assert(list.size() == 2 && "List size should be 2");
     hard_assert(list.front().value == 2000 && "List front value should be 2000");
-    hard_assert(list.front().generation == 1 && "List front generation should be 1 (copied from lvalue)");
-    hard_assert(!list.front().moved && "List front should not be marked as moved");
-    hard_assert(!lvalue1.moved && "Original lvalue should not be marked as moved after copy");
+    hard_assert(list.front().generation == 1 && "Front gen is 1 (from lvalue)");
+    hard_assert(!list.front().moved && "Front not moved");
+    hard_assert(!lvalue1.moved && "Original not moved after copy");
 
     // 3. Test emplace_front (direct construction)
     list.emplace_front(3000);
     hard_assert(list.size() == 3 && "List size should be 3");
     hard_assert(list.front().value == 3000 && "List front value should be 3000");
-    hard_assert(list.front().generation == 0 && "List front generation should be 0 (direct construction)");
-    hard_assert(!list.front().moved && "List front should not be marked as moved");
+    hard_assert(list.front().generation == 0 && "Front gen is 0 (in-place)");
+    hard_assert(!list.front().moved && "Front not moved");
 
     // 4. Test insert_after with lvalue (copy)
     non_trivial_s lvalue2(4000);
@@ -302,9 +302,9 @@ __neverinline void test_lifetime_list_insert(lifetime_test_state_s& state) {
     hard_assert(list.size() == 4 && "List size should be 4");
     ++it;
     hard_assert(it->value == 4000 && "Inserted element value should be 4000");
-    hard_assert(it->generation == 1 && "Inserted element should be copied (generation 1)");
-    hard_assert(!it->moved && "Inserted element should not be marked as moved");
-    hard_assert(!lvalue2.moved && "Original lvalue should not be marked as moved after copy");
+    hard_assert(it->generation == 1 && "Inserted element is copied (gen 1)");
+    hard_assert(!it->moved && "Inserted element not moved");
+    hard_assert(!lvalue2.moved && "Original not moved after copy");
 
     // 5. Test insert_after with rvalue (move)
     it = list.begin();
@@ -313,8 +313,8 @@ __neverinline void test_lifetime_list_insert(lifetime_test_state_s& state) {
     hard_assert(list.size() == 5 && "List size should be 5");
     ++it;
     hard_assert(it->value == 5000 && "Inserted element value should be 5000");
-    hard_assert(it->generation == 1 && "Inserted element generation should be 1 (copied from temporary)");
-    hard_assert(!it->moved && "Inserted element should not be marked as moved");
+    hard_assert(it->generation == 1 && "Inserted gen is 1 (from temp)");
+    hard_assert(!it->moved && "Inserted element not moved");
 
     // 6. Test emplace_after (direct construction)
     it = list.begin();
@@ -324,8 +324,8 @@ __neverinline void test_lifetime_list_insert(lifetime_test_state_s& state) {
     hard_assert(list.size() == 6 && "List size should be 6");
     ++it;
     hard_assert(it->value == 6000 && "Emplaced element value should be 6000");
-    hard_assert(it->generation == 0 && "Emplaced element generation should be 0 (direct construction)");
-    hard_assert(!it->moved && "Emplaced element should not be marked as moved");
+    hard_assert(it->generation == 0 && "Emplaced gen is 0 (in-place)");
+    hard_assert(!it->moved && "Emplaced element not moved");
 
     // Verify current list order: 3000 -> 4000 -> 5000 -> 6000 -> 2000 -> 1000
     it = list.begin();
@@ -377,7 +377,7 @@ __neverinline void test_lifetime_list_remove(lifetime_test_state_s& state) {
     // 7. Test pop_front
     list.pop_front();
     hard_assert(list.size() == 5 && "List size should be 5 after pop_front");
-    hard_assert(list.front().value == 4000 && "List front value should be 4000 after pop");
+    hard_assert(list.front().value == 4000 && "Front value is 4000 after pop");
     hard_assert(list.front().generation == 1 && "List front generation should be 1");
     hard_assert(!list.front().moved && "List front should not be marked as moved");
 

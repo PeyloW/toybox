@@ -19,7 +19,7 @@ namespace toybox {
     enum class directions_e : uint8_t {
         none = 0,
         up = 1 << 0, down = 1 << 1, left = 1 << 2, right = 1 << 3,
-        up_left = up | left, up_righ = up | right,
+        up_left = up | left, up_right = up | right,
         down_left = down | left, down_right = down | right
     };
     template<>
@@ -197,7 +197,7 @@ namespace toybox {
     static_assert(sizeof(point_s) == 4);
 
     using size_s = base_size_s<int16_t>;
-    static_assert(sizeof(point_s) == 4);
+    static_assert(sizeof(size_s) == 4);
 
     using rect_s = base_rect_s<int16_t>;
     static_assert(sizeof(rect_s) == 8);
