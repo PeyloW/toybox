@@ -53,7 +53,7 @@ namespace toybox {
     
 #pragma mark - Math functions
     
-    static inline int sqrti(int x) {
+    __purest static inline int sqrti(int x) {
         if (x == 0 || x == 1) return x;
         // Binary search for sqrt(x)
         int low = 1, high = x, result = 1;
@@ -73,21 +73,21 @@ namespace toybox {
     }
 
     template<ordered T>
-    __forceinline constexpr const T& max(const T& a) {
+    __forceinline __purest constexpr const T& max(const T& a) {
         return a;
     }
     template<ordered T, typename... Ts>
-    __forceinline constexpr const T& max(const T& a, const T& b, const Ts&... rest) {
+    __forceinline __purest constexpr const T& max(const T& a, const T& b, const Ts&... rest) {
         const T& m = (a < b) ? b : a;
         return max(m, rest...);
     }
     
     template<ordered T>
-    __forceinline constexpr const T& min(const T& a) {
+    __forceinline __purest constexpr const T& min(const T& a) {
         return a;
     }
     template<ordered T, typename... Ts>
-    __forceinline constexpr const T& min(const T& a, const T& b, const Ts&... rest) {
+    __forceinline __purest constexpr const T& min(const T& a, const T& b, const Ts&... rest) {
         const T& m = (a < b) ? a : b;
         return min(m, rest...);
     }
@@ -96,7 +96,7 @@ namespace toybox {
     
     static uint16_t fast_rand_seed = 0xace1u;
     
-    static __forceinline uint16_t fast_rand(uint16_t seed) {
+    static __forceinline __purest uint16_t fast_rand(uint16_t seed) {
         assert(seed != 0 && "Seed must be non-zero");
     #ifdef __m68k__
         asm volatile (
@@ -124,7 +124,7 @@ namespace toybox {
      Blue noise random number series with 256 index repeat. 
      Number are in range 0..63 inclusive.
      */
-    static __forceinline int brand(int idx) {
+    static __forceinline __purest int brand(int idx) {
         static constexpr uint8_t s_blue[256] = {
             10,  2, 17, 23, 10, 34,  4, 28, 37,  2, 19,  7,  3,  1,  5, 62,
              0,  8, 55, 46,  1, 61, 19,  0,  1,  9, 45, 25, 34, 16,  0, 24,
@@ -210,12 +210,12 @@ namespace toybox {
     
 #pragma mark - C++ language helpers
     
-    template<class C> __forceinline auto begin(C& c) -> decltype(c.begin()) { return c.begin(); };
-    template<class C> __forceinline auto begin(const C& c) -> decltype(c.begin()) { return c.begin(); };
-    template<class T, size_t N> __forceinline T* begin(T (&array)[N]) { return &array[0]; };
-    template<class C> __forceinline auto end(C& c) -> decltype(c.end()) { return c.end(); };
-    template<class C> __forceinline auto end(const C& c) -> decltype(c.end()) { return c.end(); };
-    template<class T, size_t N> __forceinline T* end(T (&array)[N]) { return &array[N]; };
+    template<class C> __forceinline auto begin(C& c) -> decltype(c.begin()) { return c.begin(); }
+    template<class C> __forceinline auto begin(const C& c) -> decltype(c.begin()) { return c.begin(); }
+    template<class T, size_t N> __forceinline T* begin(T (&array)[N]) { return &array[0]; }
+    template<class C> __forceinline auto end(C& c) -> decltype(c.end()) { return c.end(); }
+    template<class C> __forceinline auto end(const C& c) -> decltype(c.end()) { return c.end(); }
+    template<class T, size_t N> __forceinline T* end(T (&array)[N]) { return &array[N]; }
 
     template<typename T> constexpr T&& forward(typename remove_reference<T>::type& t) {
         return static_cast<T&&>(t);
@@ -325,7 +325,7 @@ namespace toybox {
             return _invoker(_target, static_cast<Args&&>(args)...);
         }
         
-        __forceinline operator bool() const { return _invoker != nullptr; }
+        __forceinline operator bool() const_pure { return _invoker != nullptr; }
     private:
         // Type-erased invoke function
         using invoke_ptr_t = R(*)(void*, Args...);
@@ -345,7 +345,7 @@ namespace toybox {
     // Base class enforcing no copy constructor or assignment.
     class nocopy_c {
     public:
-        __forceinline bool operator==(const nocopy_c& other) const {
+        __forceinline bool operator==(const nocopy_c& other) const_pure {
             return this == &other;
         }
     protected:
@@ -360,7 +360,7 @@ namespace toybox {
         static constexpr size_t align = max(alignof(Ts)...);
         alignas(align) uint8_t data[size] = {0};
         void* addr() { return &data; }
-        const void* addr() const { return &data; }
+        const void* addr() const_pure { return &data; }
         template<int I = 0>
         typename type_at<I, Ts...>::type* ptr() {
             return reinterpret_cast<typename type_at<I, Ts...>::type*>(&data);

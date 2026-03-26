@@ -29,8 +29,8 @@ namespace toybox {
         stream_c();
         virtual ~stream_c() { flush(); }
             
-        virtual bool good() const __pure;
-        virtual ptrdiff_t tell() const __pure = 0;
+        virtual bool good() const_pure;
+        virtual ptrdiff_t tell() const_pure = 0;
         virtual ptrdiff_t seek(ptrdiff_t pos, seekdir_e way) = 0;
         virtual bool flush();
 
@@ -42,9 +42,9 @@ namespace toybox {
         template<typename T> requires (!same_as<T, uint8_t>)
         __forceinline size_t write(const T* buf, size_t count = 1) { return write(reinterpret_cast<const uint8_t*>(buf), count * sizeof(T)); }
 
-        __forceinline int width() const { return _width; }
+        __forceinline int width() const_pure { return _width; }
         int width(int w) { int t = _width; _width = w; return t; }
-        __forceinline char fill() const { return _fill; }
+        __forceinline char fill() const_pure { return _fill; }
         char fill(char d) { int t = _fill; _fill = d; return t; }
 
         stream_c& operator<<(manipulator_f m);
@@ -76,8 +76,8 @@ namespace toybox {
         static inline stream_c& operator<<(stream_c& s, const setfill_s& m) { s.fill(m.c); return s; }
     }
 
-    static __forceinline constexpr detail::setw_s setw(int w) { return (detail::setw_s){ w }; };
-    static __forceinline constexpr detail::setfill_s setfill(char c) { return (detail::setfill_s){ c }; };
+    static __forceinline constexpr detail::setw_s setw(int w) { return (detail::setw_s){ w }; }
+    static __forceinline constexpr detail::setfill_s setfill(char c) { return (detail::setfill_s){ c }; }
     
 
     class fstream_c final : public stream_c {
@@ -93,8 +93,8 @@ namespace toybox {
         fstream_c(const char* path, openmode_e mode = openmode_e::input);
         virtual ~fstream_c();
 
-        __forceinline openmode_e mode() const __pure { return _mode; }
-        __forceinline bool is_open() const __pure { return _file != nullptr; }
+        __forceinline openmode_e mode() const_pure { return _mode; }
+        __forceinline bool is_open() const_pure { return _file != nullptr; }
         bool open();
         bool close();
 
@@ -121,10 +121,10 @@ namespace toybox {
     public:
         strstream_c(size_t len);
         strstream_c(char* buf, size_t len);
-        virtual ~strstream_c() {};
+        virtual ~strstream_c() {}
 
         __forceinline void reset() { _pos = 0; }
-        __forceinline char* str() { return _buf; };
+        __forceinline char* str() { return _buf; }
 
         virtual ptrdiff_t tell() const override __pure;
         virtual ptrdiff_t seek(ptrdiff_t pos, seekdir_e way) override;

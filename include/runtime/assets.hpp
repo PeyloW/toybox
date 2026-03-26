@@ -15,15 +15,13 @@
 
 namespace toybox {
 
-    using namespace toybox;
-    
     class asset_c : nocopy_c {
     public:
         enum class type_e : uint8_t {
             custom, image, tileset, font, sound, music, tilemap_level
         };
         using enum type_e;
-        __forceinline virtual type_e asset_type() const __pure { return type_e::custom; }
+        __forceinline virtual type_e asset_type() const_pure { return type_e::custom; }
     };
     
     class image_c;
@@ -54,7 +52,7 @@ namespace toybox {
         void unload(int id);
 
         template<derived_from<asset_c> T>
-        __forceinline T& asset(int id) const { return (T&)(asset(id)); };
+        __forceinline T& asset(int id) const { return (T&)(asset(id)); }
 
         __forceinline image_c& image(int id) const {
             assert(asset(id).asset_type() == asset_c::image);

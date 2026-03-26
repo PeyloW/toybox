@@ -30,17 +30,17 @@ namespace toybox {
         constexpr base_point_s() : x(0), y(0) {}
         constexpr base_point_s(Type x, Type y) : x(x), y(y) {}
         Type x, y;
-        constexpr bool operator==(const base_point_s& p) const {
+        constexpr bool operator==(const base_point_s& p) const_pure {
             return x == p.x && y == p.y;
         }
         template<typename OType>
         constexpr explicit operator base_point_s<OType>() const {
             return base_point_s<OType>(static_cast<OType>(x), static_cast<OType>(y));
         }
-        constexpr base_point_s operator+(base_point_s o) const {
+        constexpr base_point_s operator+(base_point_s o) const_pure {
             return base_point_s(x + o.x, y + o.y);
         }
-        constexpr base_point_s operator-(base_point_s o) const {
+        constexpr base_point_s operator-(base_point_s o) const_pure {
             return base_point_s(x - o.x, y - o.y);
         }
     };
@@ -51,20 +51,20 @@ namespace toybox {
         constexpr base_size_s() : width(0), height(0) {}
         constexpr base_size_s(Type w, Type h) : width(w), height(h) {}
         Type width, height;
-        constexpr bool operator==(const base_size_s s) const {
+        constexpr bool operator==(const base_size_s s) const_pure {
             return width == s.width && height == s.height;
         }
         template<typename OType>
         constexpr explicit operator base_size_s<OType>() const {
             return base_size_s<OType>(static_cast<OType>(width), static_cast<OType>(height));
         }
-        constexpr bool contains(const point_s point) const {
+        constexpr bool contains(const point_s point) const_pure {
             return point.x >= 0 && point.y >= 0 && point.x < width && point.y < height;
         }
-        constexpr bool contained_by(const base_size_s size) const {
+        constexpr bool contained_by(const base_size_s size) const_pure {
             return width <= size.width && height <= size.height;
         }
-        constexpr bool is_empty() const {
+        constexpr bool is_empty() const_pure {
             return width <= 0 || height <= 0;
         }
     };
@@ -80,33 +80,33 @@ namespace toybox {
 
         point_s origin;
         size_s size;
-        __forceinline constexpr Type max_x() const { return origin.x + size.width - 1; }
-        __forceinline constexpr Type max_y() const { return origin.y + size.height - 1; }
-        constexpr base_point_s<Type> center() const { return base_point_s<Type>(origin.x + (size.width >> 1), origin.y + (size.height >> 1)); }
-        constexpr bool operator==(const Type& r) const {
+        __forceinline constexpr Type max_x() const_pure { return origin.x + size.width - 1; }
+        __forceinline constexpr Type max_y() const_pure { return origin.y + size.height - 1; }
+        constexpr base_point_s<Type> center() const_pure { return base_point_s<Type>(origin.x + (size.width >> 1), origin.y + (size.height >> 1)); }
+        constexpr bool operator==(const Type& r) const_pure {
             return this == &r || (origin == r.origin && size == r.size);
         }
         template<typename OType>
         constexpr explicit operator base_rect_s<OType>() const {
             return base_rect_s<OType>(static_cast<base_point_s<OType>>(origin), static_cast<base_size_s<OType>>(size));
         }
-        constexpr base_rect_s operator+(base_point_s<Type> o) const {
+        constexpr base_rect_s operator+(base_point_s<Type> o) const_pure {
             return base_rect_s(origin + o, size);
         }
-        constexpr base_rect_s operator-(base_point_s<Type> o) const {
+        constexpr base_rect_s operator-(base_point_s<Type> o) const_pure {
             return base_rect_s(origin - o, size);
         }
-        constexpr bool contains(const point_s point) const {
+        constexpr bool contains(const point_s point) const_pure {
             const point_s at = point_s(point.x - origin.x, point.y - origin.y);
             return size.contains(at);
         }
-        constexpr bool contained_by(const base_rect_s& rect) const {
+        constexpr bool contained_by(const base_rect_s& rect) const_pure {
             if (origin.x < rect.origin.x || origin.y < rect.origin.y) return false;
             if (max_x() > rect.max_x()) return false;
             if (max_y() > rect.max_y()) return false;
             return true;
         }
-        constexpr bool intersects(const base_rect_s& rect) const {
+        constexpr bool intersects(const base_rect_s& rect) const_pure {
             using namespace rel_ops;
             return (origin.x < rect.origin.x + rect.size.width) &&
                    (origin.x + size.width > rect.origin.x) &&
@@ -124,7 +124,7 @@ namespace toybox {
             intersection_out = base_rect_s(x1, y1, x2 - x1, y2 - y1);
             return true;
         }
-        constexpr base_rect_s unification(const base_rect_s& rect) const {
+        constexpr base_rect_s unification(const base_rect_s& rect) const_pure {
             if (size.is_empty()) return rect;
             if (rect.size.is_empty()) return *this;
             const auto x1 = min(origin.x, rect.origin.x);
@@ -134,11 +134,11 @@ namespace toybox {
             return base_rect_s(x1, y1, x2 - x1, y2 - y1);
         }
         
-        constexpr base_rect_s inset(const Type dx, const Type dy) const {
+        constexpr base_rect_s inset(const Type dx, const Type dy) const_pure {
             return base_rect_s(origin.x + dx, origin.y + dy, size.width - dx * 2, size.height - dy * 2);
         }
 
-        constexpr base_rect_s inset(const Type left, const Type right, const Type top, const Type bottom) const {
+        constexpr base_rect_s inset(const Type left, const Type right, const Type top, const Type bottom) const_pure {
             return base_rect_s(origin.x + left,
                                origin.y + top,
                                size.width - (left + right),

@@ -34,7 +34,7 @@ namespace toybox {
                 __assume_range(i, -1, 16);
                 return _table[i + 1];
             }
-            const int& operator[](int i) const {
+            const int& operator[](int i) const_pure {
                 assert(i >= -1 && i < 16);
                 __assume_range(i, -1, 16);
                 return _table[i + 1];
@@ -65,8 +65,8 @@ namespace toybox {
         canvas_c(image_c& image);
         ~canvas_c() = default;
 
-        __forceinline image_c& image() const { return _image; }
-        __forceinline size_s size() const { return _image.size(); }
+        __forceinline image_c& image() const_pure { return _image; }
+        __forceinline size_s size() const_pure { return _image.size(); }
         
         static const stencil_t* const stencil(stencil_e type, int shade);
         
@@ -81,7 +81,7 @@ namespace toybox {
             commands();
             _clipping = old_clip;
         }
-        const rect_s& clip_rect() const { return _clip_rect; }
+        const rect_s& clip_rect() const_pure { return _clip_rect; }
         void set_clip_rect(const rect_s& rect) { _clip_rect = rect; }
 
         template<invocable<> Commands>
@@ -133,7 +133,7 @@ namespace toybox {
         dirtymap_c* _dirtymap = nullptr;
         const stencil_t* _stencil = nullptr;
         rect_s _clip_rect;
-        uint16_t _tileset_line_words;
+        int16_t _tileset_line_words;
         bool _clipping = true;
         
         __neverinline void imp_fill(uint8_t ci, const rect_s& rect) const;

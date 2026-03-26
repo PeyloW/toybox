@@ -23,17 +23,17 @@ namespace toybox {
             using element_type = T;
             basic_ptr_c(T* ptr = nullptr) : _ptr(ptr) {}
             
-            T* get() const __pure { return _ptr; }
-            
-            
-            __forceinline T* operator->() const __pure  { return _ptr; }
-            __forceinline T& operator*() const __pure  { return *(_ptr); }
-            __forceinline T& operator[](int i) const __pure  { return _ptr[i]; }
-            __forceinline T* operator+(int i) const __pure  { return _ptr + i; }
-            
-            __forceinline explicit operator bool() const __pure  { return _ptr != nullptr; }
-            __forceinline bool operator==(const basic_ptr_c& o) const __pure { return _ptr == o._ptr; }
-            __forceinline bool operator==(T* o) const __pure { return _ptr == o; }
+            T* get() const_pure { return _ptr; }
+
+
+            __forceinline T* operator->() const_pure { return _ptr; }
+            __forceinline T& operator*() const_pure { return *(_ptr); }
+            __forceinline T& operator[](int i) const_pure { return _ptr[i]; }
+            __forceinline T* operator+(int i) const_pure { return _ptr + i; }
+
+            __forceinline explicit operator bool() const_pure { return _ptr != nullptr; }
+            __forceinline bool operator==(const basic_ptr_c& o) const_pure { return _ptr == o._ptr; }
+            __forceinline bool operator==(T* o) const_pure { return _ptr == o; }
 
         protected:
             T* _ptr;
@@ -121,7 +121,7 @@ namespace toybox {
             return *this;
         }
 
-        uint16_t use_count() const __pure { return _count != nullptr ? _count->count : 0; }
+        uint16_t use_count() const_pure { return _count != nullptr ? _count->count : 0; }
         void reset(T* p = nullptr) {
             if (this->_ptr != p) cleanup();
             this->_ptr = p;

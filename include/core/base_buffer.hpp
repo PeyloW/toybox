@@ -24,10 +24,10 @@ namespace toybox {
             __forceinline aligned_membuf_s<Type>* __buffer() __pure {
                 return _buffer;
             }
-            __forceinline const aligned_membuf_s<Type>* __buffer() const __pure {
+            __forceinline const aligned_membuf_s<Type>* __buffer() const_pure {
                 return _buffer;
             }
-            __forceinline constexpr int __capacity() const __pure {
+            __forceinline constexpr int __capacity() const_purest {
                 return Count;
             }
             __forceinline void __ensure_capacity(int needed, int current_size) const {
@@ -55,10 +55,10 @@ namespace toybox {
             __forceinline aligned_membuf_s<Type>* __buffer() __pure {
                 return _buffer;
             }
-            __forceinline const aligned_membuf_s<Type>* __buffer() const __pure {
+            __forceinline const aligned_membuf_s<Type>* __buffer() const_pure {
                 return _buffer;
             }
-            __forceinline int __capacity() const __pure {
+            __forceinline int __capacity() const_pure {
                 return _capacity;
             }
 

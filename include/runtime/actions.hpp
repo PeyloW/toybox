@@ -16,7 +16,7 @@ namespace toybox {
     using action_f = void(*)(tilemap_level_c& level, entity_s& entity, bool event);
     
     namespace actions {
-        static void idle(tilemap_level_c& level, entity_s& entity, bool event) {};
+        static void idle(tilemap_level_c& level, entity_s& entity, bool event) {}
     }
     
 }

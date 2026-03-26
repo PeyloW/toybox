@@ -19,8 +19,8 @@ namespace toybox {
     public:
         unexpected_c() = delete;
         explicit unexpected_c(int err) : _error(err) {}
-        
-        int error() const { return _error; }
+
+        int error() const_pure { return _error; }
     private:
         int _error;
     };
@@ -81,7 +81,7 @@ namespace toybox {
         }
         
         // Observer - error() == 0 means has value
-        explicit operator bool() const { return _error == 0; }
+        explicit operator bool() const_pure { return _error == 0; }
         
         // Value access
         T& value() & { return _value; }
@@ -95,10 +95,10 @@ namespace toybox {
         const T&& operator*() const && { return static_cast<const T&&>(_value); }
         
         T* operator->() { return &_value; }
-        const T* operator->() const { return &_value; }
-        
+        const T* operator->() const_pure { return &_value; }
+
         // Error access
-        int error() const { return _error; }
+        int error() const_pure { return _error; }
         
     private:
         union { T _value; };
@@ -116,12 +116,12 @@ namespace toybox {
         expected_c(expected_c&&) = default;
         ~expected_c() = default;
         
-        explicit operator bool() const { return _error == 0; }
-        
+        explicit operator bool() const_pure { return _error == 0; }
+
         void value() const {}
         void operator*() const {}
-        
-        int error() const { return _error; }
+
+        int error() const_pure { return _error; }
     private:
         int _error;
     };

@@ -20,8 +20,6 @@ namespace toybox {
 #define DEBUG_CPU_PHYS_RESTORE 0x102
 #define DEBUG_CPU_DONE 0x000
     
-    using namespace toybox;
-    
     class scene_manager_c;
         
     /**
@@ -41,15 +39,15 @@ namespace toybox {
             bool use_clear = false;
         };
         scene_c();
-        virtual ~scene_c() {};
+        virtual ~scene_c() {}
         
-        virtual const configuration_s& configuration() const;
+        virtual const configuration_s& configuration() const_pure;
         static configuration_s default_configuration;
         
-        virtual void will_appear(bool obscured) {};
-        virtual void will_disappear(bool obscured) {};
-        
-        virtual void update(display_list_c& display_list, int ticks) {};
+        virtual void will_appear(bool obscured) {}
+        virtual void will_disappear(bool obscured) {}
+
+        virtual void update(display_list_c& display_list, int ticks) {}
 
     protected:
         scene_manager_c& manager;
@@ -101,9 +99,9 @@ namespace toybox {
 
         void run(unique_ptr_c<scene_c> rootscene, unique_ptr_c<transition_c> transition = nullptr);
 
-        __forceinline scene_c& top_scene() const {
+        __forceinline scene_c& top_scene() const_pure {
             return *_scene_stack.back();
-        };
+        }
         void push(unique_ptr_c<scene_c> scene, unique_ptr_c<transition_c> transition = nullptr);
         void pop(unique_ptr_c<transition_c> transition = nullptr, int count = 1);
         void replace(unique_ptr_c<scene_c> scene, unique_ptr_c<transition_c> transition = nullptr);
@@ -112,7 +110,7 @@ namespace toybox {
         timer_c& clock;
 
         display_list_c& display_list(display_list_e id);
-        int display_list_count() const { return _display_lists.size(); }
+        int display_list_count() const_pure { return _display_lists.size(); }
         
     private:
         scene_manager_c();

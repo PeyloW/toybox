@@ -14,7 +14,7 @@ namespace toybox {
     class substream_c final : public stream_c {
     public:
         substream_c(shared_ptr_c<stream_c> stream, ptrdiff_t origin, ptrdiff_t length) : _stream(move(stream)), _origin(origin), _length(length) {}
-        virtual ~substream_c() {};
+        virtual ~substream_c() {}
 
         virtual ptrdiff_t tell() const override __pure;
         virtual ptrdiff_t seek(ptrdiff_t pos, seekdir_e way) override;

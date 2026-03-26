@@ -33,20 +33,20 @@ size_s viewport_c::backing_size(size_s viewport_size) {
     );
 }
 
-detail::viewport_image_holder::viewport_image_holder(size_s viewport_size) :
+detail::viewport_image_holder_s::viewport_image_holder_s(size_s viewport_size) :
     _viewport_size(fixed_viewport_size(viewport_size)),
     _backing_image(viewport_c::backing_size(viewport_size), false, nullptr)
 {}
 
 // View port size is the total potential area, the image only what is needed to support hardware scrolling that area.
 viewport_c::viewport_c(size_s viewport_size) :
-    detail::viewport_image_holder(viewport_size),
+    detail::viewport_image_holder_s(viewport_size),
     canvas_c(_backing_image)
 {
     assert(image().size().width >= 320 && image().size().width <= 336);
     assert(image().size().height >= _viewport_size.height && "Image height must fit viewport");
-    assert(_viewport_size.contained_by(max_size));
-    assert(min_size.contained_by(_viewport_size));
+    assert(_viewport_size.contained_by(max_size) && "Viewport exceeds max size");
+    assert(min_size.contained_by(_viewport_size) && "Viewport below min size");
     _clip_rect = rect_s(_offset, size_s(image().size().width, _viewport_size.height));
     _dirtymap = dirtymap_c::create(_viewport_size);
     _dirtymap->clear();

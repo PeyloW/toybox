@@ -43,13 +43,13 @@ namespace toybox {
             }
         };
 
-        constexpr bool operator==(cc4_t o) const { return ulong == o.ulong; }
-        constexpr bool operator==(uint32_t ul) const { return ulong == ul; }
-        constexpr bool operator==(uint8_t ub[4]) const { return ubytes == ub; }
+        constexpr bool operator==(cc4_t o) const_pure { return ulong == o.ulong; }
+        constexpr bool operator==(uint32_t ul) const_pure { return ulong == ul; }
+        constexpr bool operator==(uint8_t ub[4]) const_pure { return ubytes == ub; }
 
         // Allow ? to match any character, and * to match any until end.
         // Example: "?LVL" matches "1LVL" and "2LVL". "LVL*" matches any cc4 starting with LVL.
-        bool matches(cc4_t m) const;
+        bool matches(cc4_t m) const_pure;
 
         // Return an inner pointer to a cstring representation valid until next call to cstring().
         const char* cstring() const;
@@ -85,9 +85,9 @@ namespace toybox {
     class iffstream_c final : public stream_c {
     public:
         using unknown_reader = function_c<bool(iffstream_c& stream,iff_chunk_s& chunk)>;
-        inline static const constexpr unknown_reader null_reader{};
+        static inline constexpr const unknown_reader null_reader{};
         using unknown_writer = function_c<bool(iffstream_c& stream)>;
-        inline static const constexpr unknown_writer null_writer{};
+        static inline constexpr const unknown_writer null_writer{};
 
         iffstream_c(shared_ptr_c<stream_c> stream);
         iffstream_c(const char* path, fstream_c::openmode_e mode = fstream_c::openmode_e::input);

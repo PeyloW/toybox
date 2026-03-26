@@ -11,8 +11,6 @@
 
 namespace toybox {
     
-    using namespace toybox;
- 
     /**
      A `tileset_c` is a convenience wrapper on top of `image_c` for handling a
      a set of equally sized tiles.
@@ -24,34 +22,34 @@ namespace toybox {
         tileset_c() = delete;
         tileset_c(const char* path, size_s tile_size);
         tileset_c(const shared_ptr_c<image_c>& image, size_s tile_size);
-        virtual ~tileset_c() {};
+        virtual ~tileset_c() {}
 
-        __forceinline type_e asset_type() const override final { return tileset; }
-        
-        __forceinline const shared_ptr_c<image_c>& image() const __pure {
+        __forceinline type_e asset_type() const override final __pure { return tileset; }
+
+        __forceinline const shared_ptr_c<image_c>& image() const_pure {
             return _image;
         }
 
-        __forceinline size_s tile_size() const __pure { return _rects[0].size; }
-        
-        int16_t max_index() const __pure { return _max_index; };
-        point_s max_tile() const __pure { return _max_tile; };
+        __forceinline size_s tile_size() const_pure { return _rects[0].size; }
 
-        __forceinline const rect_s& operator[](int i) const __pure {
+        int16_t max_index() const_pure { return _max_index; }
+        point_s max_tile() const_pure { return _max_tile; }
+
+        __forceinline const rect_s& operator[](int i) const_pure {
             assert(i >= 0 && i < max_index() && "Tile index out of bounds");
             __assume_count(i, 0x8000 / sizeof(rect_s));
             return _rects[i];
         }
-        __forceinline const rect_s& operator[](point_s p) const __pure {
+        __forceinline const rect_s& operator[](point_s p) const_pure {
             return (*this)[p.x, p.y];
         }
-        __forceinline const rect_s& operator[](int x, int y) const __pure {
+        __forceinline const rect_s& operator[](int x, int y) const_pure {
             assert(x >= 0 && x < _max_tile.x && y >= 0 && y < _max_tile.y && "Tile coordinates out of bounds");
             return (*this)[x + _max_tile.x * y];
         }
         
         __forceinline array_s<uint16_t, 6>& data() { return _data; }
-        __forceinline const array_s<uint16_t, 6>& data() const { return _data; }
+        __forceinline const array_s<uint16_t, 6>& data() const_pure { return _data; }
 
         template<typename T> requires (sizeof(T) <= 12)
         T& data_as() { return (T&)(_data[0]); }

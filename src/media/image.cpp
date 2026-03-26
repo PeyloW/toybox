@@ -8,6 +8,7 @@
 #include "media/image.hpp"
 #include "media/canvas.hpp"
 #include "core/iffstream.hpp"
+#include "core/math.hpp"
 #include <errno.h>
 
 using namespace toybox;
@@ -16,6 +17,7 @@ image_c::image_c(const size_s size, bool masked, shared_ptr_c<palette_c> palette
     _palette = palette;
     _size = size;
     _line_words = ((size.width + 15) >> 4);
+    assert(valid_size() && "Invalid image size");
     uint16_t bitmap_words = (_line_words * size.height) << 2;
     uint16_t mask_bytes = masked ? (_line_words * size.height) : 0;
     _bitmap.reset(reinterpret_cast<uint16_t*>(_calloc(bitmap_words + mask_bytes, 2)));
@@ -24,6 +26,14 @@ image_c::image_c(const size_s size, bool masked, shared_ptr_c<palette_c> palette
     } else {
         _maskmap = nullptr;
     }
+}
+
+// Validate that size of image does not exceed 16 bit math in canvas_atari.cpp
+// Calculations are done in single bitplane word counts, eg 20 for a 320 line,
+// So 32k * 8, will fit in an int16_t.
+bool image_c::valid_size() const {
+    if (_line_words == 0 || _size.is_empty()) return false;
+    return mul_fast(_size.height, (int16_t)(_line_words * 8)) < (0x8000 * 8);
 }
 
 int image_c::get_pixel(point_s at) const {
@@ -214,6 +224,8 @@ image_c::image_c(const char* path, int masked_cidx, const iffstream_c::unknown_r
                 return;
             }
             _size = bmhd.size;
+            _line_words = ((_size.width + 15) >> 4);
+            assert(valid_size() && "Invalid image size");
             assert(bmhd.plane_count == 4 && "Only 4-plane images are supported");
             if (masked_cidx != MASKED_CIDX) {
                 assert(bmhd.mask_type != mask_type_e::plane && "Plane mask type conflicts with custom mask color");
@@ -237,7 +249,6 @@ image_c::image_c(const char* path, int masked_cidx, const iffstream_c::unknown_r
             }
             _palette.reset(new palette_c(&cmpa[0]));
         } else if (chunk.id == ::cc4::BODY) {
-            _line_words = ((_size.width + 15) >> 4);
             const uint16_t bitmap_words = (_line_words * _size.height) << 2;
             const bool needs_mask_words = masked || (bmhd.mask_type == mask_type_e::plane);
             const uint16_t mask_words = needs_mask_words ? (bitmap_words >> 2) : 0;
@@ -331,8 +342,8 @@ static int image_packbits_into_body(uint8_t* body, const uint8_t* row_buffer, in
     uint8_t* const body_begin = body;
     uint8_t current_byte, previous_byte = '\0';
     static uint8_t buffer[256];
-    short buffer_byte_count;
-    short run_start_buffer_index = 0;
+    int16_t buffer_byte_count;
+    int16_t run_start_buffer_index = 0;
     mode_e mode = mode_e::dump;
     
     buffer[0] = previous_byte = current_byte = *row_buffer++;

@@ -42,7 +42,7 @@ namespace toybox {
 
     /// Key extractor for entity_s by id field.
     struct entity_id_get_t {
-        __forceinline uint8_t operator()(const entity_s& e) const { return e.id; }
+        __forceinline uint8_t operator()(const entity_s& e) const_pure { return e.id; }
     };
     
     // struct_layout for byte-order swapping

@@ -12,8 +12,6 @@
 
 namespace toybox {
     
-    using namespace toybox;
-
 #if TOYBOX_TARGET_ATARI
     
     /**

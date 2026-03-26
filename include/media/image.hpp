@@ -45,32 +45,33 @@ namespace toybox {
         image_c(const char* path, int masked_cidx = MASKED_CIDX, const iffstream_c::unknown_reader& unknown_reader = iffstream_c::null_reader);
         image_c(const size_s size, bool masked, shared_ptr_c<palette_c> palette);
 
-        virtual ~image_c() {};
+        virtual ~image_c() {}
         
-        __forceinline type_e asset_type() const override { return image; }
+        __forceinline type_e asset_type() const override __pure { return image; }
 
         bool save(const char* path, compression_type_e compression, bool masked, int masked_cidx = MASKED_CIDX, const iffstream_c::unknown_writer& unknown_writer = iffstream_c::null_writer);
                 
         __forceinline void set_palette(const shared_ptr_c<palette_c>& palette) {
             _palette = palette;
         }
-        __forceinline const shared_ptr_c<palette_c>& palette() const {
+        __forceinline const shared_ptr_c<palette_c>& palette() const_pure {
             return _palette;
         }
-        __forceinline size_s size() const { return _size; }
-        __forceinline bool masked() const { return _maskmap != nullptr; }
-        __forceinline bitplane_layout_e layout() const { return bitplane_layout_e::interweaved; }
+        __forceinline size_s size() const_pure { return _size; }
+        __forceinline bool masked() const_pure { return _maskmap != nullptr; }
+        __forceinline bitplane_layout_e layout() const_purest { return bitplane_layout_e::interweaved; }
 
-        int get_pixel(point_s at) const;
+        int get_pixel(point_s at) const_pure;
         void put_pixel(int ci, point_s) const;
         
     private:
-        int imp_get_pixel(point_s at) const;
+        bool valid_size() const_pure;
+        int imp_get_pixel(point_s at) const_pure;
         shared_ptr_c<palette_c> _palette;
         unique_ptr_c<uint16_t> _bitmap;
         uint16_t* _maskmap;
         size_s _size;
-        uint16_t _line_words;
+        int16_t _line_words;
     };
     
 }

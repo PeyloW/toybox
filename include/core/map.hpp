@@ -91,18 +91,18 @@ namespace toybox {
         __forceinline pointer data() requires (!is_const_ref) { return _container.data(); }
 
         // Iteration - const
-        __forceinline const_iterator begin() const { return _container.begin(); }
-        __forceinline const_iterator end() const { return _container.end(); }
-        __forceinline const_pointer data() const { return _container.data(); }
-        __forceinline int size() const { return _container.size(); }
+        __forceinline const_iterator begin() const_pure { return _container.begin(); }
+        __forceinline const_iterator end() const_pure { return _container.end(); }
+        __forceinline const_pointer data() const_pure { return _container.data(); }
+        __forceinline int size() const_pure { return _container.size(); }
 
         // Element access - non-const (only for non-const containers)
         __forceinline reference front() requires (!is_const_ref) { return _container.front(); }
         __forceinline reference back() requires (!is_const_ref) { return _container.back(); }
 
         // Element access - const
-        __forceinline const_reference front() const { return _container.front(); }
-        __forceinline const_reference back() const { return _container.back(); }
+        __forceinline const_reference front() const_pure { return _container.front(); }
+        __forceinline const_reference back() const_pure { return _container.back(); }
 
         // Lookup - non-const (only for non-const containers)
         iterator find(const key_type& key) requires (!is_const_ref) {
@@ -112,7 +112,7 @@ namespace toybox {
         }
 
         // Lookup - const
-        const_iterator find(const key_type& key) const {
+        const_iterator find(const key_type& key) const_pure {
             auto it = lower_bound(begin(), end(), key, value_key_comp());
             if (it != end() && key_get(*it) == key) return it;
             return end();
@@ -126,13 +126,13 @@ namespace toybox {
         }
 
         // operator[] - const
-        const_reference operator[](const key_type& key) const {
+        const_reference operator[](const key_type& key) const_pure {
             auto it = find(key);
             assert(it != end() && "Key not found");
             return *it;
         }
 
-        bool contains(const key_type& key) const {
+        bool contains(const key_type& key) const_pure {
             return find(key) != end();
         }
         
@@ -185,7 +185,7 @@ namespace toybox {
         }
         
         // Forwarded capacity operations
-        int capacity() const
+        __pure int capacity() const
         requires requires(const container_type& c) { { c.capacity() } -> convertible_to<int>; }
         {
             return _container.capacity();

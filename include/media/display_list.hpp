@@ -21,7 +21,7 @@ namespace toybox {
             viewport, palette
         };
         using enum type_e;
-        virtual type_e display_type() const __pure = 0;
+        virtual type_e display_type() const_pure = 0;
         virtual ~display_item_c() = default;
     };
 
@@ -33,7 +33,7 @@ namespace toybox {
         int id;
         int row;
         shared_ptr_c<display_item_c> item_ptr;
-        __forceinline display_item_c& item() const {
+        __forceinline display_item_c& item() const_pure {
             assert(item_ptr != nullptr);
             return *item_ptr;
         }
@@ -41,7 +41,7 @@ namespace toybox {
             assert(item_ptr->display_type() == display_item_c::viewport && "Display item is not a viewport");
             return reinterpret_pointer_cast<viewport_c>(item_ptr);
         }
-        __forceinline const shared_ptr_c<const viewport_c>& viewport_ptr() const {
+        __forceinline const shared_ptr_c<const viewport_c>& viewport_ptr() const_pure {
             assert(item_ptr->display_type() == display_item_c::viewport && "Display item is not a viewport");
             return reinterpret_pointer_cast<const viewport_c>(item_ptr);
         }
@@ -50,7 +50,7 @@ namespace toybox {
             assert(item_ptr->display_type() == display_item_c::viewport && "Display item is not a viewport");
             return (viewport_c&)*item_ptr;
         }
-        __forceinline const viewport_c& viewport() const {
+        __forceinline const viewport_c& viewport() const_pure {
             assert(item_ptr != nullptr);
             assert(item_ptr->display_type() == display_item_c::viewport && "Display item is not a viewport");
             return (viewport_c&)*item_ptr;
@@ -59,7 +59,7 @@ namespace toybox {
             assert(item_ptr->display_type() == display_item_c::palette && "Display item is not a palette");
             return reinterpret_pointer_cast<palette_c>(item_ptr);
         }
-        __forceinline const shared_ptr_c<const palette_c>& palette_ptr() const {
+        __forceinline const shared_ptr_c<const palette_c>& palette_ptr() const_pure {
             assert(item_ptr->display_type() == display_item_c::palette && "Display item is not a palette");
             return reinterpret_pointer_cast<const palette_c>(item_ptr);
         }
@@ -68,12 +68,12 @@ namespace toybox {
             assert(item_ptr->display_type() == display_item_c::palette && "Display item is not a palette");
             return (palette_c&)*item_ptr;
         }
-        __forceinline const palette_c& palette() const {
+        __forceinline const palette_c& palette() const_pure {
             assert(item_ptr != nullptr);
             assert(item_ptr->display_type() == display_item_c::palette && "Display item is not a palette");
             return (palette_c&)*item_ptr;
         }
-        __forceinline bool operator<(const display_list_entry_s& rhs) const {
+        __forceinline bool operator<(const display_list_entry_s& rhs) const_pure {
             return row < rhs.row;
         }
     };
@@ -91,11 +91,11 @@ namespace toybox {
             return emplace_after(pos, id, row, forward<Args>(args)...);
         }
 
-        __forceinline display_list_entry_s& get(int id) const {
+        __forceinline display_list_entry_s& get(int id) const_pure {
             return *get_if(id);
         }
 
-        display_list_entry_s* get_if(int id) const {
+        display_list_entry_s* get_if(int id) const_pure {
             for (auto& item : *this) {
                 if (item.id == id) return const_cast<display_list_entry_s*>(&item);
             }
@@ -103,7 +103,7 @@ namespace toybox {
         }
 
     private:
-        const_iterator iterator_before(int row) const {
+        const_iterator iterator_before(int row) const_pure {
             auto iter = before_begin();
             while (iter._node->next) {
                 if (iter._node->next->value.row >= row) {

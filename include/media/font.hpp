@@ -12,8 +12,6 @@
 
 namespace toybox {
     
-    using namespace toybox;
-    
     /**
      A `font_c` is a convenience wrapper of an `image_c` for managing a bitmap
      font.
@@ -25,18 +23,18 @@ namespace toybox {
         font_c(const shared_ptr_c<image_c>& image, size_s max_size, uint8_t space_width, uint8_t lead_req_space, uint8_t trail_req_space);
         font_c(const char* path, size_s character_size);
         font_c(const char* path, size_s max_size, uint8_t space_width, uint8_t lead_req_space, uint8_t trail_req_space);
-        virtual ~font_c() {};
+        virtual ~font_c() {}
 
-        __forceinline type_e asset_type() const override { return font; }
-        
-        __forceinline const shared_ptr_c<image_c>& image() const {
+        __forceinline type_e asset_type() const override __pure { return font; }
+
+        __forceinline const shared_ptr_c<image_c>& image() const_pure {
             return _image;
         }
-        const rect_s& char_rect(char c) const {
+        const rect_s& char_rect(char c) const_pure {
             if (c < 32 || c > 127) {
                 return _rects[0];
             } else {
-                short i = c - 32;
+                int16_t i = c - 32;
                 __assume_count(i, 96);
                 return _rects[i];
             }

@@ -29,12 +29,12 @@ namespace toybox {
 
         ~tilemap_level_c();
         
-        __forceinline type_e asset_type() const override final { return tilemap_level; }
+        __forceinline type_e asset_type() const override final __pure { return tilemap_level; }
 
-        const char* name() const { return _name.get(); }
+        const char* name() const_pure { return _name.get(); }
         
         virtual void update(viewport_c& viewport, int display_id, int ticks);
-        bool is_initialized() const { return _is_initialized; }
+        bool is_initialized() const_pure { return _is_initialized; }
         virtual void init();
         virtual void reset();
         
@@ -48,39 +48,39 @@ namespace toybox {
         };
 
         void enumerate_tiles(const frect_s& rect, function_c<void(tile_s&)> func);
-        tile_s::type_e collides_with_level(uint8_t id) const;
-        tile_s::type_e collides_with_level(fpoint_s at) const;
-        tile_s::type_e collides_with_level(const frect_s& rect) const;
-        bool collides_with_entity(uint8_t id, uint8_t in_group, uint8_t* id_out) const;
-        bool collides_with_entity(const frect_s& rect, uint8_t in_group, uint8_t* id_out) const;
+        tile_s::type_e collides_with_level(uint8_t id) const_pure;
+        tile_s::type_e collides_with_level(fpoint_s at) const_pure;
+        tile_s::type_e collides_with_level(const frect_s& rect) const_pure;
+        bool collides_with_entity(uint8_t id, uint8_t in_group, uint8_t* id_out) const_pure;
+        bool collides_with_entity(const frect_s& rect, uint8_t in_group, uint8_t* id_out) const_pure;
 
         pair_c<int, action_f> add_action(action_f action);
         span_c<action_f> actions() { return {_actions.begin(), _actions.size()}; };
-        span_c<const action_f> actions() const { return {_actions.begin(), _actions.size()}; };
+        span_c<const action_f> actions() const_pure { return {_actions.begin(), _actions.size()}; };
         
         pair_c<int, entity_type_def_s&> add_entity_type_def(tileset_c* tileset = nullptr);
         span_c<entity_type_def_s> entity_type_defs() { return {_entity_type_defs.begin(), _entity_type_defs.size()}; };
-        span_c<const entity_type_def_s> entity_type_defs() const { return {_entity_type_defs.begin(), _entity_type_defs.size()}; };
+        span_c<const entity_type_def_s> entity_type_defs() const_pure { return {_entity_type_defs.begin(), _entity_type_defs.size()}; };
 
         entity_s& spawn_entity(uint8_t type, uint8_t group, frect_s position);
         entity_s& get_entity(uint8_t id) { return _all_entities[id]; };
-        const entity_s& get_entity(uint8_t id) const { return _all_entities[id]; }
+        const entity_s& get_entity(uint8_t id) const_pure { return _all_entities[id]; }
         auto& all_entities() { return _all_entities; }
-        const auto& all_entities() const { return _all_entities; }
+        const auto& all_entities() const_pure { return _all_entities; }
         void destroy_entity(uint8_t id);
         void erase_destroyed_entities();
 
-        const rect_s& total_bounds() const { return _total_bounds; };
-        const rect_s& visible_bounds() const { return _visible_bounds; }
+        const rect_s& total_bounds() const_pure { return _total_bounds; };
+        const rect_s& visible_bounds() const_pure { return _visible_bounds; }
         void set_visible_bounds(const rect_s& bounds);
         void add_visible_bounds(const rect_s& bounds);
 
-        const tileset_c& tileset() const { return *_tileset; }
+        const tileset_c& tileset() const_pure { return *_tileset; }
         
         void splice_subtilemap(int index);
     
     protected:
-        virtual bool do_catchup_updates() const { return false; }
+        virtual bool do_catchup_updates() const_pure { return false; }
         virtual void update_level();
         virtual void update_actions();
         virtual void draw_tiles();

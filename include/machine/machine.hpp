@@ -41,15 +41,15 @@ namespace toybox {
         using machine_f = int (*)(machine_c& machine);
         static int with_machine(int argc, const char* argv[], machine_f f);
         
-        type_e type() const __pure;
-        size_s screen_size() const __pure; // NOTE: static constexpr?
-        size_t max_memory() const __pure;
-        size_t user_memory() const __pure;
+        type_e type() const_pure;
+        size_s screen_size() const_pure; // NOTE: static constexpr?
+        size_t max_memory() const_pure;
+        size_t user_memory() const_pure;
         void free_system_memory();
 
-        uint32_t get_cookie(uint32_t cookie, uint32_t def_value = 0) const __pure;
+        uint32_t get_cookie(uint32_t cookie, uint32_t def_value = 0) const_pure;
 
-        const shared_ptr_c<display_list_c>& active_display_list() const;
+        const shared_ptr_c<display_list_c>& active_display_list() const_pure;
         void set_active_display_list(const shared_ptr_c<display_list_c>& display_list);
 
     private:

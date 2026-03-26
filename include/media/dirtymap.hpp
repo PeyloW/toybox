@@ -31,7 +31,7 @@ namespace toybox {
         
         static dirtymap_c* create(size_s size);
         
-        __forceinline size_s size() const {
+        __forceinline size_s size() const_pure {
             return size_s(_tilespace_size.width * tile_size.width,
                           _tilespace_size.height * tile_size.height);
         }
@@ -40,12 +40,12 @@ namespace toybox {
         template<mark_type_e = mark_type_e::dirty>
         void mark(const rect_s& rect);
         void merge(const dirtymap_c& __restrict dirtymap);
-        bool is_dirty() const { return _is_dirty; }
+        bool is_dirty() const_pure { return _is_dirty; }
         void restore(canvas_c& canvas, const image_c& clean_image);
         void restore(restore_f& func);
         void clear();
         
-        rect_s dirty_bounds() const;  // Intended for host debugging
+        rect_s dirty_bounds() const_pure;  // Intended for host debugging
         void print_debug(const char* name) const; // Intended for host debugging
     private:
         dirtymap_c(const size_s size);

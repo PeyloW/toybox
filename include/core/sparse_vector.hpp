@@ -46,7 +46,7 @@ namespace toybox {
     public:
         static constexpr int max_size = vector_c<Type, Count>::max_size;
         using value_type = Type;
-        using pointer = value_type* ;
+        using pointer = value_type*;
         using const_pointer = const value_type*;
         using reference = value_type&;
         using const_reference = const value_type&;
@@ -72,28 +72,28 @@ namespace toybox {
                         
         __forceinline auto begin() __pure { return _values.begin(); }
         __forceinline auto end() __pure { return _values.end(); }
-        __forceinline auto begin() const __pure { return _values.begin(); }
-        __forceinline auto end() const __pure { return _values.end(); }
+        __forceinline auto begin() const_pure { return _values.begin(); }
+        __forceinline auto end() const_pure { return _values.end(); }
         __forceinline auto data() { return _values.data(); }
-        __forceinline auto data() const { return _values.data(); }
-        __forceinline int size() const { return _values.size(); }
+        __forceinline auto data() const_pure { return _values.data(); }
+        __forceinline int size() const_pure { return _values.size(); }
         
         __forceinline reference operator[](int key) __pure {
             __assume_count(key, max_size);
             return _values[_to_dense[key]];
         }
         
-        __forceinline const_reference operator[](int key) const __pure {
+        __forceinline const_reference operator[](int key) const_pure {
             __assume_count(key, max_size);
             return _values[_to_dense[key]];
         }
         
         __forceinline reference front() __pure { return _values.front(); }
-        __forceinline const_reference front() const __pure { return _values.front(); }
+        __forceinline const_reference front() const_pure { return _values.front(); }
         __forceinline reference back() __pure { return _values.back(); }
-        __forceinline const_reference back() const __pure { return _values.back(); }
+        __forceinline const_reference back() const_pure { return _values.back(); }
 
-        __forceinline int index_of(const_iterator pos) const __pure {
+        __forceinline int index_of(const_iterator pos) const_pure {
             assert(pos >= begin() && pos < end());
             if constexpr (detail::is_identifier<Type>) {
                 return detail::identifier<Type>{}(*pos);
@@ -169,7 +169,7 @@ namespace toybox {
             }
         }
         
-        __forceinline int sparse_key_at(int dense_idx) const {
+        __forceinline int sparse_key_at(int dense_idx) const_pure {
             __assume_count(dense_idx, max_size);
             if constexpr (detail::is_identifier<Type>) {
                 return detail::identifier<Type>{}(_values[dense_idx]);

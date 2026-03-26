@@ -144,7 +144,7 @@ void tilemap_level_c::draw_tiles() {
 #if TOYBOX_DEBUG_DIRTYMAP
         dirtymap->print_debug("tilemap_level_c::draw_tiles() masked");
 #endif
-        assert((dirtymap->dirty_bounds().size == size_s()) || dirtymap->dirty_bounds().contained_by(viewport.clip_rect()));
+        assert(((dirtymap->dirty_bounds().size == size_s()) || dirtymap->dirty_bounds().contained_by(viewport.clip_rect())) && "Dirty bounds outside clip rect");
         viewport.with_dirtymap(nullptr, [&]() {
             auto restore = [&](const rect_s& rect) {
                 assert(rect.contained_by(viewport.clip_rect()) && "Viewport must not be dirty outside clip rect");
@@ -307,7 +307,7 @@ void tilemap_level_c::splice_subtilemap(int index) {
     // NOTE: Stretch goal would be to animate these, but probably not worth the effort.
     auto& tilemap = _subtilemaps[index];
     const auto& bounds = tilemap.tilespace_bounds();
-    assert(bounds.contained_by(tilespace_bounds()));
+    assert(bounds.contained_by(tilespace_bounds()) && "Subtilemap out of bounds");
     point_s at = bounds.origin;
     for (int y = 0; y < bounds.size.height; ++y) {
         at.x = bounds.origin.x;

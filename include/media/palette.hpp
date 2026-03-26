@@ -14,8 +14,6 @@
 
 namespace toybox {
     
-    using namespace toybox;
-
     /**
      A 12 bit color in a 16 bit word.
      MOTE: Make STe hacks for Atari target only, once Amiga is to be supported.
@@ -40,7 +38,7 @@ namespace toybox {
             *g_out = from_ste(color, 4);
             *b_out = from_ste(color, 0);
         }
-        color_c mix(color_c other, int shade) const;
+        color_c mix(color_c other, int shade) const_pure;
         static constexpr int MIX_FULLY_THIS = 0;
         static constexpr int MIX_FULLY_OTHER = 64;
     private:
@@ -83,7 +81,7 @@ namespace toybox {
     static_assert(!is_polymorphic<basic_palette_c<16>>::value);
     class palette_c : public display_item_c, public basic_palette_c<16>, public nocopy_c {
     public:
-        type_e display_type() const override { return palette; }
+        type_e display_type() const override __pure { return palette; }
         constexpr palette_c() : basic_palette_c<16>() {}
         constexpr palette_c(uint16_t* cs) : basic_palette_c<16>(cs) {}
         constexpr palette_c(uint8_t* c) : basic_palette_c<16>(c) {}

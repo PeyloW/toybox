@@ -17,6 +17,8 @@
 	- `__neverinline` - Prevent function inlining.
 	- `__forceinline_lambda` - Force lambda inlining for performance.
 	- `__pure` - Mark functions with no side effects (enables compiler optimizations).
+	- `const_pure` - Combine `const` with `__pure` for const member functions.
+	- `const_purest` - Combine `const` with `__purest` for const member functions that do not read `this` or any memory (return compile-time constants).
 	- `__packed` - Pack struct/class with no padding.
 	- `__packed_struct` - Pack struct with 2-byte alignment (critical for Atari target memory layout).
 	- `__target_volatile` - Conditional volatile for target-specific code.
@@ -32,6 +34,7 @@
 		- Classes **must** support move semantics.
 		- **Never** assume copy semantics are available.
 		- Most classes explicitly forbid copy semantics by subclassing `nocopy_c`.
+	- `_f` - Function pointer and callable types.
 - **Variable Prefixes:**
 	- `_` - Private/protected member variables.
 	- `s_` - Static variables.
@@ -99,7 +102,11 @@
 - **Argument Passing:** Any type that does not fit in 4 bytes should be passed as a reference.
 - **Const Usage** Always prefer using `const`.
 	- Also for temporaries, and arguments.
-	- Do not use `const` for pod arguments that are implied `const`. 
+	- Do not use `const` for pod arguments that are implied `const`.
+	- Use `const_pure` instead of `const` for const member functions with no side effects.
+	- Use `const_purest` for const member functions that return compile-time constants without reading `this`.
+	- When `const` is followed by `override` or `final`, use `const override __pure` instead (GCC rejects attributes between `const` and virt-specifiers).
+	- Do not use `const_pure` on template member function definitions in template bodies (GCC `-Wtemplate-body` rejects this). Use plain `const` for these.
 - **Error Handling:**
 	- Use `assert()` to catch errors when building for host machine.
 	- All `assert()` statements should include a **succinct** error message: `assert(condition && "Error message")`.

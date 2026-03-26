@@ -67,7 +67,7 @@ namespace toybox {
     template<integral Int>
     struct div_t {
         Int rem; Int quot;
-        constexpr operator Int() const { return quot; }
+        constexpr operator Int() const_pure { return quot; }
     };
     template<integral Int>
     __purest __forceinline constexpr div_t<Int> div_fast(typename next_larger<Int>::type x, Int y) {
@@ -110,20 +110,20 @@ namespace toybox {
         using LargerInt = next_larger<Int>::type;
         Int raw;
 
-        constexpr base_fix_t() : raw(0) {};
+        constexpr base_fix_t() : raw(0) {}
         constexpr base_fix_t(const base_fix_t& o) = default;
         constexpr base_fix_t(base_fix_t&& o) = default;
         constexpr base_fix_t& operator=(const base_fix_t& o) = default;
-        constexpr base_fix_t(Int raw, bool tag) : raw(raw) {};
+        constexpr base_fix_t(Int raw, bool tag) : raw(raw) {}
 
         template<integral OInt>
         constexpr base_fix_t(OInt v) : raw(static_cast<Int>(v) << Bits) {}
         constexpr explicit base_fix_t(float v) : raw(static_cast<Int>(roundf(v * (static_cast<LargerInt>(1) << Bits)))) {}
         
-        constexpr explicit operator bool() const { return raw != 0; }
+        constexpr explicit operator bool() const_pure { return raw != 0; }
         template<integral OInt>
         constexpr explicit operator OInt() const { return static_cast<OInt>(raw >> Bits); }
-        constexpr explicit operator float() const { return static_cast<float>(raw) / (static_cast<LargerInt>(1) << Bits); }
+        constexpr explicit operator float() const_pure { return static_cast<float>(raw) / (static_cast<LargerInt>(1) << Bits); }
         
         __purest friend constexpr base_fix_t operator+(const base_fix_t lhs, const base_fix_t rhs) {
             return base_fix_t(static_cast<Int>(lhs.raw + rhs.raw), true);
@@ -193,7 +193,7 @@ namespace toybox {
             raw *= static_cast<Int>(o);
             return *this;
         }
-        __pure constexpr base_fix_t mul(base_fix_t o) const {
+        constexpr base_fix_t mul(base_fix_t o) const_pure {
             static constexpr auto half = (LargerInt)1 << (Bits - 1);
             const auto r = mul_fast(raw, o.raw);
             return base_fix_t(static_cast<Int>((r + (r >= 0 ? half : -half)) >> Bits), true);
@@ -222,7 +222,7 @@ namespace toybox {
             raw /= static_cast<Int>(o);
             return *this;
         }
-        __pure constexpr base_fix_t div(base_fix_t o) const {
+        constexpr base_fix_t div(base_fix_t o) const_pure {
             const bool sign_match = ((raw >= 0) == (o.raw >= 0));
             const auto eraw = (LargerInt)raw << Bits;
             const auto half_div = o.raw >> 1;

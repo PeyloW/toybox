@@ -17,8 +17,6 @@
 
 namespace toybox {
     
-    using namespace toybox;
-    
     class sound_c;
     class image_c;
     class music_c;
@@ -51,10 +49,10 @@ namespace toybox {
         virtual void resume_timers() = 0;
 
         // Host should provide a play function
-        virtual void play(const sound_c& sound) {};
+        virtual void play(const sound_c& sound) {}
         virtual void play(const music_c& music, int track) {}
  
-        int get_pixel(const image_c& image, point_s at, bool clipping = true) const;
+        int get_pixel(const image_c& image, point_s at, bool clipping = true) const_pure;
         
     private:
         

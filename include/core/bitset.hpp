@@ -21,7 +21,7 @@ namespace toybox {
         class reference_c {
             friend class bitset_c;
         public:
-            constexpr operator bool() const { return (_bitset._raw & _mask) != 0; }
+            constexpr operator bool() const_pure { return (_bitset._raw & _mask) != 0; }
             constexpr reference_c& operator=(bool v) {
                 if (v) {
                     _bitset._raw |= _mask;
@@ -51,13 +51,13 @@ namespace toybox {
                 ++(*this);
                 return tmp;
             }
-            constexpr uint8_t operator*() const {
+            constexpr uint8_t operator*() const_pure {
                 return _bit;
             }
-            constexpr bool operator==(const iterator_c& other) const {
+            constexpr bool operator==(const iterator_c& other) const_pure {
                 return _bit == other._bit && &_bitset == &other._bitset;
             }
-            constexpr bool operator!=(const iterator_c& other) const {
+            constexpr bool operator!=(const iterator_c& other) const_pure {
                 return !(*this == other);
             }
         private:
@@ -87,24 +87,24 @@ namespace toybox {
         constexpr bitset_c& operator=(bitset_c&& o) = default;
         
         constexpr reference_c operator[](int bit) { return reference_c(*this, bit); }
-        constexpr const reference_c operator[](int bit) const { return reference_c(const_cast<bitset_c&>(*this), bit); }
+        constexpr const reference_c operator[](int bit) const_pure { return reference_c(const_cast<bitset_c&>(*this), bit); }
 
-        constexpr operator bool() const { return _raw != 0; }
-        constexpr bool operator==(const bitset_c& o) const { return _raw == o._raw; }
-        constexpr bool operator==(const int bit) const { return (*this)[bit]; }
+        constexpr operator bool() const_pure { return _raw != 0; }
+        constexpr bool operator==(const bitset_c& o) const_pure { return _raw == o._raw; }
+        constexpr bool operator==(const int bit) const_pure { return (*this)[bit]; }
 
-        constexpr bitset_c operator+(const bitset_c& o) const { return bitset_c(_raw | o._raw, tag_s{}); }
+        constexpr bitset_c operator+(const bitset_c& o) const_pure { return bitset_c(_raw | o._raw, tag_s{}); }
         constexpr bitset_c& operator+=(const bitset_c& o) { _raw |= o._raw; return *this; }
-        constexpr bitset_c operator-(const bitset_c& o) const { return bitset_c(_raw & ~o._raw, tag_s{}); }
+        constexpr bitset_c operator-(const bitset_c& o) const_pure { return bitset_c(_raw & ~o._raw, tag_s{}); }
         constexpr bitset_c& operator-=(const bitset_c& o) { _raw &= ~o._raw; return *this; }
 
-        constexpr bitset_c operator&(const bitset_c& o) const { return bitset_c(_raw & o._raw, tag_s{}); }
+        constexpr bitset_c operator&(const bitset_c& o) const_pure { return bitset_c(_raw & o._raw, tag_s{}); }
         constexpr bitset_c& operator&=(const bitset_c& o) { _raw &= o._raw; return *this; }
 
         constexpr iterator_c begin() { return iterator_c(*this, begin_bit); }
-        constexpr const iterator_c begin() const { return iterator_c(*this, begin_bit); }
+        constexpr const iterator_c begin() const_pure { return iterator_c(*this, begin_bit); }
         constexpr iterator_c end() { return iterator_c(*this, end_bit); }
-        constexpr const iterator_c end() const { return iterator_c(*this, end_bit); }
+        constexpr const iterator_c end() const_pure { return iterator_c(*this, end_bit); }
 
     private:
         struct tag_s{};

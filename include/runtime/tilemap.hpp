@@ -49,7 +49,7 @@ namespace toybox {
         ~tilemap_c() = default;
         
         __forceinline tile_s& operator[](point_s p) __pure { return (*this)[p.x, p.y]; }
-        __forceinline const tile_s& operator[](point_s p) const __pure { return (*this)[p.x, p.y]; }
+        __forceinline const tile_s& operator[](point_s p) const_pure { return (*this)[p.x, p.y]; }
         // TODO: This muls is in quite hot path, may want a lookup table
         __forceinline tile_s& operator[](int x, int y) __pure {
             assert(_mul_table.get() && "Mul table not init");
@@ -58,7 +58,7 @@ namespace toybox {
             __assume_count(idx, (0x8000 / sizeof(tile_s)));
             return _tiles[idx];
         }
-        __forceinline const tile_s& operator[](int x, int y) const __pure {
+        __forceinline const tile_s& operator[](int x, int y) const_pure {
             assert(_mul_table.get() && "Mul table not init");
             __assume_count(y, 256);
             const int idx = x + _mul_table[y];
@@ -66,10 +66,10 @@ namespace toybox {
             return _tiles[idx];
         }
 
-        __forceinline rect_s tilespace_bounds() const { return _tilespace_bounds; }
+        __forceinline rect_s tilespace_bounds() const_pure { return _tilespace_bounds; }
         
-        __forceinline vector_c<int8_t,0>& activate_entity_idxs() { return _activate_entity_idxs; };
-        __forceinline vector_c<tile_s, 0>& tiles() { return _tiles; };
+        __forceinline vector_c<int8_t,0>& activate_entity_idxs() { return _activate_entity_idxs; }
+        __forceinline vector_c<tile_s, 0>& tiles() { return _tiles; }
         
     protected:
         rect_s _tilespace_bounds;

@@ -14,7 +14,7 @@ namespace toybox {
     template<typename Type, int Count>
     struct array_s {
         using value_type = Type;
-        using pointer = value_type* ;
+        using pointer = value_type*;
         using const_pointer = const value_type*;
         using reference = value_type&;
         using const_reference = const value_type&;
@@ -24,19 +24,19 @@ namespace toybox {
         Type _data[Count];
         
         __forceinline constexpr iterator begin() __pure { return &_data[0]; }
-        __forceinline constexpr const_iterator begin() const __pure { return &_data[0]; }
+        __forceinline constexpr const_iterator begin() const_pure { return &_data[0]; }
         __forceinline constexpr iterator end() __pure { return &_data[Count]; }
-        __forceinline constexpr const_iterator end() const __pure { return &_data[Count]; }
-        __forceinline constexpr int size() const __pure { return Count; }
+        __forceinline constexpr const_iterator end() const_pure { return &_data[Count]; }
+        __forceinline constexpr int size() const_purest { return Count; }
         __forceinline constexpr pointer data() { return _data[0].ptr(); }
-        __forceinline constexpr const_pointer data() const { return _data[0].ptr(); }
+        __forceinline constexpr const_pointer data() const_pure { return _data[0].ptr(); }
 
         __forceinline constexpr reference operator[](int i) __pure {
             assert(i >= 0 && i < Count && "Index out of bounds");
             __assume_count(i, Count);
             return _data[i];
         }
-        __forceinline constexpr const_reference operator[](int i) const __pure {
+        __forceinline constexpr const_reference operator[](int i) const_pure {
             assert(i >= 0 && i < Count && "Index out of bounds");
             __assume_count(i, Count);
             return _data[i];
@@ -45,7 +45,7 @@ namespace toybox {
             assert(Count > 0 && "Vector is empty");
             return _data[0];
         }
-        __forceinline constexpr const_reference front() const __pure {
+        __forceinline constexpr const_reference front() const_pure {
             assert(Count > 0 && "Vector is empty");
             return _data[0];
         }
@@ -53,12 +53,12 @@ namespace toybox {
             assert(Count > 0 && "Vector is empty");
             return _data[Count - 1];
         }
-        __forceinline constexpr const_reference back() const __pure {
+        __forceinline constexpr const_reference back() const_pure {
             assert(Count > 0 && "Vector is empty");
             return _data[Count - 1];
         }
         
-        constexpr bool operator==(const array_s& other) const {
+        constexpr bool operator==(const array_s& other) const_pure {
             if (this == &other) {
                 return true;
             } else {

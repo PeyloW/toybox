@@ -34,7 +34,7 @@ namespace toybox {
         
         static mouse_c& shared();
 
-        const rect_s& limits() const;
+        const rect_s& limits() const_pure;
         void set_limits(const rect_s& limits);
         
         bool is_pressed(button_e button) const;

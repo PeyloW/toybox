@@ -21,7 +21,7 @@ namespace toybox {
     class list_c {
     public:
         using value_type = Type;
-        using pointer = value_type* ;
+        using pointer = value_type*;
         using const_pointer = const value_type*;
         using reference = value_type&;
         using const_reference = const value_type&;
@@ -53,11 +53,11 @@ namespace toybox {
                 iterator_s(node_s* node) : _node(node) {}
                 iterator_s(const iterator_s<Type> &other) requires (!same_as<Type, TypeI>) : _node(other._node) {}
 
-                __forceinline reference operator*() const { return _node->value; }
-                __forceinline pointer operator->() const { return &_node->value; }
+                __forceinline reference operator*() const_pure { return _node->value; }
+                __forceinline pointer operator->() const_pure { return &_node->value; }
                 __forceinline iterator_s& operator++() { _node = _node->next; return *this; }
                 __forceinline iterator_s operator++(int) { auto tmp = *this; _node = _node->next; return tmp; }
-                __forceinline bool operator==(const iterator_s& o) const { return _node == o._node; }
+                __forceinline bool operator==(const iterator_s& o) const_pure { return _node == o._node; }
 
                 node_s* _node;
             };
@@ -90,7 +90,7 @@ namespace toybox {
             return *this;
         }
 
-        __forceinline bool empty() const __pure { return _head == nullptr; }
+        __forceinline bool empty() const_pure { return _head == nullptr; }
         void clear() {
             auto it = before_begin();
             while (it._node->next) {
@@ -99,7 +99,7 @@ namespace toybox {
         }
         
         __forceinline reference front() __pure { return _head->value; }
-        __forceinline const_reference front() const __pure { return _head->value; }
+        __forceinline const_reference front() const_pure { return _head->value; }
 
         /// Returns iterator to position before the first element. Required for insert/erase operations.
         iterator before_begin() __pure {
@@ -108,18 +108,18 @@ namespace toybox {
             return iterator(launder(reinterpret_cast<node_s*>(before_head)));
         }
         /// Returns const iterator to position before the first element. Required for insert/erase operations.
-        const_iterator before_begin() const __pure {
+        const_iterator before_begin() const_pure {
             using node_s = detail::node_s;
             auto before_head = const_cast<node_s**>(&_head);
             return const_iterator(launder(reinterpret_cast<node_s*>(before_head)));
         }
         __forceinline iterator begin() __pure { return iterator(_head); }
-        __forceinline const_iterator begin() const __pure { return const_iterator(_head); }
+        __forceinline const_iterator begin() const_pure { return const_iterator(_head); }
         __forceinline iterator end() __pure { return iterator(nullptr); }
-        __forceinline const_iterator end() const __pure { return const_iterator(nullptr); }
+        __forceinline const_iterator end() const_pure { return const_iterator(nullptr); }
 
         /// Returns number of elements. O(n) operation as list must be traversed.
-        int size() const __pure {
+        int size() const_pure {
             int count = 0;
             auto it = before_begin();
             while (it._node->next) {
@@ -211,7 +211,7 @@ namespace toybox {
             }
         }
 
-        bool owns_node(detail::node_s* node) const __pure {
+        bool owns_node(detail::node_s* node) const_pure {
             using node_s = detail::node_s;
             auto before_head = const_cast<node_s**>(&_head);
             auto n = reinterpret_cast<node_s*>(before_head);

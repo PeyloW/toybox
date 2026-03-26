@@ -25,7 +25,7 @@ namespace toybox {
     {
     public:
         using value_type = Type;
-        using pointer = value_type* ;
+        using pointer = value_type*;
         using const_pointer = const value_type*;
         using reference = value_type&;
         using const_reference = const value_type&;
@@ -74,22 +74,22 @@ namespace toybox {
         __forceinline iterator begin() __pure {
             return (iterator)data();
         }
-        __forceinline const_iterator begin() const __pure {
+        __forceinline const_iterator begin() const_pure {
             return (iterator)data();
         }
         __forceinline iterator end() __pure {
             return (iterator)data() + _size;
         }
-        __forceinline const_iterator end() const __pure {
+        __forceinline const_iterator end() const_pure {
             return (iterator)data() + _size;
         }
         __forceinline pointer data() {
             return this->__buffer()[0].template ptr<0>();
         }
-        __forceinline const_pointer data() const {
+        __forceinline const_pointer data() const_pure {
             return this->__buffer()[0].template ptr<0>();
         }
-        __forceinline int size() const __pure { return _size; }
+        __forceinline int size() const_pure { return _size; }
         
         void resize(int size) {
             if (_size == size) return;
@@ -114,7 +114,7 @@ namespace toybox {
             __assume_count(i, this->max_size);
             return data()[i];
         }
-        __forceinline const_reference operator[](int i) const __pure {
+        __forceinline const_reference operator[](int i) const_pure {
             assert(i < _size && "Index out of bounds");
             assert(i >= 0 && "Index must be non-negative");
             __assume_count(i, this->max_size);
@@ -124,7 +124,7 @@ namespace toybox {
             assert(_size > 0 && "Vector is empty");
             return data()[0];
         }
-        __forceinline const_reference front() const __pure {
+        __forceinline const_reference front() const_pure {
             assert(_size > 0 && "Vector is empty");
             return data()[0];
         }
@@ -134,7 +134,7 @@ namespace toybox {
             __assume_count(i, this->max_size);
             return data()[i];
         }
-        __forceinline const_reference back() const __pure {
+        __forceinline const_reference back() const_pure {
             assert(_size > 0 && "Vector is empty");
             const auto i = _size - 1;
             __assume_count(i, this->max_size);
@@ -239,7 +239,7 @@ namespace toybox {
             destroy_at(&data()[idx]);
         }
 
-        __forceinline int capacity() const __pure {
+        __forceinline int capacity() const_pure {
             return this->__capacity();
         }
 

@@ -49,7 +49,7 @@ namespace toybox {
 #endif
         }
         
-        uint8_t base_freq() const;
+        uint8_t base_freq() const_pure;
         
         void add_func(const func_t func, uint8_t freq = 0);
         void remove_func(const func_t func);

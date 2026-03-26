@@ -19,7 +19,7 @@ namespace toybox {
     public:
         static audio_mixer_c& shared();
 
-        __forceinline int channel_count() const __pure { return 1; }
+        __forceinline int channel_count() const_purest { return 1; }
         void play(const sound_c& sound, uint8_t priority = 0);
         void stop(const sound_c& sound);
 
