@@ -324,6 +324,7 @@ void tilemap_level_c::splice_subtilemap(int index) {
     for (const auto idx : tilemap.activate_entity_idxs()) {
         splice_entity(_all_entities[idx]);
     }
+    did_splice_subtilemap();
 }
 
 void tilemap_level_c::splice_tile(tile_s& tile, point_s tilespace_at) {

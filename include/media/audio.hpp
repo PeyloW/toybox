@@ -49,12 +49,12 @@ namespace toybox {
             mod
         };
         using enum format_e;
-
+        
         music_c(const char* path);
         ~music_c() {}
-
+        
         __forceinline asset_c::type_e asset_type() const override __pure { return music; }
-
+        
         __forceinline format_e format() const_pure { return _format; }
         __forceinline const char* title() const_pure { return _title; }
         __forceinline const char* composer() const_pure { return _composer; }
@@ -62,6 +62,7 @@ namespace toybox {
         __forceinline uint8_t replay_freq() const_pure { return _freq; }
         __forceinline const uint8_t* data() const_pure { return _data.get(); }
         __forceinline size_t length() const_pure { return _length; }
+        __forceinline bool supports_command() const_pure { return _supports_command; }
 
     private:
         unique_ptr_c<uint8_t> _data;
@@ -71,6 +72,7 @@ namespace toybox {
         int _track_count;
         format_e _format;
         uint8_t _freq;
+        bool _supports_command;
     };
 
 }

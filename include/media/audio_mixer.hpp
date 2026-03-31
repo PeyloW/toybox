@@ -26,6 +26,8 @@ namespace toybox {
         void play(const music_c& music_c, int track = 1); // Track starts at 1, not 0;
         void stop(const music_c& music);
         
+        long command(const music_c& music_c, int cmd, long data, void* ctx);
+        
         void stop_all();
 
     private:
@@ -35,6 +37,7 @@ namespace toybox {
         uint16_t _music_init_code[8];
         uint16_t _music_exit_code[8];
         uint16_t _music_play_code[8];
+        uint16_t _music_cmd_code[8];
 #endif
         audio_mixer_c();
         ~audio_mixer_c();

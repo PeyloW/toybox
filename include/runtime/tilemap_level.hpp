@@ -98,6 +98,7 @@ namespace toybox {
 
         virtual void splice_tile(tile_s& tile, point_s tilespace_at);
         virtual void splice_entity(entity_s& entity);
+        virtual void did_splice_subtilemap() {};
         
     private:
         void set_total_bounds(const rect_s& bounds);

@@ -60,8 +60,14 @@ music_c::music_c(const char* path) :
     assert(read == size && "Failed to read music file");
 
     if (_format == format_e::sndh) {
-        assert(memcmp(_data.get() + 12, "SNDH", 4) == 0 && "File must be valid SNDH");
-        char* header_str = (char*)(_data.get() + 16);
+        char* header_str = nullptr;
+        if (memcmp(_data.get() + 12, "SNDH", 4) == 0) {
+            header_str = (char*)(_data.get() + 16);
+        } else if (memcmp(_data.get() + 16, "SNDH", 4) == 0) {
+            header_str = (char*)(_data.get() + 20);
+            _supports_command = true;
+        }
+        assert(header_str && "File must be valid SNDH");
         while (strncmp(header_str, "HDNS", 4) != 0 && ((uint8_t*)header_str < _data.get() + 200)) {
             const int len = (int)strlen(header_str);
             if (len > 0) {

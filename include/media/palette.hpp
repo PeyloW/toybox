@@ -20,10 +20,17 @@ namespace toybox {
      */
     class color_c {
     public:
+        enum class colorspace_e : uint8_t {
+            rgb,    // Red, Green Blue
+            hsb,    // Hue, Saturation, Brightness
+            ycrcb   // Brighness, Redness, Blueness
+        };
         uint16_t color;
         constexpr color_c() = default;
         constexpr color_c(uint16_t c) : color(c) {}
         constexpr color_c(uint8_t r, uint8_t g, uint8_t b) : color(to_ste(r, 8) | to_ste(g, 4) | to_ste(b, 0)) {}
+        explicit color_c(const uint8_t c[3], colorspace_e space = colorspace_e::rgb);
+        
         void set_at(int i) const {
 #ifdef __M68000__
 #   if TOYBOX_TARGET_ATARI
@@ -38,6 +45,7 @@ namespace toybox {
             *g_out = from_ste(color, 4);
             *b_out = from_ste(color, 0);
         }
+        void get(uint8_t c[3], colorspace_e space = colorspace_e::rgb) const;
         color_c mix(color_c other, int shade) const_pure;
         static constexpr int MIX_FULLY_THIS = 0;
         static constexpr int MIX_FULLY_OTHER = 64;

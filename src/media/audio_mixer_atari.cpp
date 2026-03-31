@@ -64,6 +64,9 @@ void audio_mixer_c::play(const music_c& music, int track) {
         codegen_s::make_trampoline(_music_init_code, data + 0, false);
         codegen_s::make_trampoline(_music_exit_code, data + 4, false);
         codegen_s::make_trampoline(_music_play_code, data + 8, false);
+        if (music.supports_command()) {
+            codegen_s::make_trampoline(_music_cmd_code, data + 12, false);
+        }
     }
     timer_c::with_paused_timers([this, track, &music] {
         timer_c& clock = timer_c::shared(timer_c::timer_e::clock);
@@ -93,6 +96,20 @@ void audio_mixer_c::stop(const music_c& music) {
     _active_music = nullptr;
     _active_track = 0;
 }
+
+long audio_mixer_c::command(const music_c& music, int cmd, long data, void* ctx) {
+    assert(_active_music == &music && "Music being stopped must be active");
+    assert(music.supports_command() && "Music does not support commands");
+    long result = 0;
+#ifdef __M68000__
+    timer_c::with_paused_timers([&] {
+        // Command driver
+        result = ((long(*)(int cmd, long data, void* ctx))_music_exit_code)(cmd, data, ctx);
+    });
+#endif
+    return result;
+}
+
 
 void audio_mixer_c::stop_all() {
     if (_active_music) {
