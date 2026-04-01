@@ -55,6 +55,7 @@ endif
 	# Check for libpsgplay (use static linking)
 	PKG_CONFIG ?= $(shell command -v pkgconf 2>/dev/null || echo /opt/homebrew/bin/pkgconf)
 	HAVE_LIBPSGPLAY := $(shell $(PKG_CONFIG) --exists libpsgplay 2>/dev/null && echo yes)
+	HAVE_LIBPSGPLAY=no
 	ifeq ($(HAVE_LIBPSGPLAY),yes)
 $(info Found libpsgplay via pkg-config)
 		CFLAGS += $(shell $(PKG_CONFIG) --cflags libpsgplay)
@@ -87,7 +88,7 @@ else
 		-fno-eliminate-unused-debug-symbols
 endif
 #	FLAGS+=-S
-	FLAGS+=-DTOYBOX_DEBUG_CPU=1
+	FLAGS+=-DTOYBOX_DEBUG_CPU=0
 	CFLAGS+=-O2 -fomit-frame-pointer -fno-threadsafe-statics
 	CFLAGS+=-fgcse-after-reload -fpredictive-commoning -ftree-partial-pre -funswitch-loops
 	CFLAGS+=-fno-exceptions -Wno-write-strings -Wno-pointer-arith -Wno-packed-not-aligned -fno-rtti

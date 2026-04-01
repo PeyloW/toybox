@@ -104,7 +104,7 @@ long audio_mixer_c::command(const music_c& music, int cmd, long data, void* ctx)
 #ifdef __M68000__
     timer_c::with_paused_timers([&] {
         // Command driver
-        result = ((long(*)(int cmd, long data, void* ctx))_music_exit_code)(cmd, data, ctx);
+        result = ((long(*)(int cmd, long data, void* ctx))_music_cmd_code)(cmd, data, ctx);
     });
 #endif
     return result;

@@ -26,7 +26,7 @@ namespace toybox {
         void play(const music_c& music_c, int track = 1); // Track starts at 1, not 0;
         void stop(const music_c& music);
         
-        long command(const music_c& music_c, int cmd, long data, void* ctx);
+        __neverinline long command(const music_c& music_c, int cmd, long data, void* ctx);
         
         void stop_all();
 
