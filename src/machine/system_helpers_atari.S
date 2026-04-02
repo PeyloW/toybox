@@ -90,7 +90,6 @@ g_vbl_interupt:
     move.l  timer_func_context(%a2),%a0
     jsr     (%a1)
 .no_call_v:
-    add.l   #14,%a2
     bra.s   .next_func_v
 .no_more_funcs_v:
     movem.l (%sp)+,%d0-%d2/%a0-%a2
@@ -122,7 +121,6 @@ g_clock_interupt:
     move.l  timer_func_context(%a2),%a0
     jsr     (%a1)
 .no_call_c:
-    add.l   #14,%a2
     bra.s   .next_func_c
 .no_more_funcs_c:
 #if TOYBOX_DEBUG_CPU
