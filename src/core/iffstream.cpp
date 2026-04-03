@@ -42,7 +42,7 @@ iffstream_c::iffstream_c(const char* path, fstream_c::openmode_e mode) {
     }
 }
 
-bool iffstream_c::good() const { return _stream->good(); }
+bool iffstream_c::good() const { return (bool)_stream && _stream->good(); }
 ptrdiff_t iffstream_c::tell() const { return _stream->tell(); }
 ptrdiff_t iffstream_c::seek(ptrdiff_t pos, seekdir_e way) { return _stream->seek(pos, way); }
 

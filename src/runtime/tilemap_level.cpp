@@ -129,8 +129,14 @@ void tilemap_level_c::update_actions() {
     }
 }
 
+
+#define TOYBOX_DEBUG_DRAW_TILES 0
+
 void tilemap_level_c::draw_tiles() {
     auto& viewport = active_viewport();
+#if TOYBOX_DEBUG_DRAW_TILES
+    int draw_tiles_count = 0;
+#endif
     viewport.with_tileset(*_tileset, [&](){
         // Need to capture the dirty map here, so we have one.
         // And then do the restore without dirtymap so we do not dirty it when restoring.
@@ -162,6 +168,9 @@ void tilemap_level_c::draw_tiles() {
                             const auto& tile = (*this)[x, y];
                             debug_cpu_color(0x223);
                             draw_tile(tile, at);
+                            #if TOYBOX_DEBUG_DRAW_TILES
+                                draw_tiles_count++;
+                            #endif
                             at.x += 16;
                         }
                     }
@@ -172,6 +181,9 @@ void tilemap_level_c::draw_tiles() {
             dirtymap->restore(func);
         });
     });
+#if TOYBOX_DEBUG_DRAW_TILES
+    printf("Draw tiles: %d\n", draw_tiles_count);
+#endif
 }
 
 void tilemap_level_c::draw_tile(const tile_s& tile, point_s at) {

@@ -60,6 +60,7 @@ asset_c& asset_manager_c::asset(int id) const {
     if (asset.get() == nullptr) {
         asset.reset(create_asset(id, _asset_defs[id]));
     }
+    hard_assert(asset.get() != nullptr);
     return *asset;
 }
 

@@ -41,7 +41,7 @@ static expected_c<image_c*> load_image(const char* path, size_s tile_size) {
         }
         return false;
     };
-    return new image_c(path, image_c::MASKED_CIDX, chunk_handler);
+    return expected_cast(new expected_c<image_c>(failable, path, image_c::MASKED_CIDX, chunk_handler));
 }
 
 tileset_c::tileset_c(const char* path, size_s tile_size)
