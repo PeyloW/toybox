@@ -26,10 +26,10 @@ namespace toybox {
             T* get() const_pure { return _ptr; }
 
 
-            __forceinline T* operator->() const_pure { return _ptr; }
-            __forceinline T& operator*() const_pure { return *(_ptr); }
-            __forceinline T& operator[](int i) const_pure { return _ptr[i]; }
-            __forceinline T* operator+(int i) const_pure { return _ptr + i; }
+            __forceinline T* operator->() const_pure { __assume(_ptr); return _ptr; }
+            __forceinline T& operator*() const_pure { __assume(_ptr); return *(_ptr); }
+            __forceinline T& operator[](int i) const_pure { __assume(_ptr); return _ptr[i]; }
+            __forceinline T* operator+(int i) const_pure { __assume(_ptr); return _ptr + i; }
 
             __forceinline explicit operator bool() const_pure { return _ptr != nullptr; }
             __forceinline bool operator==(const basic_ptr_c& o) const_pure { return _ptr == o._ptr; }

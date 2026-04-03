@@ -31,26 +31,21 @@ tileset_c::tileset_c(const shared_ptr_c<image_c> &image, size_s tile_size) :
     }
 }
 
-detail::tileset_header_s s_header;
-static expected_c<image_c*> load_image(const char* path, size_s tile_size) {
-    s_header = { .tile_size = tile_size, .reserved = {0} };
+tileset_c::tileset_c(const char* path, size_s tile_size)
+{
+    detail::tileset_header_s header = { .tile_size = tile_size, .reserved = {0} };
     auto chunk_handler = [&](iffstream_c& stream, iff_chunk_s& chunk) {
         if (chunk.id == cc4_t("TSHD")) {
-            stream.read(&s_header);
+            stream.read(&header);
             return true;
         }
         return false;
     };
-    return expected_cast(new expected_c<image_c>(failable, path, image_c::MASKED_CIDX, chunk_handler));
-}
-
-tileset_c::tileset_c(const char* path, size_s tile_size)
-{
-    auto image = load_image(path, tile_size);
-    if (image) {
-        construct_at(this, *image, s_header.tile_size);
-        copyn(&s_header.reserved[0], 6, _data.begin());
+    auto image = new expected_c<image_c>(failable, path, image_c::MASKED_CIDX, chunk_handler);
+    if (*image) {
+        construct_at(this, expected_cast(image), header.tile_size);
+        copyn(&header.reserved[0], 6, _data.begin());
     } else {
-        errno = image.error();
+        errno = image->error();
     }
 }
