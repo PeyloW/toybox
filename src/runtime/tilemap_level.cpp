@@ -224,7 +224,7 @@ void tilemap_level_c::mark_tiles_dirtymap(rect_s rect) {
 
 template<typename Level, invocable<tile_s&> Func>
     requires same_as<typename remove_cvref<Level>::type, tilemap_level_c>
-__forceinline static void enmerate_level_tiles(Level& level, const frect_s& _rect, Func func) {
+__forceinline static void enumerate_level_tiles(Level& level, const frect_s& _rect, Func func) {
     const auto rect = static_cast<rect_s>(_rect);
     assert(rect.contained_by(level.total_bounds()) && "Rect must be in bounds");
     const auto tile_x_min = rect.origin.x >> 4;
@@ -240,7 +240,7 @@ __forceinline static void enmerate_level_tiles(Level& level, const frect_s& _rec
 }
 
 void tilemap_level_c::enumerate_tiles(const frect_s& rect, function_c<void(tile_s&)> func) {
-    enmerate_level_tiles(*this, rect, func);
+    enumerate_level_tiles(*this, rect, func);
 }
 
 tile_s::type_e tilemap_level_c::collides_with_level(uint8_t id) const {
@@ -258,7 +258,7 @@ tile_s::type_e tilemap_level_c::collides_with_level(fpoint_s at) const {
 tile_s::type_e tilemap_level_c::collides_with_level(const frect_s& rect) const {
     // Check each tile in the rect's coverage area
     tile_s::type_e max_type = tile_s::none;
-    enmerate_level_tiles(*this, rect, [&](const tile_s& tile) {
+    enumerate_level_tiles(*this, rect, [&](const tile_s& tile) {
         max_type = max(max_type, tile.type);
     });
     return max_type;
