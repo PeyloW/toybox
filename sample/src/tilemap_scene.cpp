@@ -46,7 +46,7 @@ static bool move_entity_if_possible(tilemap_level_c& level, entity_s& entity, fp
     return false;
 }
 
-static void player_control(tilemap_level_c& level, entity_s& entity, bool event) {
+static void player_control(tilemap_level_c& level, entity_s& entity, uint8_t source) {
     auto dir = controller_c::shared().directions();
     fpoint_s delta(0,0);
     if ((dir & controller_c::up) == true) {
