@@ -91,10 +91,6 @@ void canvas_c::draw_aligned(const tileset_c& src, int idx, point_s at) {
     draw_aligned(*src.image(), src[idx], at);
 }
 
-void canvas_c::draw_aligned(const tileset_c& src, point_s tile, point_s at) {
-    draw_aligned(*src.image(), src[tile], at);
-}
-
 void canvas_c::draw(const image_c& src, point_s at, const int color) {
     assert(_image._maskmap == nullptr && "Canvas must not have maskmap");
     rect_s rect(point_s(), src.size());
@@ -132,10 +128,6 @@ void canvas_c::draw(const image_c& src, const rect_s& rect, point_s at, const in
 
 void canvas_c::draw(const tileset_c& src, int idx, point_s at, const int color) {
     draw(*src.image(), src[idx], at, color);
-}
-
-void canvas_c::draw(const tileset_c& src, point_s tile, point_s at, int color) {
-    draw(*src.image(), src[tile], at, color);
 }
 
 void canvas_c::draw_3_patch(const image_c& src, int16_t cap, const rect_s& in) {
@@ -282,12 +274,4 @@ void canvas_c::draw_tile(const tileset_c& src, int idx, point_s at) {
     } else {
         imp_draw_tile(*src.image(), src[idx], at);
     }
-}
-
-void canvas_c::draw_tile(const tileset_c& src, point_s tile, point_s at) {
-    assert(_tileset_line_words != 0 && "draw_tile must be called within with_tileset()");
-    assert(src.image()->_line_words == _tileset_line_words && "Tileset must match with_tileset() tileset");
-    assert((at.x & 0xf) == 0 && "Tile must be aligned to 16px boundary");
-    assert(rect_s(at, size_s(16, 16)).contained_by(_clip_rect) && "Tile must be within canvas bounds");
-    imp_draw_tile(*src.image(), src[tile], at);
 }

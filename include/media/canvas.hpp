@@ -105,11 +105,9 @@ namespace toybox {
         void draw_aligned(const image_c& src, point_s at);
         void draw_aligned(const image_c& src, const rect_s& rect, point_s at);
         void draw_aligned(const tileset_c& src, int idx, point_s at);
-        void draw_aligned(const tileset_c& src, point_s tile, point_s at);
         void draw(const image_c& src, point_s at, int color = image_c::MASKED_CIDX);
         void draw(const image_c& src, const rect_s& rect, point_s at, int color = image_c::MASKED_CIDX);
         void draw(const tileset_c& src, int idx, point_s at, int color = image_c::MASKED_CIDX);
-        void draw(const tileset_c& src, point_s tile, point_s at, int color = image_c::MASKED_CIDX);
 
         void draw_3_patch(const image_c& src, int16_t cap, const rect_s& in);
         void draw_3_patch(const image_c& src, const rect_s& rect, int16_t cap, const rect_s& in);
@@ -126,7 +124,6 @@ namespace toybox {
         }
         void fill_tile(uint8_t ci, point_s at);
         void draw_tile(const tileset_c& src, int idx, point_s at);
-        void draw_tile(const tileset_c& src, point_s tile, point_s at);
 
     protected:
         image_c& _image;

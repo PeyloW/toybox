@@ -155,3 +155,117 @@ ToyBox provides a tilemap system for creating tile-based game worlds with entiti
 * `action_f` - Function type for AI actions: `void(*)(tilemap_level_c&, entity_s&)`.
     * Actions are registered in the level's action vector.
     * Each entity references an action by index.
+
+
+## File Formats
+
+All custom file formats use [EA IFF 85](https://en.wikipedia.org/wiki/Interchange_File_Format) container format. Multi-byte values are stored big-endian. Chunk sizes include only the data bytes (not the chunk header itself), and chunks are padded to even byte boundaries.
+
+### Images
+
+Images are stored as standard [ILBM](https://en.wikipedia.org/wiki/ILBM) files inside an IFF FORM container. Only 4-bitplane (16 color) images are supported. Compression may be none or PackBits.
+
+```
+FORM ILBM {
+    BMHD { 20 bytes — standard ILBM bitmap header }
+    CMAP { 48 bytes — 16 RGB triplets (3 bytes each) }
+    ...  { additional chunks passed to unknown_reader }
+    BODY { planar bitmap data, interleaved by scanline }
+}
+```
+
+Masking is supported via plane mask (5th bitplane), color key mask, or no mask.
+
+### Fonts
+
+Fonts are image-based; they use the same ILBM format as images. Character layout is a grid of 96 ASCII characters (32–127) arranged left-to-right, top-to-bottom in the source image. No additional file chunks are needed — character sizes are passed at construction time.
+
+### Tilesets
+
+Tilesets extend ILBM with a custom `TSHD` chunk embedded in the image file. The `TSHD` chunk is read by the image loader's unknown chunk handler.
+
+```
+FORM ILBM {
+    BMHD { ... }
+    CMAP { ... }
+    TSHD {
+        UINT16 tile_width       — tile width in pixels, or 0 for variable
+        UINT16 tile_height      — tile height in pixels, or 0 for variable
+        UINT16 reserved[6]      — 12 bytes custom data
+        ; If tile_width and tile_height are both 0, variable rect entries follow:
+        RECT[N] {               — N = (chunk_size - 16) / 8
+            UINT16 origin_x
+            UINT16 origin_y
+            UINT16 width
+            UINT16 height
+        }
+    }
+    BODY { ... }
+}
+```
+
+When `tile_size` is non-zero, tiles are uniform and computed as a grid over the image. When `tile_size` is `{0, 0}`, explicit rect entries define each tile's position and size within the image.
+
+### Audio
+
+**Sound effects** are stored as standard [AIFF](https://en.wikipedia.org/wiki/Audio_Interchange_File_Format) files. Only mono 8-bit samples at 11–14 kHz are supported.
+
+```
+FORM AIFF {
+    COMM { 18 bytes — channels (1), sample frames, sample size (8), sample rate }
+    SSND { 8 byte header + raw sample data }
+}
+```
+
+**Music** is stored as [SNDH](https://sndh.atari.org/fileformat.php) files (`.snd`), the standard Atari ST music format. The SNDH header tags `TITL`, `COMM`, `##`, and timer tags (`TA`/`TB`/`TC`/`TD`/`!V`) are parsed for metadata.
+
+### Tilemaps
+Tilemap levels use a custom IFF FORM with type `LEVL`.
+
+```
+FORM LEVL {
+    LVHD {                          — level header, 16 bytes
+        UINT16 width                — level width in tiles
+        UINT16 height               — level height in tiles
+        UINT8  tileset_index        — asset index of tileset
+        UINT8  entity_count         — number of entities
+        INT8   reserved_data[10]    — custom level data
+    }
+    NAME { NUL-terminated string    — level name }
+    ENTS {                          — entity data
+        ENTITY[entity_count] {      — 24 bytes each
+            UINT8  id
+            UINT8  flags            — bitfield: active:1, event:1, flags:6
+            UINT8  type
+            UINT8  group
+            UINT8  action
+            UINT8  frame_index
+            UINT16 position[4]      — fixed-point rect (x, y, w, h)
+            UINT8  reserved_data[10]
+        }
+    }
+    LIST TMAP {                     — list of sub-tilemaps
+        FORM TMAP {                 — one per sub-tilemap
+            TMHD {                  — tilemap header, 8 bytes
+                UINT16 origin_x     — tilespace origin
+                UINT16 origin_y
+                UINT16 width        — tilespace size
+                UINT16 height
+            }
+            ENTA {                  — entity activation indices
+                INT8[N]             — indices into ENTS array
+            }
+            BODY {                  — tile data
+                TILE[width*height] {    — 8 bytes each
+                    INT16  index        — tileset index
+                    UINT8  type         — none/water/climbable/platform/solid
+                    UINT8  flags
+                    UINT8  reserved_data[4]
+                }
+            }
+        }
+        ...
+    }
+}
+```
+
