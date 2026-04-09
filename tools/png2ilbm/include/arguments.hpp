@@ -15,7 +15,17 @@
 #include <functional>
 #include <string>
 
-typedef std::deque<const char* > arguments_t;
+struct arguments_t : std::deque<const char*> {
+    using std::deque<const char*>::deque;
+    int take_int_front(int def) {
+        if (!empty() && front()[0] >= '0' && front()[0] <= '9') {
+            int val = atoi(front());
+            pop_front();
+            return val;
+        }
+        return def;
+    }
+};
 typedef std::function<void(arguments_t&)> handler_t;
 typedef std::pair<const char* , handler_t> arg_handler_t;
 struct arg_compare_t;

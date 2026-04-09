@@ -24,21 +24,26 @@ static void handle_compressed(arguments_t& args);
 
 static bool save_palette = true;
 static bool save_masked = false;
-static uint8_t masked_idx = 16;
+static bool has_masked_idx = false;
+static uint8_t masked_idx = 0;
 static image_c::compression_type_e compression = image_c::compression_type_e::none;
 //static point_s grab_point = {0,0};
 
 const arg_handlers_t arg_handlers {
     {"-h",          {"Show this help and exit.", &handle_help}},
     {"-np",         {"Do not save palette.", [] (arguments_t&) { save_palette = false; }}},
-    {"-m",          {"Save masked.", [] (arguments_t&) { save_masked = true; }}},
-    {"-mi index",   {"Masked index.", [] (arguments_t& args) {
-        masked_idx = atoi(args.front());
-        args.pop_front();
+    {"-m",          {"Save with mask (from PNG alpha).", [] (arguments_t&) { save_masked = true; }}},
+    {"-mi index",   {"Save with transparent color index.", [] (arguments_t& args) {
+        int idx = args.take_int_front(-1);
+        if (idx < 0 || idx > 15) {
+            printf("Missing or invalid index for -mi.\n");
+            exit(-1);
+        }
+        masked_idx = idx;
+        has_masked_idx = true;
     }}},
-    {"-c type",          {"Save compressed.", [] (arguments_t& args) {
-        compression = (image_c::compression_type_e)atoi(args.front());
-        args.pop_front();
+    {"-c [type]",        {"Save compressed (default RLE).", [] (arguments_t& args) {
+        compression = (image_c::compression_type_e)args.take_int_front(1);
     }}},
 /*   {"-g x,y",      {"Add grab point.", [] (arguments_t& args) {
         auto split = split_string(args.front(), ',');
@@ -99,6 +104,16 @@ static int convert_png_to_ilbm(const std::string &png_file, const std::string &i
         cgpalette = new palette_c((uint8_t*)palette);
     }
 
+    // Build transparency lookup from PNG tRNS chunk for -m mode
+    bool is_transparent[256] = {};
+    if (save_masked) {
+        png_bytep trans_alpha = nullptr;
+        int num_trans = 0;
+        png_get_tRNS(png, info, &trans_alpha, &num_trans, nullptr);
+        for (int i = 0; i < num_trans; i++) {
+            is_transparent[i] = trans_alpha[i] < 128;
+        }
+    }
     image_c cgimage((size_s){width, height}, save_masked, cgpalette);
 
     png_bytep row = (png_byte*)malloc(row_bytes);
@@ -108,7 +123,7 @@ static int convert_png_to_ilbm(const std::string &png_file, const std::string &i
         png_read_row(png, row, nullptr);
         for (at.x = 0; at.x < width; at.x++) {
             uint8_t c = row[at.x];
-            if (c == masked_idx) {
+            if (save_masked && is_transparent[c]) {
                 cgimage.put_pixel(image_c::MASKED_CIDX, at);
             } else if (c > 15) {
                 if (!has_warned) {
@@ -120,10 +135,14 @@ static int convert_png_to_ilbm(const std::string &png_file, const std::string &i
             }
         }
     }
-    
+
     // cgimage.set_offset(grab_point);
-    
-    cgimage.save(ilbm_file.c_str(), compression, save_masked);
+
+    if (has_masked_idx) {
+        cgimage.save(ilbm_file.c_str(), compression, false, masked_idx);
+    } else {
+        cgimage.save(ilbm_file.c_str(), compression, save_masked);
+    }
     
     return 0;
 }
