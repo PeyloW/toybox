@@ -19,7 +19,7 @@ namespace toybox {
     public:
         static audio_mixer_c& shared();
 
-        __forceinline int channel_count() const_purest { return 1; }
+        __forceinline int channel_count() const_purest { return 4; }
         void play(const sound_c& sound, uint8_t priority = 0);
         void stop(const sound_c& sound);
 
@@ -33,12 +33,10 @@ namespace toybox {
     private:
         const music_c* _active_music;  // Non-owning, references music owned elsewhere
         int _active_track;
-#ifdef __M68000__
         uint16_t _music_init_code[8];
         uint16_t _music_exit_code[8];
         uint16_t _music_play_code[8];
         uint16_t _music_cmd_code[8];
-#endif
         audio_mixer_c();
         ~audio_mixer_c();
     };

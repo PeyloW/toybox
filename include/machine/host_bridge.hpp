@@ -42,6 +42,9 @@ namespace toybox {
                 
         void update_joystick(directions_e directions, bool fire);
         
+        // Host must call to mix audio into buffer
+        void sfx_mixer_callback(int8_t* mix_buffer);
+        
         // Host must provide a yield function
         virtual void yield() = 0;
 
@@ -51,6 +54,10 @@ namespace toybox {
         // Host should provide a play function
         virtual void play(const sound_c& sound) {}
         virtual void play(const music_c& music, int track) {}
+        
+        // Host should provide mixer setup/teardown
+        virtual void setup_mixer() {}
+        virtual void teardown_mixer() {}
  
         int get_pixel(const image_c& image, point_s at, bool clipping = true) const_pure;
         

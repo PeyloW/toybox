@@ -29,10 +29,10 @@ namespace toybox {
 #endif
     }
 
-#ifdef __M68000__
     struct codegen_s {
         // Buffer must be 16 bytes
         static void make_trampoline(uint16_t* buffer, void* func, bool all_regs) {
+#ifdef __M68000__
             //movem.l d3-d7/a2-a6,-(sp)
             //jsr     [func].l
             //movem.l (sp)+,d3-d7/a2-a6
@@ -55,9 +55,8 @@ namespace toybox {
                 buffer[6] = 0x7cf8;
             }
             buffer[7] = 0x4e75;
+#endif
         }
     };
-        
-#endif
-   
+
 }

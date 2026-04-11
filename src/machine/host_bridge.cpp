@@ -18,6 +18,7 @@ extern "C" {
     extern void g_clock_interupt();
     extern void g_update_mouse(point_s position, bool left, bool right);
     extern void g_update_joystick(directions_e directions, bool fire);
+    extern void g_sfx_mixer_callback(int8_t* mix_buffer);
     
 #ifdef TOYBOX_HOST
     static const char* s_added_searchpath = nullptr;
@@ -70,6 +71,10 @@ void host_bridge_c::update_mouse(point_s position, bool left, bool right) {
 
 void host_bridge_c::update_joystick(directions_e directions, bool fire) {
     g_update_joystick(directions, fire);
+}
+
+void host_bridge_c::sfx_mixer_callback(int8_t* mix_buffer) {
+    g_sfx_mixer_callback(mix_buffer);
 }
 
 int host_bridge_c::get_pixel(const image_c& image, point_s at, bool clipping) const {

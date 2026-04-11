@@ -24,14 +24,27 @@ namespace toybox {
      */
     class machine_c : public nocopy_c {
     public:
+#ifdef TOYBOX_HOST
+        constexpr static bool host = true;
+#else
+        constexpr static bool host = false;
+#endif
+#if TOYBOX_TARGET_ATARI
+        constexpr static bool atari = true;
+        constexpr static bool amiga = true;
+#elif TOYBOY_TARGET_AMIGA
+        constexpr static bool atari = false;
+        constexpr static bool amiga = true;
+#else
+#   error "Unsupported target"
+#endif
+
         enum class type_e : uint8_t {
             unknown,
 #if TOYBOX_TARGET_ATARI
             st, ste, falcon
-#elif TOYBOY_TARGET_AMIGA
-            osc, aga
 #else
-#   error "Unsupported target"
+            osc, aga
 #endif
         };
         using enum type_e;

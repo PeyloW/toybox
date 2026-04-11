@@ -33,15 +33,6 @@ public:
         _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
         _texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, screen_size.width, screen_size.height);
         SDL_RaiseWindow(_window);
-
-        SDL_AudioSpec desired;
-        SDL_zero(desired);
-        desired.freq = 12517;                // STe/Falcon lowest compatible rate
-        desired.format = AUDIO_S8;           // 8-bit signed audio (based on int8_t sample)
-        desired.channels = 1;                // Mono audio
-        desired.samples = 4096;              // Buffer size (can be tuned)
-        desired.callback = nullptr;          // No callback, we'll use SDL_QueueAudio
-        _effectts_device_id = SDL_OpenAudioDevice(nullptr, 0, &desired, nullptr, 0);
         
         // Initialize joystick if available
         for (int i = 0; i < SDL_NumJoysticks(); ++i) {
@@ -88,21 +79,40 @@ public:
         _timer_mutex.unlock();
     }
 
-    virtual void play(const sound_c& sound) override {
-        // Get the audio sample data, length, and sample rate
-        const int8_t* sample_data = sound.sample();
-        uint32_t sample_length = sound.length();
-        uint16_t sample_rate = sound.rate();
-        
-        if (!sample_data || sample_length == 0 || sample_rate == 0 || _effectts_device_id == 0) {
-            return; // Invalid sound sample, exit early
+    static void effects_callback(void* userdata, uint8_t* stream, int len) {
+        auto* bridge = static_cast<sdl2_host_bridge*>(userdata);
+        std::lock_guard<std::recursive_mutex> lock(bridge->_timer_mutex);
+        while (len >= 256) {
+            bridge->sfx_mixer_callback(reinterpret_cast<int8_t*>(stream));
+            stream += 256;
+            len -= 256;
         }
-        
-        // Unpause the audio device to start playback
+        if (len > 0) {
+            int8_t tmp[256];
+            bridge->sfx_mixer_callback(tmp);
+            memcpy(stream, tmp, len);
+        }
+    }
+    
+    virtual void setup_mixer() override {
+        SDL_AudioSpec desired;
+        SDL_zero(desired);
+        desired.freq = 12517;
+        desired.format = AUDIO_S8;
+        desired.channels = 1;
+        desired.samples = 256;
+        desired.callback = effects_callback;
+        desired.userdata = this;
+        _effectts_device_id = SDL_OpenAudioDevice(nullptr, 0, &desired, nullptr, 0);
         SDL_PauseAudioDevice(_effectts_device_id, 0);
-        
-        // Queue the audio sample for playback
-        SDL_QueueAudio(_effectts_device_id, sample_data, sample_length);
+    }
+    
+    virtual void teardown_mixer() override {
+        if (_effectts_device_id) {
+            SDL_PauseAudioDevice(_effectts_device_id, 1);
+            SDL_CloseAudioDevice(_effectts_device_id);
+            _effectts_device_id = 0;
+        }
     }
     
 #if HAVE_LIBPSGPLAY

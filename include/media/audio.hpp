@@ -16,7 +16,7 @@ namespace toybox {
     
     /**
      A `sound_c` is an 8 bit PCM sound sample.
-     Sounds can be loaded for EA 85 AIFF files.
+     Sounds can be loaded for EA 85 AIFF files., or 8SVX IFF files. 8SVX files support repeats.
      */
     class sound_c final : public asset_c {
         friend class audio_mixer_c;
@@ -29,11 +29,13 @@ namespace toybox {
 
         __forceinline const int8_t* sample() const_pure { return _sample.get(); }
         __forceinline size_t length() const_pure { return _length; }
+        __forceinline size_t repeat_length() const_pure { return _repeat_length; }
         __forceinline uint16_t rate() const_pure { return _rate; }
         
     private:
         unique_ptr_c<int8_t> _sample;
         size_t _length;
+        size_t _repeat_length;
         uint16_t _rate;
     };
     

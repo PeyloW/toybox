@@ -6,9 +6,11 @@
 //
 
 #include "media/audio_mixer.hpp"
+#include "machine/machine.hpp"
 #include "machine/timer.hpp"
+#include "core/memory.hpp"
 #include "core/system_helpers.hpp"
-#ifndef __M68000__
+#ifdef TOYBOX_HOST
 #include "machine/host_bridge.hpp"
 #endif
 
@@ -21,30 +23,138 @@ audio_mixer_c& audio_mixer_c::shared() {
     return s_mixer;
 }
 
-void audio_mixer_c::play(const sound_c& sound, uint8_t priority) {
+struct channel_t {
+    const int8_t* current = nullptr; // nullptr if not playing
+    const int8_t* end = nullptr;     // undefined if not playing
+    size_t  repeat_length = 0;  // 0 if no repeat, otherwise decrease current with this if past end
+    uint8_t priority = 0;       // undefined if not playing
+};
+
+namespace sfx_state {
+    static channel_t s_channels[4];
+    static int8_t* s_dma_buffer = nullptr;  // 1024 bytes allocated
+    static int8_t* s_mix_start = nullptr;   // 256-byte-aligned start within s_dma_buffer (3 × 256 = 768 usable)
+    static split_hw_addr_c<0xffff8903> s_dma_start;
+    static split_hw_addr_c<0xffff8909> s_dma_current;
+    static split_hw_addr_c<0xffff890f> s_dma_end;
+    static uint8_t s_start_mid;     // mid byte of s_mix_start, used to convert DMA mid byte to buffer index
+    static uint8_t s_prev_buf_idx;  // buffer index (0-2) to fill next
+}
+
+__forceinline static void sfx_mix_channel(const int8_t* _samples, int8_t* _mix_buffer, bool first) {
+    // For perf reasons we mix 32 bit values to get a 4x speedup.
+    // The added audio noice is worth it.
+    const int32_t* samples = reinterpret_cast<const int32_t*>(_samples);
+    int32_t* mix_buffer = reinterpret_cast<int32_t*>(_mix_buffer);
+    if (first) {
+        #pragma GCC unroll 8
+        for (int i = 0; i < 256 / 4; i++) {
+            *mix_buffer++ = *samples++;
+        }
+    } else {
+        #pragma GCC unroll 8
+        for (int i = 0; i < 256 / 4; i++) {
+            *mix_buffer++ += *samples++;
+        }
+    }
+}
+
+__forceinline static void sfx_mix_clear(int8_t* _mix_buffer) {
+    int32_t* mix_buffer = reinterpret_cast<int32_t*>(_mix_buffer);
+    #pragma GCC unroll 8
+    for (int i = 0; i < 256 / 4; i++) {
+        *mix_buffer++ = 0;
+    }
+}
+
+extern "C" void g_sfx_mixer_callback(int8_t* mix_buffer) {
+    bool first = true;
+    for (int i = 0; i < 4; i++) {
+        channel_t& channel = sfx_state::s_channels[i];
+        if (channel.current) {
+            sfx_mix_channel(channel.current, mix_buffer, first);
+            channel.current += 256;
+            if (channel.current >= channel.end) {
+                if (channel.repeat_length) {
+                    channel.current -= channel.repeat_length;
+                } else {
+                    channel.current = nullptr;
+                }
+            }
+            first = false;
+        }
+    }
+    if (first) {
+        sfx_mix_clear(mix_buffer);
+    }
+}
+
 #ifdef __M68000__
-    uint8_t* ste_dma_control  = (uint8_t*)0xffff8901;
-    uint8_t* ste_dma_mode  = (uint8_t*)0xffff8921;
-    uint8_t* ste_dma_start = (uint8_t*)0xffff8903;
-    uint8_t* ste_dma_end   = (uint8_t*)0xffff890f;
-    // Stop audio
-    *ste_dma_control &= 0xFE;
-    // Set start address, high to low byte
-    size_t tmp = (size_t)sound._sample.get();
-    ste_dma_start[0] = (uint8_t)((tmp >> 16)&0xff);
-    ste_dma_start[2] = (uint8_t)((tmp >>  8)&0xff);
-    ste_dma_start[4] = (uint8_t)((tmp       )&0xff);
-    // Set end address, high to low byte
-    tmp += sound._length;
-    ste_dma_end[0] = (uint8_t)((tmp >> 16)&0xff);
-    ste_dma_end[2] = (uint8_t)((tmp >>  8)&0xff);
-    ste_dma_end[4] = (uint8_t)((tmp       )&0xff);
-    // Set mode, and start
-    *ste_dma_mode = 0x81; // 8 bit mono @ 12.5kHz
-    *ste_dma_control = 1; // Play once
-#else
-    host_bridge_c::shared().play(sound);
+static void target_mixer_callback() {
+    const uint8_t buf_idx = sfx_state::s_dma_current[2] - sfx_state::s_start_mid;
+    __assume_count(buf_idx, 3);
+    if (buf_idx == sfx_state::s_prev_buf_idx) return;
+    // s_prev_buf_idx is the buffer DMA just left — fill it before DMA wraps back
+    int8_t* mix_buffer = sfx_state::s_mix_start + sfx_state::s_prev_buf_idx * 256;
+    sfx_state::s_prev_buf_idx = buf_idx;
+    g_sfx_mixer_callback(mix_buffer);
+}
 #endif
+
+static void setup_mixer() {
+    sfx_state::s_dma_buffer = (int8_t*)_calloc(256, 4);
+    sfx_state::s_mix_start = (int8_t*)(((size_t)sfx_state::s_dma_buffer + 255) & ~255);
+#ifdef __M68000__
+    timer_c::with_paused_timers([]{
+        *(volatile uint8_t*)0xffff8901 &= 0xFE;       // Stop DMA
+        sfx_state::s_dma_start.set(sfx_state::s_mix_start);
+        sfx_state::s_dma_end.set(sfx_state::s_mix_start + 768);
+        *(volatile uint8_t*)0xffff8921 = 0x81;         // 8-bit mono @ 12.5kHz
+        *(volatile uint8_t*)0xffff8901 = 3;            // Start DMA loop
+        sfx_state::s_start_mid = reinterpret_cast<size_t>(sfx_state::s_mix_start) >> 8;
+        sfx_state::s_prev_buf_idx = 0;
+        timer_c& clock = timer_c::shared(timer_c::timer_e::clock);
+        clock.add_func((timer_c::func_t)target_mixer_callback, 50);
+    });
+#else
+    host_bridge_c::shared().setup_mixer();
+#endif
+}
+
+static void teardown_mixer() {
+#ifdef __M68000__
+    timer_c::with_paused_timers([]{
+        timer_c& clock = timer_c::shared(timer_c::timer_e::clock);
+        clock.remove_func((timer_c::func_t)target_mixer_callback);
+        *(volatile uint8_t*)0xffff8901 &= 0xFE;       // Stop DMA
+    });
+#else
+    host_bridge_c::shared().teardown_mixer();
+#endif
+}
+
+void audio_mixer_c::play(const sound_c& sound, uint8_t priority) {
+    timer_c::with_paused_timers([&] {
+        uint8_t max_prio = 0;
+        int idx = -1;
+        for (int i = 0; i < 4; i++) {
+            channel_t& channel = sfx_state::s_channels[i];
+            if (channel.current == nullptr) {
+                idx = i;
+                break;
+            } else if (channel.priority > priority && channel.priority > max_prio) {
+                idx = i;
+                max_prio = channel.priority;
+            }
+        }
+        if (idx >= 0) {
+            channel_t& channel = sfx_state::s_channels[idx];
+            channel.current = sound.sample();
+            channel.end = sound.sample() + sound.length();
+            channel.repeat_length = sound.repeat_length();
+            channel.priority = priority;
+        }
+    });
 }
 
 void audio_mixer_c::stop(const sound_c& sound) {
@@ -120,6 +230,7 @@ void audio_mixer_c::stop_all() {
 extern "C" void g_microwire_write(uint16_t value);
 
 audio_mixer_c::audio_mixer_c() : _active_music(nullptr), _active_track(0) {
+    setup_mixer();
 #ifdef __M68000__
     g_microwire_write(0x4c | 40); // Max master volume (0 to 40)
     g_microwire_write(0x50 | 20); // Right volume (0 to 20)
@@ -129,6 +240,7 @@ audio_mixer_c::audio_mixer_c() : _active_music(nullptr), _active_track(0) {
 
 audio_mixer_c::~audio_mixer_c() {
     stop_all();
+    teardown_mixer();
 };
 
 #endif

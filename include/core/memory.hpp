@@ -176,4 +176,35 @@ namespace toybox {
         return const_cast<shared_ptr_c<U>&>(r);
     }
 
+    // Helper class for accessing 24 bit HW regs on the Atari Target
+    template<uint32_t BaseAddr>
+    class split_hw_addr_c {
+    public:
+        void *get() {
+            return reinterpret_cast<void*>(
+                (static_cast<size_t>((*this)[0]) << 16) |
+                (static_cast<size_t>((*this)[2]) << 8) |
+                 static_cast<size_t>((*this)[4])
+            );
+        }
+        void set(void *p) {
+            size_t addr = reinterpret_cast<size_t>(p);
+            (*this)[0] = static_cast<uint8_t>(addr >> 16);
+            (*this)[2] = static_cast<uint8_t>(addr >> 8);
+            (*this)[4] = static_cast<uint8_t>(addr);
+        }
+        __forceinline volatile uint8_t& operator[](int i) {
+            __assume((i & 1) == 0 && i >= 0 && i <= 4);
+            return *reinterpret_cast<volatile uint8_t*>(
+                static_cast<uintptr_t>(BaseAddr) + i
+            );
+        }
+        __forceinline const volatile uint8_t& operator[](int i) const {
+            __assume((i & 1) == 0 && i >= 0 && i <= 4);
+            return *reinterpret_cast<const volatile uint8_t*>(
+                static_cast<uintptr_t>(BaseAddr) + i
+            );
+        }
+    };
+    
 }
