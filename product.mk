@@ -19,6 +19,18 @@ ifneq ($(HOST),sdl2)
 	OBJECTS+=$(patsubst src/%.S,build/%.o,$(ASM_SOURCES))
 endif
 
+# Graphics conversion: PNG -> ILBM (requires png2ilbm)
+PNG_SOURCES=$(wildcard assets/*.png)
+LBM_DATA=$(patsubst assets/%.png,data/%.lbm,$(PNG_SOURCES))
+
+# Audio conversion: WAV -> 8SVX (requires sox)
+WAV_SOURCES=$(wildcard assets/*.wav)
+SVX_DATA=$(patsubst assets/%.wav,data/%.svx,$(WAV_SOURCES))
+
+# Music conversion: TPM -> SNDH (requires tpmtool)
+TPM_SOURCES=$(sort $(wildcard assets/*.tpm))
+SND_DATA=$(if $(TPM_SOURCES),data/music.snd)
+
 -include $(DEPS)
 
 all: product
@@ -41,7 +53,19 @@ build/%.o: src/%.S
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $< -o $@
 
-install: product
+data/%.lbm: assets/%.png
+	@mkdir -p $(dir $@)
+	png2ilbm $$(if [ -f $<.args ]; then cat $<.args; fi) $< $@
+
+data/%.svx: assets/%.wav
+	@mkdir -p $(dir $@)
+	sox $< -t 8svx -r 12517 -c 1 -e signed-integer -b 8 $@ channels 1 rate -v -L 12517 dither -s
+
+data/music.snd: $(TPM_SOURCES)
+	@mkdir -p $(dir $@)
+	tpmtool -e -n -o $@ $^
+
+install: product $(LBM_DATA) $(SVX_DATA) $(SND_DATA)
 	mkdir -p install
 	if [ -d data ]; then mkdir -p install/data && cp -r data/. install/data/; fi
 ifeq ($(HOST),sdl2)
@@ -61,5 +85,5 @@ clean:
 	rm -rf install
 
 .DEFAULT_GOAL:=all
-.PHONY: all toybox install cracked clean
+.PHONY: all toybox install audio cracked clean
 

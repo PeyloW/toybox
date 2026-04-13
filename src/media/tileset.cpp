@@ -13,7 +13,7 @@ using namespace toybox;
 
 tileset_c::tileset_c(const shared_ptr_c<image_c> &image, size_s tile_size) :
     _image(image),
-    _rects(), _data()
+    _rects()
 {
     point_s max_tile((uint16_t)_image->size().width / tile_size.width, (uint16_t)_image->size().height / tile_size.height);
     assert(max_tile.x > 0 && max_tile.y > 0 && "Tileset must have at least one tile");
@@ -29,7 +29,7 @@ tileset_c::tileset_c(const shared_ptr_c<image_c> &image, size_s tile_size) :
 
 tileset_c::tileset_c(const shared_ptr_c<image_c> &image, const vector_c<rect_s, 0>& rects) :
     _image(image),
-    _rects(rects), _data()
+    _rects(rects)
 {
     assert(_rects.size() > 0 && "Tileset must have at least one tile rect");
     _uniform = true;
@@ -62,7 +62,7 @@ static bool read_tshd(iffstream_c& stream, iff_chunk_s& chunk,
 
 tileset_c::tileset_c(const char* path)
 {
-    detail::tileset_header_s header = { .tile_size = {0, 0}, .reserved = {0} };
+    detail::tileset_header_s header = { .tile_size = {0, 0} };
     vector_c<rect_s, 0> tshd_rects;
     bool found_tshd = false;
     auto chunk_handler = [&](iffstream_c& stream, iff_chunk_s& chunk) {
@@ -80,7 +80,6 @@ tileset_c::tileset_c(const char* path)
         } else {
             construct_at(this, expected_cast(image), header.tile_size);
         }
-        copyn(&header.reserved[0], 6, _data.begin());
     } else {
         errno = image->error();
     }
@@ -88,12 +87,11 @@ tileset_c::tileset_c(const char* path)
 
 tileset_c::tileset_c(const char* path, size_s tile_size)
 {
-    detail::tileset_header_s header = { .tile_size = tile_size, .reserved = {0} };
+    detail::tileset_header_s header = { .tile_size = tile_size };
     vector_c<rect_s, 0> tshd_rects;
     auto chunk_handler = [&](iffstream_c& stream, iff_chunk_s& chunk) {
         if (chunk.id == cc4_t("TSHD")) {
             read_tshd(stream, chunk, header, tshd_rects);
-            hard_assert(header.tile_size == tile_size && "TSHD tile_size does not match");
             return true;
         }
         return false;
@@ -101,14 +99,13 @@ tileset_c::tileset_c(const char* path, size_s tile_size)
     auto image = new expected_c<image_c>(failable, path, image_c::MASKED_CIDX, chunk_handler);
     if (*image) {
         construct_at(this, expected_cast(image), header.tile_size);
-        copyn(&header.reserved[0], 6, _data.begin());
     } else {
         errno = image->error();
     }
 }
 tileset_c::tileset_c(const char* path, const vector_c<rect_s, 0>& rects)
 {
-    detail::tileset_header_s header = { .tile_size = {0, 0}, .reserved = {0} };
+    detail::tileset_header_s header = { .tile_size = {0, 0} };
     vector_c<rect_s, 0> tshd_rects;
     auto chunk_handler = [&](iffstream_c& stream, iff_chunk_s& chunk) {
         if (chunk.id == cc4_t("TSHD")) {
@@ -134,7 +131,6 @@ tileset_c::tileset_c(const char* path, const vector_c<rect_s, 0>& rects)
     auto image = new expected_c<image_c>(failable, path, image_c::MASKED_CIDX, chunk_handler);
     if (*image) {
         construct_at(this, expected_cast(image), rects);
-        copyn(&header.reserved[0], 6, _data.begin());
     } else {
         errno = image->error();
     }

@@ -44,17 +44,9 @@ namespace toybox {
         bool is_uniform() const_pure { return _uniform; };
         __forceinline size_s tile_size() const_pure { return _rects[0].size; }
         
-        __forceinline array_s<uint16_t, 6>& data() { return _data; }
-        __forceinline const array_s<uint16_t, 6>& data() const_pure { return _data; }
-
-        template<typename T> requires (sizeof(T) <= 12)
-        T& data_as() { return (T&)(_data[0]); }
-        template<typename T> requires (sizeof(T) <= 12)
-        const T& data_as() const { return (const T&)(_data[0]); }
     private:
         const shared_ptr_c<image_c> _image;
         vector_c<rect_s, 0> _rects;
-        array_s<uint16_t, 6> _data;
         bool _uniform;
     };
 
@@ -64,17 +56,16 @@ namespace toybox {
             static constexpr toybox::cc4_t TSHD("TSHD");
         }
         // Tileset header for EA IFF 85 TSHD chunk (inside ILBM)
-        // If tile_size is non-zero, tiles are uniform.
-        // If tile_size is {0,0}, (chunk.size - 16) / 8 rect_s entries follow.
+        // If tile_size is non-zero, tiles are uniform (no trailing data).
+        // If tile_size is {0,0}, (chunk.size - 4) / 8 rect_s entries follow the header.
         struct tileset_header_s {
             size_s tile_size;           // Fixed size of tiles, or {0,0} for variable rects
-            uint16_t reserved[6];       // Custom data
         };
-        static_assert(sizeof(tileset_header_s) == 16);
+        static_assert(sizeof(tileset_header_s) == 4);
     }
     template<>
     struct struct_layout<detail::tileset_header_s> {
-        static constexpr const char* value = "8w";
+        static constexpr const char* value = "2w";
     };
     
 }

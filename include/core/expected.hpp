@@ -140,7 +140,9 @@ namespace toybox {
     
     template<typename T>
     T* expected_cast(expected_c<T>* exp) {
-        hard_assert(*exp && "Expected has error");
+        if (!*exp) {
+            hard_assert(*exp && "Expected has error");
+        }
         return reinterpret_cast<T*>(exp);
     }
     

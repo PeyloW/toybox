@@ -6,6 +6,7 @@
 //
 
 #include <iostream>
+#include <expected>
 #include <png.h>
 
 #include "arguments.hpp"
@@ -13,6 +14,7 @@
 #include "core/geometry.hpp"
 #include "media/image.hpp"
 #include "media/canvas.hpp"
+#include "media/tileset.hpp"
 
 
 using namespace toybox;
@@ -28,6 +30,61 @@ static bool has_masked_idx = false;
 static uint8_t masked_idx = 0;
 static image_c::compression_type_e compression = image_c::compression_type_e::none;
 //static point_s grab_point = {0,0};
+static bool has_tileset = false;
+static size_s tileset_tile_size = {0, 0};
+static std::vector<rect_s> tileset_rects;
+
+using int_pair = std::pair<int, int>;
+using group_pair = std::pair<int_pair, int_pair>;
+
+// Parse "{x,y}" from str at pos, advancing pos past '}'.
+static std::expected<int_pair, std::string> try_parse_pair(const std::string& str, size_t& pos) {
+    if (pos >= str.size() || str[pos] != '{')
+        return std::unexpected("Expected '{' at position " + std::to_string(pos));
+    pos++;
+    int a = atoi(str.c_str() + pos);
+    auto comma = str.find(',', pos);
+    if (comma == std::string::npos)
+        return std::unexpected("Expected ',' after first value at position " + std::to_string(pos));
+    pos = comma + 1;
+    int b = atoi(str.c_str() + pos);
+    auto close = str.find('}', pos);
+    if (close == std::string::npos)
+        return std::unexpected("Expected '}' after second value at position " + std::to_string(pos));
+    pos = close + 1;
+    return int_pair{a, b};
+}
+
+// Parse "{{x,y},{u,v}}" from str at pos.
+static std::expected<group_pair, std::string> try_parse_group(const std::string& str, size_t& pos) {
+    if (pos >= str.size() || str[pos] != '{')
+        return std::unexpected("Expected '{' at position " + std::to_string(pos));
+    pos++;
+    auto first = try_parse_pair(str, pos);
+    if (!first) return std::unexpected(first.error());
+    if (pos < str.size() && str[pos] == ',') pos++;
+    auto second = try_parse_pair(str, pos);
+    if (!second) return std::unexpected(second.error());
+    if (pos >= str.size() || str[pos] != '}')
+        return std::unexpected("Expected '}' closing group at position " + std::to_string(pos));
+    pos++;
+    return group_pair{*first, *second};
+}
+
+// Parse "{{x,y},{u,v}},{{x,y},{u,v}},..." from str.
+static std::expected<std::vector<group_pair>, std::string> try_parse_group_list(const std::string& str) {
+    std::vector<group_pair> groups;
+    size_t pos = 0;
+    while (pos < str.size()) {
+        if (str[pos] == ',') pos++;
+        auto group = try_parse_group(str, pos);
+        if (!group) return std::unexpected(group.error());
+        groups.push_back(*group);
+    }
+    if (groups.empty())
+        return std::unexpected("Empty group list");
+    return groups;
+}
 
 const arg_handlers_t arg_handlers {
     {"-h",          {"Show this help and exit.", &handle_help}},
@@ -45,6 +102,31 @@ const arg_handlers_t arg_handlers {
     {"-c [type]",        {"Save compressed (default RLE).", [] (arguments_t& args) {
         compression = (image_c::compression_type_e)args.take_int_front(1);
     }}},
+    {"-t {W,H}",         {"Add uniform tileset definition.", [] (arguments_t& args) {
+        if (args.empty()) { printf("Missing size for -t.\n"); exit(-1); }
+        size_t pos = 0;
+        std::string s = args.front(); args.pop_front();
+        auto pair = try_parse_pair(s, pos);
+        if (!pair) { printf("-t: %s\n", pair.error().c_str()); exit(-1); }
+        if (pair->first <= 0 || pair->second <= 0) {
+            printf("-t: Width and height must be positive.\n");
+            exit(-1);
+        }
+        has_tileset = true;
+        tileset_tile_size = {(int16_t)pair->first, (int16_t)pair->second};
+    }}},
+    {"-ts {{X,Y},{W,H}},...", {"Add variable tileset rect definitions.", [] (arguments_t& args) {
+        if (args.empty()) { printf("Missing rects for -ts.\n"); exit(-1); }
+        std::string s = args.front(); args.pop_front();
+        auto groups = try_parse_group_list(s);
+        if (!groups) { printf("-ts: %s\n", groups.error().c_str()); exit(-1); }
+        has_tileset = true;
+        tileset_tile_size = {0, 0};
+        for (auto& [origin, size] : *groups) {
+            tileset_rects.push_back({(int16_t)origin.first, (int16_t)origin.second,
+                                     (int16_t)size.first, (int16_t)size.second});
+        }
+    }}},
 /*   {"-g x,y",      {"Add grab point.", [] (arguments_t& args) {
         auto split = split_string(args.front(), ',');
         grab_point = {(int16_t)atoi(split[0].c_str()), (int16_t)atoi(split[1].c_str())};
@@ -52,7 +134,7 @@ const arg_handlers_t arg_handlers {
 };
 
 static void handle_help(arguments_t& args) {
-    do_print_help("png2ilbm - A utility for converting png images to iff ilbm.\nusage: png2ilbm [options] image.png image.iff", arg_handlers);
+    do_print_help("png2ilbm - A utility for converting png images to iff ilbm.\nusage: png2ilbm [options] image.png [image.iff]", arg_handlers);
     exit(0);
 }
 
@@ -138,10 +220,24 @@ static int convert_png_to_ilbm(const std::string &png_file, const std::string &i
 
     // cgimage.set_offset(grab_point);
 
+    auto tshd_writer = [](iffstream_c& stream) -> bool {
+        if (!has_tileset) return true;
+        iff_chunk_s chunk;
+        detail::tileset_header_s tshd{};
+        tshd.tile_size = tileset_tile_size;
+        stream.begin(detail::cc4::TSHD, chunk);
+        stream.write(&tshd);
+        for (auto& r : tileset_rects) {
+            stream.write((uint16_t*)&r, sizeof(rect_s) / sizeof(uint16_t));
+        }
+        stream.end(chunk);
+        return true;
+    };
+
     if (has_masked_idx) {
-        cgimage.save(ilbm_file.c_str(), compression, false, masked_idx);
+        cgimage.save(ilbm_file.c_str(), compression, false, masked_idx, tshd_writer);
     } else {
-        cgimage.save(ilbm_file.c_str(), compression, save_masked);
+        cgimage.save(ilbm_file.c_str(), compression, save_masked, image_c::MASKED_CIDX, tshd_writer);
     }
     
     return 0;
