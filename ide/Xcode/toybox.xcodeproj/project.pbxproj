@@ -185,7 +185,7 @@
 /* Begin PBXLegacyTarget section */
 		A61D9E9D2EC80A2800F0A182 /* png2ilbm */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "HOST=sdl2 install";
+			buildArgumentsString = install;
 			buildConfigurationList = A61D9E9E2EC80A2800F0A182 /* Build configuration list for PBXLegacyTarget "png2ilbm" */;
 			buildPhases = (
 			);
@@ -201,7 +201,7 @@
 		};
 		A68D49702EA1314600174946 /* toybox */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "HOST=sdl2 all";
+			buildArgumentsString = all;
 			buildConfigurationList = A68D49732EA1314600174946 /* Build configuration list for PBXLegacyTarget "toybox" */;
 			buildPhases = (
 			);
@@ -217,7 +217,7 @@
 		};
 		A68D4C8B2EA138FA00174946 /* sample */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "HOST=sdl2 install";
+			buildArgumentsString = install;
 			buildConfigurationList = A68D4C8C2EA138FA00174946 /* Build configuration list for PBXLegacyTarget "sample" */;
 			buildPhases = (
 			);
